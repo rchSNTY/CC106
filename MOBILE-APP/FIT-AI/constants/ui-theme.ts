@@ -1,14 +1,14 @@
 export const UiTheme = {
   colors: {
-    page: '#F6F8FB',
+    page: '#F5F8FC',
     surface: '#FFFFFF',
-    surfaceMuted: '#EEF2F7',
-    border: '#DCE3EC',
-    textPrimary: '#112031',
-    textSecondary: '#4A5C6E',
-    accent: '#28A745',
-    accentSoft: '#EAF8EE',
-    danger: '#FF3B30',
+    surfaceMuted: '#EAF0F8',
+    border: '#C7D5E8',
+    textPrimary: '#0F1E33',
+    textSecondary: '#3E536F',
+    accent: '#123A73',
+    accentSoft: '#DCE7F7',
+    danger: '#C62828',
   },
   spacing: {
     xs: 6,

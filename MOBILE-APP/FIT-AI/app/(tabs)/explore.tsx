@@ -53,7 +53,7 @@ export default function Explore(): JSX.Element {
           <Image source={require('@/assets/images/search.png')} style={styles.searchIcon} contentFit="contain" />
           <TextInput
             placeholder="Search by title or workout type"
-            placeholderTextColor="#7A8A99"
+            placeholderTextColor={UiTheme.colors.textSecondary}
             style={styles.searchInput}
             value={query}
             onChangeText={setQuery}

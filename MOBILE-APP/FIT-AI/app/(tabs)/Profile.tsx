@@ -17,7 +17,7 @@ export default function Profile(): JSX.Element {
   const router = useRouter();
 
   function handleLogout() {
-    router.push('/' as Href);
+    router.push('/login' as Href);
   }
 
   return (
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     borderRadius: UiTheme.radius.lg,
     height: 56,
     paddingHorizontal: UiTheme.spacing.lg,
-    shadowColor: '#000',
+    shadowColor: UiTheme.colors.textPrimary,
     shadowOpacity: 0.08,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 4 },
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: UiTheme.spacing.md,
-    shadowColor: '#000',
+    shadowColor: UiTheme.colors.textPrimary,
     shadowOpacity: 0.08,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 4 },

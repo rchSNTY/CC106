@@ -1,247 +1,286 @@
 import { Image } from 'expo-image';
-import { Href, Link, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Href, useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { UiTheme } from '@/constants/ui-theme';
-import { useThemeColor } from '@/hooks/use-theme-color';
 
-export default function SignupScreen() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+const CAPABILITY_SLIDES = [
+  {
+    title: 'Personalized Plans',
+    description: 'FIT-AI creates workout suggestions based on your profile and selected activity level.',
+  },
+  {
+    title: 'Workout Discovery',
+    description: 'Browse routines by type and intensity, then save the ones you want to repeat.',
+  },
+  {
+    title: 'Progress Tracking',
+    description: 'Check your activity log, streak, and weekly goals to stay consistent over time.',
+  },
+] as const;
+
+export default function LandingScreen() {
   const router = useRouter();
-  const textColor = useThemeColor({}, 'text');
-  const [accepted, setAccepted] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
+  const sliderRef = useRef<ScrollView>(null);
+  const { width } = useWindowDimensions();
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  const hasMinPassword = password.length >= 8;
-  const canSubmit =
-    accepted &&
-    username.trim().length > 0 &&
-    email.trim().length > 0 &&
-    password.length > 0 &&
-    confirmPassword.length > 0;
+  const slideWidth = Math.max(width - UiTheme.spacing.lg * 2, 280);
 
-  function validateEmail(e: string) {
-    return /\S+@\S+\.\S+/.test(e);
+  const canGoPrev = activeIndex > 0;
+  const canGoNext = activeIndex < CAPABILITY_SLIDES.length - 1;
+
+  const currentSlide = useMemo(() => CAPABILITY_SLIDES[activeIndex], [activeIndex]);
+
+  function onSliderScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    const { contentOffset, layoutMeasurement } = event.nativeEvent;
+    const width = layoutMeasurement.width;
+    if (!width) {
+      return;
+    }
+
+    const index = Math.round(contentOffset.x / width);
+    if (index !== activeIndex && index >= 0 && index < CAPABILITY_SLIDES.length) {
+      setActiveIndex(index);
+    }
   }
 
-  function handleSignup() {
-    if (!username.trim() || !email.trim() || !password || !confirmPassword) {
-      Alert.alert('Missing fields', 'Please fill in all fields.');
-      return;
-    }
-    if (!validateEmail(email)) {
-      Alert.alert('Invalid email', 'Please enter a valid email address.');
-      return;
-    }
-    if (!hasMinPassword) {
-      Alert.alert('Weak password', 'Password must be at least 8 characters.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      Alert.alert('Password mismatch', 'Passwords do not match.');
-      return;
-    }
-
-    // Mock Signup
-    Alert.alert('Account created', `Welcome, ${username}! Please log in.`);
-    setUsername('');
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    router.push('/login' as Href);
+  function goToSlide(nextIndex: number) {
+    sliderRef.current?.scrollTo({ x: slideWidth * nextIndex, y: 0, animated: true });
+    setActiveIndex(nextIndex);
   }
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveIndex((prev) => {
+        const next = prev === CAPABILITY_SLIDES.length - 1 ? 0 : prev + 1;
+        sliderRef.current?.scrollTo({ x: slideWidth * next, y: 0, animated: true });
+        return next;
+      });
+    }, 3200);
+
+    return () => clearInterval(timer);
+  }, [slideWidth]);
 
   return (
-    <ThemedView style={styles.container}>
-      <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
-      <ThemedText type="title" style={styles.title}>Create an Account</ThemedText>
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={UiTheme.colors.page} />
 
-      <View style={styles.form}>
-        <ThemedText style={styles.label}>Username</ThemedText>
-        <TextInput
-          value={username}
-          onChangeText={setUsername}
-          placeholder="Enter username"
-          style={styles.input}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+      <View style={styles.container}>
+        <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
+        <ThemedText type="title" style={styles.title}>Train Smarter with FIT-AI</ThemedText>
+        <ThemedText style={styles.subtitle}>Your fitness companion for planning, tracking, and improving every week.</ThemedText>
 
-        <ThemedText style={styles.label}>Email</ThemedText>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="juandelacruz@gmail.com"
-          keyboardType="email-address"
-          style={styles.input}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+        <View style={styles.sliderOuter}>
+          <ScrollView
+            ref={sliderRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={onSliderScroll}
+            contentContainerStyle={styles.sliderContent}
+          >
+            {CAPABILITY_SLIDES.map((slide) => (
+              <View key={slide.title} style={[styles.slideCard, { width: slideWidth }]}>
+                <ThemedText style={styles.slideTitle}>{slide.title}</ThemedText>
+                <ThemedText style={styles.slideDescription}>{slide.description}</ThemedText>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
 
-        <ThemedText style={styles.label}>Password</ThemedText>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Password"
-          secureTextEntry
-          style={styles.input}
-        />
-        {!hasMinPassword && password.length > 0 ? (
-          <ThemedText style={styles.inlineHint}>Use at least 8 characters.</ThemedText>
-        ) : null}
+        <View style={styles.dotsRow}>
+          {CAPABILITY_SLIDES.map((slide, idx) => (
+            <View key={slide.title} style={[styles.dot, idx === activeIndex ? styles.dotActive : null]} />
+          ))}
+        </View>
 
-        <ThemedText style={styles.label}>Confirm Password</ThemedText>
-        <TextInput
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          placeholder="Confirm Password"
-          secureTextEntry
-          style={styles.input}
-        />
+        <View style={styles.previewCard}>
+          <ThemedText style={styles.previewLabel}>Now Viewing</ThemedText>
+          <ThemedText style={styles.previewTitle}>{currentSlide.title}</ThemedText>
+        </View>
 
-        <View style={{ marginTop: 8 }}>
-          <Pressable onPress={() => setAccepted((s) => !s)} style={styles.checkboxRow}>
-            <View style={[styles.checkbox, accepted ? styles.checkboxChecked : {}]} />
-            <ThemedText style={[styles.checkboxLabel, { color: textColor, fontSize: 15 }]}> 
-              <ThemedText type="link" onPress={() => setShowTerms(true)}> I have read the terms and privacy policy</ThemedText>
-            </ThemedText>
-          </Pressable>
-
-          <TouchableOpacity onPress={handleSignup} style={[styles.button, !canSubmit && styles.buttonDisabled]} activeOpacity={0.9} disabled={!canSubmit}>
-            <ThemedText type="defaultSemiBold" style={styles.buttonText}>Signup</ThemedText>
+        <View style={styles.navHintRow}>
+          <TouchableOpacity
+            onPress={() => goToSlide(Math.max(activeIndex - 1, 0))}
+            disabled={!canGoPrev}
+            style={[styles.navChip, !canGoPrev && styles.navChipDisabled]}
+          >
+            <ThemedText style={[styles.navChipText, !canGoPrev && styles.navChipTextDisabled]}>Previous</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => goToSlide(Math.min(activeIndex + 1, CAPABILITY_SLIDES.length - 1))}
+            disabled={!canGoNext}
+            style={[styles.navChip, !canGoNext && styles.navChipDisabled]}
+          >
+            <ThemedText style={[styles.navChipText, !canGoNext && styles.navChipTextDisabled]}>Next</ThemedText>
           </TouchableOpacity>
         </View>
 
-        <ThemedText style={styles.orText}>OR</ThemedText>
+        <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/signup' as Href)}>
+          <ThemedText type="defaultSemiBold" style={styles.primaryButtonText}>Create Account</ThemedText>
+        </TouchableOpacity>
 
-        <ThemedText style={styles.orText}>
-          Have an Account?{' '}
-          <Link href={"/login" as Href} style={styles.linkText}>
-            <ThemedText type="link">Login here</ThemedText>
-          </Link>
-        </ThemedText>
+        <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push('/login' as Href)}>
+          <ThemedText type="defaultSemiBold" style={styles.secondaryButtonText}>I already have an account</ThemedText>
+        </TouchableOpacity>
       </View>
-      <Modal visible={showTerms} animationType="slide" onRequestClose={() => setShowTerms(false)}>
-        <View style={styles.modalContainer}>
-          <ScrollView contentContainerStyle={styles.modalContent} showsVerticalScrollIndicator={false}>
-            <ThemedText type="title" style={styles.modalTitle}>Terms & Privacy</ThemedText>
-
-            <ThemedText style={[styles.modalText, { marginBottom: 12 }]}>It’s Required by Law: Apps are legally obligated (by laws like GDPR) to get your permission before collecting personal data (like your name, email, or location). Checking this box fulfills that requirement.</ThemedText>
-
-            <ThemedText style={[styles.modalText, { marginBottom: 12 }]}>It’s a Binding Contract: By clicking Agree, the user enters a legally binding agreement. They cannot later claim they were unaware of the apps rules.</ThemedText>
-
-            <ThemedText style={[styles.modalText, { marginBottom: 12 }]}>The Terms of Service (ToS) covers the Rules: This document outlines the dos and donts of the app, rules for user conduct, payment terms, and the apps right to terminate accounts.</ThemedText>
-
-            <ThemedText style={styles.modalText}>The Privacy Policy covers your Data: This document explains exactly what data the app collects, how it will be used (e.g., for improvements or advertising), and if it will be shared with third parties.</ThemedText>
-
-            <TouchableOpacity onPress={() => setShowTerms(false)} style={styles.doneButton}>
-              <ThemedText type="defaultSemiBold" style={styles.doneButtonText}>Close</ThemedText>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      </Modal>
-    </ThemedView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    padding: UiTheme.spacing.lg,
-    justifyContent: 'center',
-    gap: UiTheme.spacing.md,
     backgroundColor: UiTheme.colors.page,
   },
-  form: {
-    gap: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: UiTheme.colors.border,
-    padding: 12,
-    borderRadius: UiTheme.radius.sm,
-    backgroundColor: UiTheme.colors.surface,
-    fontSize: 16,
-  },
-  inlineHint: {
-    marginTop: -6,
-    color: UiTheme.colors.textSecondary,
-    fontSize: UiTheme.font.caption,
-  },
-  button: {
-    marginTop: 8,
-    backgroundColor: UiTheme.colors.accent,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: UiTheme.radius.sm,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: UiTheme.colors.surface,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  orText: {
-    textAlign: 'center',
-    color: UiTheme.colors.textSecondary,
-    marginVertical: 8,
-  },
-  linkText: {
-    textDecorationLine: 'none',
-  },
-  title: {
-    textAlign: 'center',
-    fontWeight: '800',
-    color: UiTheme.colors.textPrimary,
-    fontSize: 28,
-    marginBottom: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 6,
-    color: UiTheme.colors.textPrimary,
+  container: {
+    flex: 1,
+    paddingHorizontal: UiTheme.spacing.lg,
+    paddingTop: UiTheme.spacing.lg,
+    paddingBottom: UiTheme.spacing.xl,
+    backgroundColor: UiTheme.colors.page,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 88,
+    height: 88,
     alignSelf: 'center',
-    marginBottom: 12,
+    marginTop: UiTheme.spacing.xl,
+    marginBottom: UiTheme.spacing.sm,
   },
-
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 1, borderColor: '#ccc' },
-  checkboxChecked: { backgroundColor: UiTheme.colors.accent, borderColor: UiTheme.colors.accent },
-  checkboxLabel: { flex: 1, color: UiTheme.colors.textPrimary },
-
-  modalContainer: { flex: 1, padding: 20 },
-  modalTitle: { textAlign: 'center', marginBottom: 12, color: '#000', fontWeight: '700', fontSize: 18 },
-  modalContent: {
-    backgroundColor: '#ffffff',
-    padding: 20,
-    borderRadius: 12,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
+  title: {
+    color: UiTheme.colors.textPrimary,
+    fontSize: 30,
+    lineHeight: 34,
+    textAlign: 'center',
+    fontWeight: '900',
   },
-  modalText: { color: '#000', fontSize: 15, lineHeight: 22 },
-  doneButtonText: { color: UiTheme.colors.surface, fontSize: 16, fontWeight: '700' },
-  doneButton: {
-    marginTop: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: UiTheme.radius.sm,
-    alignItems: 'center',
+  subtitle: {
+    textAlign: 'center',
+    color: UiTheme.colors.textSecondary,
+    marginTop: UiTheme.spacing.xs,
+    marginBottom: UiTheme.spacing.md,
+    fontSize: 14,
+  },
+  sliderOuter: {
+    width: '100%',
+  },
+  sliderContent: {
+    alignItems: 'stretch',
+  },
+  slideCard: {
+    minHeight: 180,
+    backgroundColor: UiTheme.colors.surface,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+    borderRadius: UiTheme.radius.lg,
+    padding: UiTheme.spacing.lg,
+    justifyContent: 'center',
+    gap: UiTheme.spacing.sm,
+  },
+  slideTitle: {
+    color: UiTheme.colors.textPrimary,
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  slideDescription: {
+    color: UiTheme.colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  dotsRow: {
+    marginTop: UiTheme.spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: UiTheme.spacing.xs,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: UiTheme.colors.border,
+  },
+  dotActive: {
+    width: 20,
     backgroundColor: UiTheme.colors.accent,
   },
-  buttonDisabled: { opacity: 0.6 },
+  previewCard: {
+    marginTop: UiTheme.spacing.md,
+    backgroundColor: UiTheme.colors.surface,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+    borderRadius: UiTheme.radius.md,
+    padding: UiTheme.spacing.md,
+    gap: 4,
+  },
+  previewLabel: {
+    color: UiTheme.colors.textSecondary,
+    fontSize: UiTheme.font.caption,
+    fontWeight: '700',
+  },
+  previewTitle: {
+    color: UiTheme.colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  navHintRow: {
+    marginTop: UiTheme.spacing.sm,
+    flexDirection: 'row',
+    gap: UiTheme.spacing.sm,
+  },
+  navChip: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+    borderRadius: UiTheme.radius.sm,
+    backgroundColor: UiTheme.colors.surface,
+    paddingVertical: UiTheme.spacing.xs + 2,
+    alignItems: 'center',
+  },
+  navChipDisabled: {
+    opacity: 0.45,
+  },
+  navChipText: {
+    color: UiTheme.colors.textPrimary,
+    fontWeight: '700',
+  },
+  navChipTextDisabled: {
+    color: UiTheme.colors.textSecondary,
+  },
+  primaryButton: {
+    marginTop: UiTheme.spacing.md,
+    backgroundColor: UiTheme.colors.accent,
+    borderRadius: UiTheme.radius.sm,
+    alignItems: 'center',
+    paddingVertical: 13,
+  },
+  primaryButtonText: {
+    color: UiTheme.colors.surface,
+    fontWeight: '800',
+  },
+  secondaryButton: {
+    marginTop: UiTheme.spacing.sm,
+    borderRadius: UiTheme.radius.sm,
+    borderColor: UiTheme.colors.border,
+    borderWidth: 1,
+    alignItems: 'center',
+    paddingVertical: 13,
+    backgroundColor: UiTheme.colors.surface,
+  },
+  secondaryButtonText: {
+    color: UiTheme.colors.textPrimary,
+    fontWeight: '700',
+  },
 });

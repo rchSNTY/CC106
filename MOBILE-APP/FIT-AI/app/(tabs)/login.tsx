@@ -59,7 +59,7 @@ export default function LoginScreen() {
 
         <ThemedText style={styles.signupText}>
           Dont Have an account Yet?{' '}
-          <Link href={"/" as Href} style={styles.linkText}>
+          <Link href={'/signup' as Href} style={styles.linkText}>
             <ThemedText type="link">Signup Here</ThemedText>
           </Link>
         </ThemedText>

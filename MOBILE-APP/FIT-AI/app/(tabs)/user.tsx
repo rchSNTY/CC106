@@ -73,7 +73,7 @@ export default function UserProfile() {
         </Pressable>
 
         <TouchableOpacity onPress={pickImage} style={[styles.photoButton, styles.photoButtonColored]}>
-          <ThemedText style={{ color: '#fff' }}>{avatarUrl ? 'Change photo' : 'Add photo'}</ThemedText>
+          <ThemedText style={{ color: UiTheme.colors.surface }}>{avatarUrl ? 'Change photo' : 'Add photo'}</ThemedText>
         </TouchableOpacity>
       </View>
 
