@@ -1,232 +1,158 @@
-import React, { JSX } from 'react'
-import {
-  SafeAreaView,
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native'
-import { Image } from 'expo-image'
-import { useRouter, Href } from 'expo-router'
+import BottomTabNav from '@/components/ui/bottom-tab-nav';
+import { UiTheme } from '@/constants/ui-theme';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import React, { JSX } from 'react';
+import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-// Declared Data
-const WORKOUT_HISTORY = [
-  {
-    id: 1,
-    date: 'March 5, 2026',
-    title: 'Intense Bodyweight',
-    duration: '45 mins',
-  },
-  {
-    id: 2,
-    date: 'March 3, 2026',
-    title: 'Moderate Cardio',
-    duration: '30 mins',
-  },
-]
+type HistoryItem = {
+  id: number;
+  date: string;
+  title: string;
+  durationMins: number;
+};
+
+const WORKOUT_HISTORY: HistoryItem[] = [
+  { id: 1, date: 'March 5, 2026', title: 'Intense Bodyweight', durationMins: 45 },
+  { id: 2, date: 'March 3, 2026', title: 'Moderate Cardio', durationMins: 30 },
+  { id: 3, date: 'March 1, 2026', title: 'Light Mobility', durationMins: 20 },
+];
+
+const WEEK_DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const DONE_DAYS = new Set<number>([0, 1, 3]);
 
 export default function Log(): JSX.Element {
-  const router = useRouter()
+  const router = useRouter();
 
-  const handleProfilePress = () => {
-    router.push('/Profile' as Href)
-  }
+  const workouts = WORKOUT_HISTORY.length;
+  const totalMinutes = WORKOUT_HISTORY.reduce((sum, item) => sum + item.durationMins, 0);
+  const averageMinutes = Math.round(totalMinutes / workouts);
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" />
-      
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {/* Top Header with Logo */}
-        <View style={styles.topHeader}>
-           <Image source={require('@/assets/images/Logo.png')} style={styles.topLogo} contentFit="contain" />
-           <Text style={styles.topLogoText}>FITBUD</Text>
-        </View>
 
-        {/* Back Button */}
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>{'< Back'}</Text>
-        </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.topRow}>
+          <View style={styles.brandRow}>
+            <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
+            <View>
+              <Text style={styles.brandName}>FITBUD</Text>
+              <Text style={styles.brandSub}>Activity Journal</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={styles.backText}>Back</Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.pageTitle}>Activity Log</Text>
 
-        {/* This Week's Streak */}
+        <View style={styles.statsGrid}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Workouts</Text>
+            <Text style={styles.statValue}>{workouts}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Total Minutes</Text>
+            <Text style={styles.statValue}>{totalMinutes}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Avg Session</Text>
+            <Text style={styles.statValue}>{averageMinutes}</Text>
+          </View>
+        </View>
+
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>This Weeks Streak</Text>
+          <Text style={styles.sectionTitle}>Weekly Streak</Text>
           <View style={styles.streakRow}>
-            {/* M - White bg (blended), green text to match T bg style logic perhaps, or just color */}
-            <View style={[styles.dayCircle, styles.dayCircleWhite]}>
-              <Text style={styles.dayTextGreen}>M</Text>
-            </View>
-            {/* T - Highlighted Green */}
-            <View style={[styles.dayCircle, styles.dayCircleGreen]}>
-              <Text style={styles.dayTextWhite}>T</Text>
-            </View>
-            {/* Others - Grayed out */}
-            <View style={[styles.dayCircle, styles.dayCircleGray]}>
-              <Text style={styles.dayTextGray}>W</Text>
-            </View>
-            <View style={[styles.dayCircle, styles.dayCircleGray]}>
-              <Text style={styles.dayTextGray}>T</Text>
-            </View>
-            <View style={[styles.dayCircle, styles.dayCircleGray]}>
-              <Text style={styles.dayTextGray}>F</Text>
-            </View>
+            {WEEK_DAYS.map((day, index) => {
+              const done = DONE_DAYS.has(index);
+
+              return (
+                <View key={`${day}-${index}`} style={[styles.dayCircle, done ? styles.dayDone : styles.dayIdle]}>
+                  <Text style={[styles.dayText, done ? styles.dayTextDone : styles.dayTextIdle]}>{day}</Text>
+                </View>
+              );
+            })}
           </View>
         </View>
 
-        {/* Quick Stats */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Stats</Text>
-          <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Workouts</Text>
-              <Text style={styles.statValue}>2</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Active Time</Text>
-              <Text style={styles.statValue}>135 mins</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Workout History */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Workout History</Text>
           <View style={styles.historyList}>
             {WORKOUT_HISTORY.map((item) => (
               <View key={item.id} style={styles.historyCard}>
-                <View style={styles.historyContent}>
+                <View>
                   <Text style={styles.historyDate}>{item.date}</Text>
                   <Text style={styles.historyTitle}>{item.title}</Text>
-                  <Text style={styles.historyDuration}>{item.duration}</Text>
                 </View>
-                 {/* Right arrow placeholder */}
-                 <View style={styles.arrowIcon}>
-                    <Text style={{color:'#ccc', fontSize: 18}}>{'v'}</Text>
-                 </View>
+                <Text style={styles.historyDuration}>{item.durationMins} min</Text>
               </View>
             ))}
           </View>
         </View>
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNavWrap} pointerEvents="box-none">
-        <View style={styles.bottomNav}>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Homepage' as Href)}>
-            <Image source={require('@/assets/images/home.png')} style={styles.navIconHome} contentFit="contain" />
-            <Text style={styles.navLabel}>Home</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Favorites' as Href)}>
-            <Image source={require('@/assets/images/favorite-logo.png')} style={styles.navIcon} contentFit="contain" />
-            <Text style={styles.navLabel}>Favorites</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/explore' as Href)}>
-						<Image source={require('@/assets/images/search.png')} style={styles.navIcon} contentFit="contain" />
-						<Text style={styles.navLabel}>Explore</Text>
-					</TouchableOpacity>
-
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Log' as Href)}>
-            <Image source={require('@/assets/images/activity-log.png')} style={styles.navIcon} contentFit="contain" />
-            <Text style={styles.navLabel}>Activity Log</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={handleProfilePress}>
-            <Image source={require('@/assets/images/user-logo.png')} style={styles.navIcon} contentFit="contain" />
-            <Text style={styles.navLabel}>Profile</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <BottomTabNav activeTab="Log" />
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f2f2f7' }, 
-  scrollContainer: { padding: 20, paddingBottom: 100 },
-  
-  topHeader: { alignItems: 'center', marginBottom: 20, marginTop: 30 },
-  topLogo: { width: 50, height: 50, marginBottom: 4 }, 
-  topLogoText: { fontSize: 20, fontWeight: '800', fontStyle: 'italic', letterSpacing: -0.5, color: '#000' },
-
-  backButton: { marginBottom: 10, alignSelf: 'flex-start' },
-  backText: { fontSize: 16, color: '#4CD964', fontWeight: '600' },
-
-  pageTitle: { fontSize: 28, fontWeight: '800', color: '#000', marginBottom: 24 },
-
-  section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#000', marginBottom: 12 },
-
-  // Streak
-  streakRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 10 },
-  dayCircle: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center' },
-  dayCircleWhite: { backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e5e5ea' }, 
-  dayCircleGreen: { backgroundColor: '#00c800', shadowColor: '#00c800', shadowOpacity: 0.3, shadowRadius: 4, elevation: 4 }, 
-  dayCircleGray: { backgroundColor: '#e5e5ea' }, 
-  
-  dayTextGreen: { fontSize: 16, fontWeight: '700', color: '#00c800' }, 
-  dayTextWhite: { fontSize: 16, fontWeight: '700', color: '#ffffff' },
-  dayTextGray: { fontSize: 16, fontWeight: '700', color: '#c7c7cc' },
-
-  // Stats
-  statsRow: { flexDirection: 'row', gap: 16 },
-  statCard: { 
-    flex: 1, 
-    backgroundColor: '#cceeee', 
-    borderRadius: 16, 
-    paddingVertical: 24, 
-    paddingHorizontal: 16,
-    alignItems: 'center', 
-    justifyContent: 'center' 
+  safe: { flex: 1, backgroundColor: UiTheme.colors.page },
+  container: {
+    padding: UiTheme.spacing.lg,
+    paddingBottom: UiTheme.nav.height + UiTheme.spacing.xl,
+    gap: UiTheme.spacing.md,
   },
-  statLabel: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8 },
-  statValue: { fontSize: 28, fontWeight: '800', color: '#000' },
-
-  // History
-  historyList: { gap: 12 },
+  topRow: {
+    marginTop: UiTheme.spacing.xl,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: UiTheme.spacing.sm },
+  logo: { width: 44, height: 44 },
+  brandName: { fontSize: 18, fontWeight: '900', color: UiTheme.colors.textPrimary, letterSpacing: 0.5 },
+  brandSub: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.caption, fontWeight: '700' },
+  backText: { color: UiTheme.colors.accent, fontSize: UiTheme.font.body, fontWeight: '800' },
+  pageTitle: { color: UiTheme.colors.textPrimary, fontSize: 28, fontWeight: '900' },
+  statsGrid: { flexDirection: 'row', gap: UiTheme.spacing.sm },
+  statCard: {
+    flex: 1,
+    backgroundColor: UiTheme.colors.surface,
+    borderColor: UiTheme.colors.border,
+    borderWidth: 1,
+    borderRadius: UiTheme.radius.md,
+    paddingVertical: UiTheme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statLabel: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.caption, fontWeight: '700' },
+  statValue: { color: UiTheme.colors.textPrimary, fontSize: 18, fontWeight: '900' },
+  section: { gap: UiTheme.spacing.sm },
+  sectionTitle: { color: UiTheme.colors.textPrimary, fontSize: UiTheme.font.subtitle, fontWeight: '800' },
+  streakRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  dayCircle: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
+  dayDone: { backgroundColor: UiTheme.colors.accentSoft, borderWidth: 1, borderColor: UiTheme.colors.accent },
+  dayIdle: { backgroundColor: UiTheme.colors.surface, borderWidth: 1, borderColor: UiTheme.colors.border },
+  dayText: { fontWeight: '800', fontSize: UiTheme.font.caption },
+  dayTextDone: { color: UiTheme.colors.accent },
+  dayTextIdle: { color: UiTheme.colors.textSecondary },
+  historyList: { gap: UiTheme.spacing.sm },
   historyCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: UiTheme.colors.surface,
+    borderColor: UiTheme.colors.border,
+    borderWidth: 1,
+    borderRadius: UiTheme.radius.lg,
+    padding: UiTheme.spacing.md,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  historyContent: { gap: 4 },
-  historyDate: { fontSize: 13, fontWeight: '700', color: '#00c800' },
-  historyTitle: { fontSize: 16, fontWeight: '800', color: '#000' },
-  historyDuration: { fontSize: 14, fontWeight: '600', color: '#008080' },
-  arrowIcon: { paddingRight: 8 },
-
-  // Bottom Nav
-  bottomNavWrap: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
     alignItems: 'center',
   },
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    height: 72,
-    paddingHorizontal: 18,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#e6e6e6',
-  },
-  navItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8 },
-  navIcon: { width: 24, height: 24, marginBottom: 4 },
-  navIconHome: { width: 28, height: 28, marginBottom: 4 },
-  navLabel: { fontSize: 11, color: '#333', fontWeight: '600', textAlign: 'center' },
-})
+  historyDate: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.caption, fontWeight: '700' },
+  historyTitle: { color: UiTheme.colors.textPrimary, fontSize: 16, fontWeight: '800' },
+  historyDuration: { color: UiTheme.colors.textSecondary, fontWeight: '800', fontSize: UiTheme.font.body },
+});

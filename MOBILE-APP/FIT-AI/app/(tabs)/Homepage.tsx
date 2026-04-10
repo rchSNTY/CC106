@@ -1,146 +1,151 @@
-import React, { JSX } from 'react'
-import {
-  SafeAreaView,
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  TouchableOpacity,
-} from 'react-native'
-import { Image } from 'expo-image'
-import { useRouter, Href } from 'expo-router'
+import BottomTabNav from '@/components/ui/bottom-tab-nav';
+import { UiTheme } from '@/constants/ui-theme';
+import { Image } from 'expo-image';
+import { Href, useRouter } from 'expo-router';
+import React, { JSX } from 'react';
+import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+const STATS = [
+  { label: 'Weekly Goal', value: '3 / 5' },
+  { label: 'Minutes', value: '135' },
+  { label: 'Streak', value: '2 days' },
+];
 
 export default function Homepage(): JSX.Element {
-	const router = useRouter()
+  const router = useRouter();
 
-	const handleProfilePress = () => {
-		router.push('/Profile' as Href)
-	}
+  return (
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" />
 
-	return (
-		<SafeAreaView style={styles.safe}>
-			<StatusBar barStyle="dark-content" />
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.headerRow}>
+          <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
+          <View>
+            <Text style={styles.kicker}>FIT AI</Text>
+            <Text style={styles.welcomeText}>Welcome back, User</Text>
+          </View>
+        </View>
 
-				<View style={styles.container}>
-					<View style={styles.headerRow}>
-						<Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
-						<Text style={styles.welcomeText}>Welcome User!!</Text>
-					</View>
+        <View style={styles.heroCard}>
+          <Text style={styles.heroTitle}>Today&apos;s Focus</Text>
+          <Text style={styles.heroSubtitle}>Moderate Cardio + Core Stability</Text>
+          <View style={styles.heroActions}>
+            <TouchableOpacity style={styles.primaryAction} onPress={() => router.push('/choices' as Href)}>
+              <Text style={styles.primaryActionText}>Change Plan</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.secondaryAction} onPress={() => router.push('/Log' as Href)}>
+              <Text style={styles.secondaryActionText}>View Log</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-					<View style={styles.previewWrap}>
-						<View style={styles.previewCard}>
-							<Text style={styles.previewTitle}>Preview</Text>
-							<Text style={styles.previewSubtitle}>Placeholder — no images, static preview</Text>
-						</View>
-					</View>
-				</View>
+        <View style={styles.statsRow}>
+          {STATS.map((item) => (
+            <View key={item.label} style={styles.statCard}>
+              <Text style={styles.statLabel}>{item.label}</Text>
+              <Text style={styles.statValue}>{item.value}</Text>
+            </View>
+          ))}
+        </View>
 
-			<View style={styles.bottomNavWrap} pointerEvents="box-none">
-				<View style={styles.bottomNav}>
-					<TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Homepage' as Href)}>
-						<Image source={require('@/assets/images/home.png')} style={styles.navIconHome} contentFit="contain" />
-						<Text style={styles.navLabel}>Home</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Favorites' as Href)}>
-						<Image source={require('@/assets/images/favorite-logo.png')} style={styles.navIcon} contentFit="contain" />
-						<Text style={styles.navLabel}>Favorites</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/explore' as Href)}>
-						<Image source={require('@/assets/images/search.png')} style={styles.navIcon} contentFit="contain" />
-						<Text style={styles.navLabel}>Explore</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Log' as Href)}>
-						<Image source={require('@/assets/images/activity-log.png')} style={styles.navIcon} contentFit="contain" />
-						<Text style={styles.navLabel}>Activity Log</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={handleProfilePress}>
-						<Image source={require('@/assets/images/user-logo.png')} style={styles.navIcon} contentFit="contain" />
-						<Text style={styles.navLabel}>Profile</Text>
-					</TouchableOpacity>
-				</View>
-			</View>
-		</SafeAreaView>
-	)
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Quick Launch</Text>
+        </View>
+
+        <View style={styles.quickGrid}>
+          <TouchableOpacity style={styles.quickCard} onPress={() => router.push('/explore' as Href)}>
+            <Text style={styles.quickTitle}>Explore Workouts</Text>
+            <Text style={styles.quickSubtitle}>Find routines by intensity and style.</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.quickCard} onPress={() => router.push('/Favorites' as Href)}>
+            <Text style={styles.quickTitle}>Your Favorites</Text>
+            <Text style={styles.quickSubtitle}>Open your saved workout shortcuts.</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      <BottomTabNav activeTab="Homepage" />
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-	safe: { flex: 1, backgroundColor: '#ffffff' },
-		container: { flex: 1, backgroundColor: '#ffffff', padding: 20, paddingBottom: 100, justifyContent: 'flex-start', alignItems: 'stretch' },
-		searchWrap: {
-		width: '100%',
-		marginBottom: 12,
-		marginTop: 20,
-		height: 42,
-		flexDirection: 'row',
-		alignItems: 'center',
-		backgroundColor: '#f2f2f2',
-		borderRadius: 20,
-		paddingHorizontal: 14,
-	},
-	searchIcon: { width: 18, height: 18, marginRight: 8 },
-	searchInput: {
-		flex: 1,
-		height: 42,
-		fontSize: 14,
-		color: '#222',
-		fontWeight: '600',
-	},
-	previewCard: {
-		width: '100%',
-		maxWidth: 520,
-		height: 220,
-		borderRadius: 12,
-		backgroundColor: '#f8f8f8',
-		alignItems: 'center',
-		justifyContent: 'center',
-		shadowColor: '#000',
-		shadowOpacity: 0.04,
-		shadowRadius: 6,
-		shadowOffset: { width: 0, height: 2 },
-		elevation: 1,
-	},
-	previewTitle: { fontSize: 18, color: '#111', marginBottom: 6, fontWeight: '700' },
-	previewSubtitle: { fontSize: 13, color: '#555' },
-	headerRow: { width: '100%', flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 40, marginBottom: 10 },
-	logo: { width: 44, height: 44, borderRadius: 8 },
-	welcomeText: { fontSize: 16, color: '#111', fontWeight: '700' },
-	previewWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%' },
-
-	bottomNavWrap: {
-		position: 'absolute',
-		left: 0,
-		right: 0,
-		bottom: 0,
-		alignItems: 'center',
-	},
-	bottomNav: {
-		flexDirection: 'row',
-		backgroundColor: '#ffffff',
-		height: 72,
-		paddingHorizontal: 18,
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		width: '100%',
-		borderTopWidth: StyleSheet.hairlineWidth,
-		borderTopColor: '#e6e6e6',
-	},
-	navItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8 },
-	navItemCenter: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-	navIconPlaceholder: {
-		width: 24,
-		height: 24,
-		marginBottom: 4,
-	},
-	navIcon: { width: 24, height: 24, marginBottom: 4 },
-	navIconHome: { width: 28, height: 28, marginBottom: 4 },
-	navCenterCircle: {
-		width: 56,
-		height: 56,
-		borderRadius: 28,
-		backgroundColor: '#ffffff',
-		borderWidth: 2,
-		borderColor: '#e6e6e6',
-	},
-	navLabel: { fontSize: 11, color: '#333', fontWeight: '600', textAlign: 'center' },
-})
-
+  safe: { flex: 1, backgroundColor: UiTheme.colors.page },
+  container: {
+    padding: UiTheme.spacing.lg,
+    paddingBottom: UiTheme.nav.height + UiTheme.spacing.xl,
+    gap: UiTheme.spacing.md,
+  },
+  headerRow: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: UiTheme.spacing.sm,
+    marginTop: UiTheme.spacing.xl,
+  },
+  logo: { width: 44, height: 44, borderRadius: UiTheme.radius.sm },
+  kicker: {
+    fontSize: UiTheme.font.caption,
+    color: UiTheme.colors.textSecondary,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+  },
+  welcomeText: { fontSize: UiTheme.font.subtitle, color: UiTheme.colors.textPrimary, fontWeight: '800' },
+  heroCard: {
+    backgroundColor: UiTheme.colors.surface,
+    borderColor: UiTheme.colors.border,
+    borderWidth: 1,
+    borderRadius: UiTheme.radius.lg,
+    padding: UiTheme.spacing.lg,
+    gap: UiTheme.spacing.sm,
+  },
+  heroTitle: { color: UiTheme.colors.textSecondary, fontWeight: '700', fontSize: UiTheme.font.body },
+  heroSubtitle: { color: UiTheme.colors.textPrimary, fontWeight: '800', fontSize: UiTheme.font.subtitle },
+  heroActions: { flexDirection: 'row', gap: UiTheme.spacing.sm, marginTop: UiTheme.spacing.xs },
+  primaryAction: {
+    flex: 1,
+    backgroundColor: UiTheme.colors.accent,
+    borderRadius: UiTheme.radius.sm,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  primaryActionText: { color: UiTheme.colors.surface, fontWeight: '800' },
+  secondaryAction: {
+    flex: 1,
+    backgroundColor: UiTheme.colors.surfaceMuted,
+    borderRadius: UiTheme.radius.sm,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+  },
+  secondaryActionText: { color: UiTheme.colors.textPrimary, fontWeight: '700' },
+  statsRow: { flexDirection: 'row', gap: UiTheme.spacing.sm },
+  statCard: {
+    flex: 1,
+    backgroundColor: UiTheme.colors.surface,
+    borderRadius: UiTheme.radius.md,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+    paddingVertical: UiTheme.spacing.md,
+    paddingHorizontal: UiTheme.spacing.sm,
+    alignItems: 'center',
+  },
+  statLabel: { color: UiTheme.colors.textSecondary, fontWeight: '600', fontSize: UiTheme.font.caption },
+  statValue: { color: UiTheme.colors.textPrimary, fontWeight: '800', fontSize: 16 },
+  sectionHeader: { marginTop: UiTheme.spacing.xs },
+  sectionTitle: { fontSize: UiTheme.font.subtitle, fontWeight: '800', color: UiTheme.colors.textPrimary },
+  quickGrid: { gap: UiTheme.spacing.sm },
+  quickCard: {
+    backgroundColor: UiTheme.colors.surface,
+    borderRadius: UiTheme.radius.lg,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+    padding: UiTheme.spacing.md,
+    gap: UiTheme.spacing.xs,
+  },
+  quickTitle: { fontSize: 16, fontWeight: '800', color: UiTheme.colors.textPrimary },
+  quickSubtitle: { fontSize: UiTheme.font.body, color: UiTheme.colors.textSecondary },
+});

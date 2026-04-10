@@ -1,120 +1,198 @@
-import React, { JSX } from 'react'
-import {
-  SafeAreaView,
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  TouchableOpacity,
-  TextInput,
-} from 'react-native'
-import { Image } from 'expo-image'
-import { useRouter, Href } from 'expo-router'
+import BottomTabNav from '@/components/ui/bottom-tab-nav';
+import { UiTheme } from '@/constants/ui-theme';
+import { Image } from 'expo-image';
+import React, { JSX, useMemo, useState } from 'react';
+import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+type Intensity = 'All' | 'Light' | 'Moderate' | 'Intense';
+
+type WorkoutCard = {
+  id: number;
+  name: string;
+  type: string;
+  intensity: Exclude<Intensity, 'All'>;
+  duration: string;
+};
+
+const FILTERS: Intensity[] = ['All', 'Light', 'Moderate', 'Intense'];
+
+const WORKOUTS: WorkoutCard[] = [
+  { id: 1, name: 'Morning Mobility Flow', type: 'Bodyweight', intensity: 'Light', duration: '15 min' },
+  { id: 2, name: 'Endurance Burn', type: 'Cardio', intensity: 'Moderate', duration: '30 min' },
+  { id: 3, name: 'Strength Circuit', type: 'Weights', intensity: 'Intense', duration: '45 min' },
+  { id: 4, name: 'Core Starter', type: 'Bodyweight', intensity: 'Moderate', duration: '20 min' },
+];
 
 export default function Explore(): JSX.Element {
-	const router = useRouter()
+  const [query, setQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<Intensity>('All');
 
-	const handleProfilePress = () => {
-		router.push('/Profile' as Href)
-	}
+  const visibleWorkouts = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
 
-	return (
-		<SafeAreaView style={styles.safe}>
-			<StatusBar barStyle="dark-content" />
+    return WORKOUTS.filter((item) => {
+      const matchesFilter = activeFilter === 'All' || item.intensity === activeFilter;
+      const matchesQuery =
+        normalized.length === 0 ||
+        item.name.toLowerCase().includes(normalized) ||
+        item.type.toLowerCase().includes(normalized);
 
-			<View style={styles.container}>
-				<Text style={styles.browseTitle}>Browse Here!!</Text>
-				<View style={styles.searchWrap}>
-					<Image source={require('@/assets/images/search.png')} style={styles.searchIcon} contentFit="contain" />
-					<TextInput
-						placeholder="Search Here"
-						placeholderTextColor="#999"
-						style={styles.searchInput}
-						editable={true}
-						onFocus={() => {}}
-					/>
-				</View>
-			</View>
+      return matchesFilter && matchesQuery;
+    });
+  }, [activeFilter, query]);
 
-			<View style={styles.bottomNavWrap} pointerEvents="box-none">
-				<View style={styles.bottomNav}>
-					<TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Homepage' as Href)}>
-						<Image source={require('@/assets/images/home.png')} style={styles.navIconHome} contentFit="contain" />
-						<Text style={styles.navLabel}>Home</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Favorites' as Href)}>
-						<Image source={require('@/assets/images/favorite-logo.png')} style={styles.navIcon} contentFit="contain" />
-						<Text style={styles.navLabel}>Favorites</Text>
-					</TouchableOpacity>
-					
-					<TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/explore' as Href)}>
-						<Image source={require('@/assets/images/search.png')} style={styles.navIcon} contentFit="contain" />
-						<Text style={styles.navLabel}>Explore</Text>
-					</TouchableOpacity>
+  return (
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" />
 
-					<TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Log' as Href)}>
-						<Image source={require('@/assets/images/activity-log.png')} style={styles.navIcon} contentFit="contain" />
-						<Text style={styles.navLabel}>Activity Log</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={handleProfilePress}>
-						<Image source={require('@/assets/images/user-logo.png')} style={styles.navIcon} contentFit="contain" />
-						<Text style={styles.navLabel}>Profile</Text>
-					</TouchableOpacity>
-				</View>
-			</View>
-		</SafeAreaView>
-	)
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <Text style={styles.browseTitle}>Discover Workouts</Text>
+        <Text style={styles.browseSubtitle}>Search routines and narrow by intensity.</Text>
+
+        <View style={styles.searchWrap}>
+          <Image source={require('@/assets/images/search.png')} style={styles.searchIcon} contentFit="contain" />
+          <TextInput
+            placeholder="Search by title or workout type"
+            placeholderTextColor="#7A8A99"
+            style={styles.searchInput}
+            value={query}
+            onChangeText={setQuery}
+          />
+        </View>
+
+        <View style={styles.filterRow}>
+          {FILTERS.map((filter) => {
+            const selected = filter === activeFilter;
+
+            return (
+              <TouchableOpacity
+                key={filter}
+                style={[styles.filterChip, selected && styles.filterChipActive]}
+                onPress={() => setActiveFilter(filter)}
+              >
+                <Text style={[styles.filterText, selected && styles.filterTextActive]}>{filter}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Results</Text>
+          <Text style={styles.sectionMeta}>{visibleWorkouts.length} items</Text>
+        </View>
+
+        <View style={styles.cardList}>
+          {visibleWorkouts.map((item) => (
+            <View key={item.id} style={styles.workoutCard}>
+              <View style={styles.workoutHeader}>
+                <Text style={styles.workoutName}>{item.name}</Text>
+                <Text style={styles.workoutDuration}>{item.duration}</Text>
+              </View>
+              <Text style={styles.workoutType}>{item.type}</Text>
+              <View style={styles.badgeRow}>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{item.intensity}</Text>
+                </View>
+              </View>
+            </View>
+          ))}
+
+          {visibleWorkouts.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>No workouts found</Text>
+              <Text style={styles.emptySubtitle}>Try another search keyword or switch filter.</Text>
+            </View>
+          ) : null}
+        </View>
+      </ScrollView>
+
+      <BottomTabNav activeTab="explore" />
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-	safe: { flex: 1, backgroundColor: '#ffffff' },
-	container: { flex: 1, backgroundColor: '#ffffff', padding: 20, paddingBottom: 100, justifyContent: 'flex-start', alignItems: 'stretch' },
-	browseTitle: {
-		marginTop: 40,
-		fontSize: 24,
-		fontWeight: 'bold',
-		color: '#111',
-		marginBottom: 10,
-	},
-	searchWrap: {
-		width: '100%',
-		marginBottom: 12,
-		marginTop: 20,
-		height: 42,
-		flexDirection: 'row',
-		alignItems: 'center',
-		backgroundColor: '#f2f2f2',
-		borderRadius: 20,
-		paddingHorizontal: 14,
-	},
-	searchIcon: { width: 18, height: 18, marginRight: 8 },
-	searchInput: {
-		flex: 1,
-		height: 42,
-		fontSize: 14,
-		color: '#222',
-		fontWeight: '600',
-	},
-	bottomNavWrap: {
-		position: 'absolute',
-		left: 0,
-		right: 0,
-		bottom: 0,
-		alignItems: 'center',
-	},
-	bottomNav: {
-		flexDirection: 'row',
-		backgroundColor: '#ffffff',
-		height: 72,
-		paddingHorizontal: 18,
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		width: '100%',
-		borderTopWidth: StyleSheet.hairlineWidth,
-		borderTopColor: '#e6e6e6',
-	},
-	navItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8 },
-	navIcon: { width: 24, height: 24, marginBottom: 4 },
-	navIconHome: { width: 28, height: 28, marginBottom: 4 },
-	navLabel: { fontSize: 11, color: '#333', fontWeight: '600', textAlign: 'center' },
-})
+  safe: { flex: 1, backgroundColor: UiTheme.colors.page },
+  container: {
+    padding: UiTheme.spacing.lg,
+    paddingBottom: UiTheme.nav.height + UiTheme.spacing.xl,
+    gap: UiTheme.spacing.md,
+  },
+  browseTitle: {
+    marginTop: UiTheme.spacing.xl,
+    fontSize: UiTheme.font.title,
+    fontWeight: '800',
+    color: UiTheme.colors.textPrimary,
+  },
+  browseSubtitle: {
+    color: UiTheme.colors.textSecondary,
+    fontSize: UiTheme.font.body,
+    marginTop: -4,
+  },
+  searchWrap: {
+    width: '100%',
+    height: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: UiTheme.colors.surface,
+    borderRadius: UiTheme.radius.xl,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+  },
+  searchIcon: { width: 18, height: 18, marginRight: 8 },
+  searchInput: {
+    flex: 1,
+    height: 44,
+    fontSize: 14,
+    color: UiTheme.colors.textPrimary,
+    fontWeight: '600',
+  },
+  filterRow: { flexDirection: 'row', gap: UiTheme.spacing.xs },
+  filterChip: {
+    paddingVertical: UiTheme.spacing.xs,
+    paddingHorizontal: UiTheme.spacing.md,
+    borderRadius: UiTheme.radius.xl,
+    borderColor: UiTheme.colors.border,
+    borderWidth: 1,
+    backgroundColor: UiTheme.colors.surface,
+  },
+  filterChipActive: { backgroundColor: UiTheme.colors.accentSoft, borderColor: UiTheme.colors.accent },
+  filterText: { color: UiTheme.colors.textSecondary, fontWeight: '700', fontSize: UiTheme.font.caption },
+  filterTextActive: { color: UiTheme.colors.accent },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sectionTitle: { fontSize: UiTheme.font.subtitle, fontWeight: '800', color: UiTheme.colors.textPrimary },
+  sectionMeta: { fontSize: UiTheme.font.caption, fontWeight: '700', color: UiTheme.colors.textSecondary },
+  cardList: { gap: UiTheme.spacing.sm },
+  workoutCard: {
+    backgroundColor: UiTheme.colors.surface,
+    borderRadius: UiTheme.radius.lg,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+    padding: UiTheme.spacing.md,
+    gap: UiTheme.spacing.xs,
+  },
+  workoutHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  workoutName: { color: UiTheme.colors.textPrimary, fontSize: 16, fontWeight: '800', flex: 1, marginRight: UiTheme.spacing.sm },
+  workoutDuration: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.caption, fontWeight: '700' },
+  workoutType: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.body },
+  badgeRow: { marginTop: UiTheme.spacing.xs, flexDirection: 'row' },
+  badge: {
+    backgroundColor: UiTheme.colors.surfaceMuted,
+    borderRadius: UiTheme.radius.sm,
+    paddingVertical: 4,
+    paddingHorizontal: UiTheme.spacing.sm,
+  },
+  badgeText: { color: UiTheme.colors.textPrimary, fontSize: UiTheme.font.caption, fontWeight: '700' },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: UiTheme.spacing.xl,
+    backgroundColor: UiTheme.colors.surface,
+    borderRadius: UiTheme.radius.lg,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+    gap: UiTheme.spacing.xs,
+  },
+  emptyTitle: { color: UiTheme.colors.textPrimary, fontSize: 16, fontWeight: '800' },
+  emptySubtitle: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.body },
+});

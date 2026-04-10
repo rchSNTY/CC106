@@ -1,9 +1,10 @@
+import { Href, useRouter } from 'expo-router'
 import React, { JSX, useState } from 'react'
-import { StyleSheet, View, TouchableOpacity } from 'react-native'
-import { useRouter, Href } from 'expo-router'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
 
 import { ThemedText } from '@/components/themed-text'
 import { ThemedView } from '@/components/themed-view'
+import { UiTheme } from '@/constants/ui-theme'
 import { useThemeColor } from '@/hooks/use-theme-color'
 
 export default function ChoicesScreen(): JSX.Element {
@@ -24,7 +25,6 @@ export default function ChoicesScreen(): JSX.Element {
 
   function selectWorkout(w: string) {
     setWorkout(w)
-    // navigate to Homepage after selecting a workout
     router.push('/Homepage' as Href)
   }
 
@@ -80,22 +80,37 @@ export default function ChoicesScreen(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#f2f2f2', justifyContent: 'center' },
-  card: { backgroundColor: '#fff', borderRadius: 16, padding: 20, alignItems: 'center', marginHorizontal: 12 },
-  cardStep1: { backgroundColor: '#f3f8ff' },
-  cardStep2: { backgroundColor: '#fff7f3' },
+  container: { flex: 1, padding: UiTheme.spacing.lg, backgroundColor: UiTheme.colors.page, justifyContent: 'center' },
+  card: {
+    backgroundColor: UiTheme.colors.surface,
+    borderRadius: UiTheme.radius.lg,
+    padding: UiTheme.spacing.lg,
+    alignItems: 'center',
+    marginHorizontal: UiTheme.spacing.sm,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+  },
+  cardStep1: { backgroundColor: '#EFF7FF' },
+  cardStep2: { backgroundColor: '#FFF7F1' },
   header: { fontWeight: '900', marginBottom: 14, letterSpacing: 0.6, fontSize: 14 },
   option: {
     width: '90%',
     paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: '#ececec',
+    borderRadius: UiTheme.radius.md,
+    backgroundColor: UiTheme.colors.surfaceMuted,
     marginVertical: 8,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#cfcfcf',
+    borderColor: UiTheme.colors.border,
   },
-  optionText: { color: '#111', fontSize: 13, fontWeight: '800' },
-  backButton: { marginTop: 12, paddingVertical: 10, borderWidth: 1, borderColor: '#ddd', paddingHorizontal: 16, borderRadius: 8 },
-  backText: { color: '#444', fontWeight: '800' },
+  optionText: { color: UiTheme.colors.textPrimary, fontSize: 13, fontWeight: '800' },
+  backButton: {
+    marginTop: UiTheme.spacing.md,
+    paddingVertical: UiTheme.spacing.sm,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+    paddingHorizontal: UiTheme.spacing.md,
+    borderRadius: UiTheme.radius.sm,
+  },
+  backText: { color: UiTheme.colors.textSecondary, fontWeight: '800' },
 })

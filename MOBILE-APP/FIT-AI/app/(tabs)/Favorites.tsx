@@ -1,89 +1,102 @@
-import React, { JSX } from 'react'
-import { SafeAreaView, View, Text, StyleSheet, TouchableOpacity } from 'react-native'
-import { Image } from 'expo-image'
-import { useRouter, Href } from 'expo-router'
+import BottomTabNav from '@/components/ui/bottom-tab-nav';
+import { UiTheme } from '@/constants/ui-theme';
+import { Href, useRouter } from 'expo-router';
+import React, { JSX } from 'react';
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+const FAVORITES = [
+  { id: 1, title: 'Low Impact Starter', type: 'Bodyweight', duration: '20 min' },
+  { id: 2, title: 'Cardio Ladder', type: 'Cardio', duration: '30 min' },
+];
 
 export default function Favorites(): JSX.Element {
-  const router = useRouter()
+  const router = useRouter();
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-        <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.headlineRow}>
           <Text style={styles.title}>Favorites</Text>
-          <Text style={styles.subtitle}>The selected favorites will be displayed here</Text>
+          <TouchableOpacity onPress={() => router.push('/explore' as Href)}>
+            <Text style={styles.headlineAction}>Add More</Text>
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.bottomNavWrap} pointerEvents="box-none">
-          <View style={styles.bottomNav}>
-            <TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Homepage' as Href)}>
-              <Image source={require('@/assets/images/home.png')} style={styles.navIconHome} contentFit="contain" />
-              <Text style={styles.navLabel}>Home</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Favorites' as Href)}>
-              <Image source={require('@/assets/images/favorite-logo.png')} style={styles.navIcon} contentFit="contain" />
-              <Text style={styles.navLabel}>Favorites</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.navItemCenter} activeOpacity={0.7} onPress={() => router.push('/explore' as Href)}>
-               <Image source={require('@/assets/images/search.png')} style={styles.navIcon} contentFit="contain" />
-              <Text style={styles.navLabel}>Explore</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Log' as Href)}>
-              <Image source={require('@/assets/images/activity-log.png')} style={styles.navIcon} contentFit="contain" />
-              <Text style={styles.navLabel}>Activity Log</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.navItem} activeOpacity={0.7}  onPress={() => router.push('/Profile' as Href)}  >
-              <Image source={require('@/assets/images/user-logo.png')} style={styles.navIcon} contentFit="contain" />
-              <Text style={styles.navLabel}>Profile</Text>
-            </TouchableOpacity>
-          </View>
+        <Text style={styles.subtitle}>Your saved routines for faster workout starts.</Text>
+
+        <View style={styles.list}>
+          {FAVORITES.map((item) => (
+            <View key={item.id} style={styles.favoriteCard}>
+              <View>
+                <Text style={styles.favoriteTitle}>{item.title}</Text>
+                <Text style={styles.favoriteMeta}>{item.type}</Text>
+              </View>
+              <Text style={styles.favoriteDuration}>{item.duration}</Text>
+            </View>
+          ))}
         </View>
-      </View>
+
+        <View style={styles.emptyHintCard}>
+          <Text style={styles.emptyHintTitle}>Want more personalization?</Text>
+          <Text style={styles.emptyHintSubtitle}>Open Explore and save workouts based on your activity level.</Text>
+          <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/explore' as Href)}>
+            <Text style={styles.ctaText}>Go to Explore</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      <BottomTabNav activeTab="Favorites" />
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#ffffff' },
-  container: { flex: 1, backgroundColor: '#ffffff', padding: 20, paddingBottom: 100 },
-  content: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 22, fontWeight: '700', color: '#111', marginBottom: 8 },
-  subtitle: { fontSize: 14, color: '#666', textAlign: 'center' },
-
-  bottomNavWrap: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
+  safe: { flex: 1, backgroundColor: UiTheme.colors.page },
+  container: {
+    padding: UiTheme.spacing.lg,
+    paddingBottom: UiTheme.nav.height + UiTheme.spacing.xl,
+    gap: UiTheme.spacing.sm,
   },
-  bottomNav: {
+  headlineRow: {
+    marginTop: UiTheme.spacing.xl,
     flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    height: 72,
-    paddingHorizontal: 18,
-    alignItems: 'center',
     justifyContent: 'space-between',
-    width: '100%',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#e6e6e6',
+    alignItems: 'center',
   },
-  navItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8 },
-  navItemCenter: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  navIconPlaceholder: {
-    width: 24,
-    height: 24,
-    marginBottom: 4,
+  title: { fontSize: UiTheme.font.title, fontWeight: '800', color: UiTheme.colors.textPrimary },
+  headlineAction: { fontSize: UiTheme.font.body, fontWeight: '800', color: UiTheme.colors.accent },
+  subtitle: { fontSize: UiTheme.font.body, color: UiTheme.colors.textSecondary, marginBottom: UiTheme.spacing.xs },
+  list: { gap: UiTheme.spacing.sm },
+  favoriteCard: {
+    backgroundColor: UiTheme.colors.surface,
+    borderRadius: UiTheme.radius.lg,
+    borderColor: UiTheme.colors.border,
+    borderWidth: 1,
+    padding: UiTheme.spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  navIcon: { width: 24, height: 24, marginBottom: 4 },
-  navIconHome: { width: 28, height: 28, marginBottom: 4 },
-  navCenterCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#ffffff',
-    borderWidth: 2,
-    borderColor: '#e6e6e6',
+  favoriteTitle: { color: UiTheme.colors.textPrimary, fontSize: 16, fontWeight: '800' },
+  favoriteMeta: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.body },
+  favoriteDuration: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.caption, fontWeight: '700' },
+  emptyHintCard: {
+    marginTop: UiTheme.spacing.sm,
+    backgroundColor: UiTheme.colors.surface,
+    borderRadius: UiTheme.radius.lg,
+    borderColor: UiTheme.colors.border,
+    borderWidth: 1,
+    padding: UiTheme.spacing.md,
+    gap: UiTheme.spacing.sm,
   },
-  navLabel: { fontSize: 11, color: '#333', fontWeight: '600', textAlign: 'center' },
-})
+  emptyHintTitle: { color: UiTheme.colors.textPrimary, fontWeight: '800', fontSize: 16 },
+  emptyHintSubtitle: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.body },
+  ctaButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: UiTheme.colors.accent,
+    borderRadius: UiTheme.radius.sm,
+    paddingHorizontal: UiTheme.spacing.md,
+    paddingVertical: UiTheme.spacing.xs + 2,
+  },
+  ctaText: { color: UiTheme.colors.surface, fontWeight: '800' },
+});

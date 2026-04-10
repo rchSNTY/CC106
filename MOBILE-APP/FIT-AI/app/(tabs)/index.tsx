@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { Alert, StyleSheet, TextInput, TouchableOpacity, View, Pressable, Modal } from 'react-native';
 import { Image } from 'expo-image';
-import { Link, useRouter, Href } from 'expo-router';
+import { Href, Link, useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { UiTheme } from '@/constants/ui-theme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 export default function SignupScreen() {
@@ -12,10 +13,18 @@ export default function SignupScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const router = useRouter(); 
+  const router = useRouter();
   const textColor = useThemeColor({}, 'text');
   const [accepted, setAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+
+  const hasMinPassword = password.length >= 8;
+  const canSubmit =
+    accepted &&
+    username.trim().length > 0 &&
+    email.trim().length > 0 &&
+    password.length > 0 &&
+    confirmPassword.length > 0;
 
   function validateEmail(e: string) {
     return /\S+@\S+\.\S+/.test(e);
@@ -28,6 +37,10 @@ export default function SignupScreen() {
     }
     if (!validateEmail(email)) {
       Alert.alert('Invalid email', 'Please enter a valid email address.');
+      return;
+    }
+    if (!hasMinPassword) {
+      Alert.alert('Weak password', 'Password must be at least 8 characters.');
       return;
     }
     if (password !== confirmPassword) {
@@ -57,6 +70,7 @@ export default function SignupScreen() {
           placeholder="Enter username"
           style={styles.input}
           autoCapitalize="none"
+          autoCorrect={false}
         />
 
         <ThemedText style={styles.label}>Email</ThemedText>
@@ -67,6 +81,7 @@ export default function SignupScreen() {
           keyboardType="email-address"
           style={styles.input}
           autoCapitalize="none"
+          autoCorrect={false}
         />
 
         <ThemedText style={styles.label}>Password</ThemedText>
@@ -77,6 +92,9 @@ export default function SignupScreen() {
           secureTextEntry
           style={styles.input}
         />
+        {!hasMinPassword && password.length > 0 ? (
+          <ThemedText style={styles.inlineHint}>Use at least 8 characters.</ThemedText>
+        ) : null}
 
         <ThemedText style={styles.label}>Confirm Password</ThemedText>
         <TextInput
@@ -88,14 +106,14 @@ export default function SignupScreen() {
         />
 
         <View style={{ marginTop: 8 }}>
-          <Pressable onPress={() => setAccepted(s => !s)} style={styles.checkboxRow}>
+          <Pressable onPress={() => setAccepted((s) => !s)} style={styles.checkboxRow}>
             <View style={[styles.checkbox, accepted ? styles.checkboxChecked : {}]} />
             <ThemedText style={[styles.checkboxLabel, { color: textColor, fontSize: 15 }]}> 
               <ThemedText type="link" onPress={() => setShowTerms(true)}> I have read the terms and privacy policy</ThemedText>
             </ThemedText>
           </Pressable>
 
-          <TouchableOpacity onPress={handleSignup} style={[styles.button, !accepted && styles.buttonDisabled]} activeOpacity={0.9} disabled={!accepted}>
+          <TouchableOpacity onPress={handleSignup} style={[styles.button, !canSubmit && styles.buttonDisabled]} activeOpacity={0.9} disabled={!canSubmit}>
             <ThemedText type="defaultSemiBold" style={styles.buttonText}>Signup</ThemedText>
           </TouchableOpacity>
         </View>
@@ -111,7 +129,7 @@ export default function SignupScreen() {
       </View>
       <Modal visible={showTerms} animationType="slide" onRequestClose={() => setShowTerms(false)}>
         <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+          <ScrollView contentContainerStyle={styles.modalContent} showsVerticalScrollIndicator={false}>
             <ThemedText type="title" style={styles.modalTitle}>Terms & Privacy</ThemedText>
 
             <ThemedText style={[styles.modalText, { marginBottom: 12 }]}>It’s Required by Law: Apps are legally obligated (by laws like GDPR) to get your permission before collecting personal data (like your name, email, or location). Checking this box fulfills that requirement.</ThemedText>
@@ -125,7 +143,7 @@ export default function SignupScreen() {
             <TouchableOpacity onPress={() => setShowTerms(false)} style={styles.doneButton}>
               <ThemedText type="defaultSemiBold" style={styles.doneButtonText}>Close</ThemedText>
             </TouchableOpacity>
-          </View>
+          </ScrollView>
         </View>
       </Modal>
     </ThemedView>
@@ -135,38 +153,43 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: UiTheme.spacing.lg,
     justifyContent: 'center',
-    gap: 16,
-    backgroundColor: '#ffffff',
+    gap: UiTheme.spacing.md,
+    backgroundColor: UiTheme.colors.page,
   },
   form: {
     gap: 12,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e6e6e6',
+    borderColor: UiTheme.colors.border,
     padding: 12,
-    borderRadius: 8,
-    backgroundColor: '#fff',
+    borderRadius: UiTheme.radius.sm,
+    backgroundColor: UiTheme.colors.surface,
     fontSize: 16,
+  },
+  inlineHint: {
+    marginTop: -6,
+    color: UiTheme.colors.textSecondary,
+    fontSize: UiTheme.font.caption,
   },
   button: {
     marginTop: 8,
-    backgroundColor: '#28a745',
+    backgroundColor: UiTheme.colors.accent,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: UiTheme.radius.sm,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
+    color: UiTheme.colors.surface,
     fontSize: 16,
     fontWeight: '700',
   },
   orText: {
     textAlign: 'center',
-    color: '#888',
+    color: UiTheme.colors.textSecondary,
     marginVertical: 8,
   },
   linkText: {
@@ -175,7 +198,7 @@ const styles = StyleSheet.create({
   title: {
     textAlign: 'center',
     fontWeight: '800',
-    color: '#222',
+    color: UiTheme.colors.textPrimary,
     fontSize: 28,
     marginBottom: 8,
   },
@@ -183,7 +206,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 6,
-    color: '#222',
+    color: UiTheme.colors.textPrimary,
   },
   logo: {
     width: 120,
@@ -194,10 +217,10 @@ const styles = StyleSheet.create({
 
   checkboxRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 1, borderColor: '#ccc' },
-  checkboxChecked: { backgroundColor: '#28a745', borderColor: '#28a745' },
-  checkboxLabel: { flex: 1, color: '#222' },
+  checkboxChecked: { backgroundColor: UiTheme.colors.accent, borderColor: UiTheme.colors.accent },
+  checkboxLabel: { flex: 1, color: UiTheme.colors.textPrimary },
 
-  modalContainer: { flex: 1, padding: 20, justifyContent: 'center' },
+  modalContainer: { flex: 1, padding: 20 },
   modalTitle: { textAlign: 'center', marginBottom: 12, color: '#000', fontWeight: '700', fontSize: 18 },
   modalContent: {
     backgroundColor: '#ffffff',
@@ -211,7 +234,14 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   modalText: { color: '#000', fontSize: 15, lineHeight: 22 },
-  doneButtonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  doneButton: { marginTop: 12, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center', backgroundColor: '#28a745' },
+  doneButtonText: { color: UiTheme.colors.surface, fontSize: 16, fontWeight: '700' },
+  doneButton: {
+    marginTop: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: UiTheme.radius.sm,
+    alignItems: 'center',
+    backgroundColor: UiTheme.colors.accent,
+  },
   buttonDisabled: { opacity: 0.6 },
 });

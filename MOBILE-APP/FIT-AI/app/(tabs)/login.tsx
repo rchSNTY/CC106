@@ -1,27 +1,27 @@
-import React, { useState } from 'react';
-import { Alert, StyleSheet, TextInput, TouchableOpacity, View,} from 'react-native';
 import { Image } from 'expo-image';
-import { Link, useRouter, Href } from 'expo-router';
+import { Href, Link, useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { UiTheme } from '@/constants/ui-theme';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
- 
-  
-
+  const canSubmit = username.trim().length > 0 && password.length > 0;
 
   function handleLogin() {
-    if (!username.trim() || !password) {
+    const normalizedUsername = username.trim();
+
+    if (!normalizedUsername || !password) {
       Alert.alert('Missing fields', 'Please provide both username and password.');
       return;
     }
 
-    // Mock Login
-    Alert.alert('Success', `Welcome back, ${username}!`);
+    Alert.alert('Success', `Welcome back, ${normalizedUsername}!`);
     router.push('/user' as Href);
   }
 
@@ -38,6 +38,7 @@ export default function LoginScreen() {
           placeholder="Enter username"
           style={styles.input}
           autoCapitalize="none"
+          autoCorrect={false}
         />
 
         <ThemedText style={styles.label}>Password</ThemedText>
@@ -51,7 +52,7 @@ export default function LoginScreen() {
 
         <View style={{ marginTop: 8 }}>
           
-          <TouchableOpacity onPress={handleLogin} style={styles.button} activeOpacity={0.9}>
+          <TouchableOpacity onPress={handleLogin} style={[styles.button, !canSubmit && styles.buttonDisabled]} activeOpacity={0.9} disabled={!canSubmit}>
             <ThemedText type="defaultSemiBold" style={styles.buttonText}>Login</ThemedText>
           </TouchableOpacity>
         </View>
@@ -63,7 +64,6 @@ export default function LoginScreen() {
           </Link>
         </ThemedText>
       </View>
-     
     </ThemedView>
   );
 }
@@ -71,38 +71,38 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: UiTheme.spacing.lg,
     justifyContent: 'center',
-    gap: 16,
-    backgroundColor: '#ffffff',
+    gap: UiTheme.spacing.md,
+    backgroundColor: UiTheme.colors.page,
   },
   form: {
     gap: 12,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e6e6e6',
+    borderColor: UiTheme.colors.border,
     padding: 12,
-    borderRadius: 8,
-    backgroundColor: '#fff',
+    borderRadius: UiTheme.radius.sm,
+    backgroundColor: UiTheme.colors.surface,
     fontSize: 16,
   },
   button: {
     marginTop: 8,
-    backgroundColor: '#28a745',
+    backgroundColor: UiTheme.colors.accent,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: UiTheme.radius.sm,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
+    color: UiTheme.colors.surface,
     fontSize: 16,
     fontWeight: '700',
   },
   signupText: {
     textAlign: 'center',
-    color: '#888',
+    color: UiTheme.colors.textSecondary,
     marginTop: 8,
   },
   linkText: {
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   title: {
     textAlign: 'center',
     fontWeight: '800',
-    color: '#222',
+    color: UiTheme.colors.textPrimary,
     fontSize: 28,
     marginBottom: 8,
   },
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 6,
-    color: '#222',
+    color: UiTheme.colors.textPrimary,
   },
   logo: {
     width: 120,
@@ -127,14 +127,5 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 12,
   },
-
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 1, borderColor: '#ccc' },
-  checkboxChecked: { backgroundColor: '#28a745', borderColor: '#28a745' },
-  checkboxLabel: { flex: 1, color: '#222' },
-
-  modalContainer: { flex: 1, padding: 20, justifyContent: 'center' },
-  modalTitle: { textAlign: 'center', marginBottom: 12 },
-  doneButton: { marginTop: 12, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center', backgroundColor: '#28a745' },
   buttonDisabled: { opacity: 0.6 },
 });
