@@ -35,11 +35,19 @@ const CAPABILITY_SLIDES = [
 export default function LandingScreen() {
   const router = useRouter();
   const sliderRef = useRef<ScrollView>(null);
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const slideWidth = Math.max(width - UiTheme.spacing.lg * 2, 280);
+  const isCompact = width < 380 || height < 700;
+  const horizontalPadding = isCompact ? UiTheme.spacing.md : UiTheme.spacing.lg;
+  const logoSize = Math.max(100, Math.min(124, Math.round(width * 0.28)));
+  const titleSize = isCompact ? 26 : 30;
+  const titleLineHeight = isCompact ? 30 : 34;
+  const subtitleSize = isCompact ? 13 : 14;
+  const slideMinHeight = Math.max(210, Math.min(270, Math.round(height * 0.34)));
+  const bottomCtaPadding = isCompact ? UiTheme.spacing.sm : UiTheme.spacing.md;
+  const slideWidth = Math.max(width - horizontalPadding * 2, 280);
 
   const canGoPrev = activeIndex > 0;
   const canGoNext = activeIndex < CAPABILITY_SLIDES.length - 1;
@@ -80,10 +88,13 @@ export default function LandingScreen() {
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={UiTheme.colors.page} />
 
-      <View style={styles.container}>
-        <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
-        <ThemedText type="title" style={styles.title}>Train Smarter with FIT-AI</ThemedText>
-        <ThemedText style={styles.subtitle}>Your fitness companion for planning, tracking, and improving every week.</ThemedText>
+      <ScrollView
+        contentContainerStyle={[styles.container, { paddingHorizontal: horizontalPadding, paddingBottom: bottomCtaPadding }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Image source={require('@/assets/images/Logo.png')} style={[styles.logo, { width: logoSize, height: logoSize }]} contentFit="contain" />
+        <ThemedText type="title" style={[styles.title, { fontSize: titleSize, lineHeight: titleLineHeight }]}>Train Smarter with FIT-AI</ThemedText>
+        <ThemedText style={[styles.subtitle, { fontSize: subtitleSize }]}>Your fitness companion for planning, tracking, and improving every week.</ThemedText>
 
         <View style={styles.sliderOuter}>
           <ScrollView
@@ -95,7 +106,7 @@ export default function LandingScreen() {
             contentContainerStyle={styles.sliderContent}
           >
             {CAPABILITY_SLIDES.map((slide) => (
-              <View key={slide.title} style={[styles.slideCard, { width: slideWidth }]}>
+              <View key={slide.title} style={[styles.slideCard, { width: slideWidth, minHeight: slideMinHeight }]}>
                 <ThemedText style={styles.slideTitle}>{slide.title}</ThemedText>
                 <ThemedText style={styles.slideDescription}>{slide.description}</ThemedText>
               </View>
@@ -126,10 +137,12 @@ export default function LandingScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.primaryButton} onPress={() => setModalVisible(true)}>
-          <ThemedText type="defaultSemiBold" style={styles.primaryButtonText}>Start my journey</ThemedText>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.bottomActionWrap}>
+          <TouchableOpacity style={styles.primaryButton} onPress={() => setModalVisible(true)}>
+            <ThemedText type="defaultSemiBold" style={styles.primaryButtonText}>Start my journey</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
       <Modal
         visible={modalVisible}
@@ -171,15 +184,11 @@ const styles = StyleSheet.create({
     backgroundColor: UiTheme.colors.page,
   },
   container: {
-    flex: 1,
-    paddingHorizontal: UiTheme.spacing.lg,
+    flexGrow: 1,
     paddingTop: UiTheme.spacing.lg,
-    paddingBottom: UiTheme.spacing.xl,
     backgroundColor: UiTheme.colors.page,
   },
   logo: {
-    width: 88,
-    height: 88,
     alignSelf: 'center',
     marginTop: UiTheme.spacing.xl,
     marginBottom: UiTheme.spacing.sm,
@@ -205,7 +214,6 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
   },
   slideCard: {
-    minHeight: 250,
     backgroundColor: UiTheme.colors.surface,
     borderWidth: 1,
     borderColor: UiTheme.colors.border,
@@ -284,11 +292,14 @@ const styles = StyleSheet.create({
     color: UiTheme.colors.textSecondary,
   },
   primaryButton: {
-    marginTop: UiTheme.spacing.md,
     backgroundColor: UiTheme.colors.accent,
     borderRadius: UiTheme.radius.sm,
     alignItems: 'center',
     paddingVertical: 13,
+  },
+  bottomActionWrap: {
+    marginTop: 'auto',
+    paddingTop: UiTheme.spacing.md,
   },
   primaryButtonText: {
     color: UiTheme.colors.surface,

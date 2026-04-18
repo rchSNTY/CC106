@@ -64,6 +64,8 @@ export default function Profile(): JSX.Element {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.container, isCompact && styles.containerCompact]}
       >
+        <Text style={styles.pageTitle}>Profile</Text>
+
         <View style={styles.header}>
           <Image
             source={profile.avatarUrl ? { uri: profile.avatarUrl } : require('@/assets/images/user-logo.png')}
@@ -160,7 +162,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: UiTheme.spacing.lg,
     paddingBottom: UiTheme.nav.height + UiTheme.spacing.lg,
   },
-  header: { flexDirection: 'row', alignItems: 'center', marginTop: UiTheme.spacing.xl, marginBottom: UiTheme.spacing.xl },
+  pageTitle: {
+    marginTop: UiTheme.spacing.xxl + UiTheme.spacing.lg,
+    color: UiTheme.colors.textPrimary,
+    fontSize: UiTheme.font.title,
+    fontWeight: '800',
+  },
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: UiTheme.spacing.xl },
   avatar: {
     width: 100,
     height: 100,
