@@ -1,3 +1,5 @@
+import { Card } from '@/components/Card';
+import RoutineDetailsModal, { type Routine } from '@/components/RoutineDetailsModal';
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { UiTheme } from '@/constants/ui-theme';
 import { Image } from 'expo-image';
@@ -6,26 +8,64 @@ import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, Touch
 
 type Intensity = 'All' | 'Light' | 'Moderate' | 'Intense';
 
-type WorkoutCard = {
-  id: number;
-  name: string;
-  type: string;
-  intensity: Exclude<Intensity, 'All'>;
-  duration: string;
-};
-
 const FILTERS: Intensity[] = ['All', 'Light', 'Moderate', 'Intense'];
 
-const WORKOUTS: WorkoutCard[] = [
-  { id: 1, name: 'Morning Mobility Flow', type: 'Bodyweight', intensity: 'Light', duration: '15 min' },
-  { id: 2, name: 'Endurance Burn', type: 'Cardio', intensity: 'Moderate', duration: '30 min' },
-  { id: 3, name: 'Strength Circuit', type: 'Weights', intensity: 'Intense', duration: '45 min' },
-  { id: 4, name: 'Core Starter', type: 'Bodyweight', intensity: 'Moderate', duration: '20 min' },
+const WORKOUTS: Routine[] = [
+  {
+    id: 1,
+    title: 'Morning Mobility Flow',
+    subtitle: 'Bodyweight',
+    intensity: 'Light',
+    duration: '15 min',
+    exercises: [
+      { id: 1, name: 'Cat-Cow Stretch', detail: 'Slow movement to warm up the spine.', reps: '10 reps' },
+      { id: 2, name: 'Hip Circles', detail: 'Mobilize the hips in both directions.', reps: '8 each side' },
+      { id: 3, name: 'Shoulder Rolls', detail: 'Improve upper body mobility and posture.', reps: '10 reps' },
+    ],
+  },
+  {
+    id: 2,
+    title: 'Endurance Burn',
+    subtitle: 'Cardio',
+    intensity: 'Moderate',
+    duration: '30 min',
+    exercises: [
+      { id: 1, name: 'Jumping Jacks', detail: 'Raise heart rate steadily.', reps: '2 min' },
+      { id: 2, name: 'Mountain Climbers', detail: 'Drive knees toward chest at a steady pace.', reps: '45 sec' },
+      { id: 3, name: 'High Knees', detail: 'Maintain a quick rhythm with tall posture.', reps: '60 sec' },
+    ],
+  },
+  {
+    id: 3,
+    title: 'Strength Circuit',
+    subtitle: 'Weights',
+    intensity: 'Intense',
+    duration: '45 min',
+    exercises: [
+      { id: 1, name: 'Goblet Squat', detail: 'Hold weight at chest and squat deeply.', reps: '12 reps' },
+      { id: 2, name: 'Dumbbell Row', detail: 'Pull weight toward hip with control.', reps: '10 reps each side' },
+      { id: 3, name: 'Plank Hold', detail: 'Maintain a solid core line.', reps: '60 sec' },
+    ],
+  },
+  {
+    id: 4,
+    title: 'Core Starter',
+    subtitle: 'Bodyweight',
+    intensity: 'Moderate',
+    duration: '20 min',
+    exercises: [
+      { id: 1, name: 'Dead Bug', detail: 'Slow, controlled core stability work.', reps: '12 reps each side' },
+      { id: 2, name: 'Side Plank', detail: 'Hold posture with hips lifted.', reps: '30 sec each side' },
+      { id: 3, name: 'Glute Bridge', detail: 'Activate posterior chain and core.', reps: '15 reps' },
+    ],
+  },
 ];
 
 export default function Explore(): JSX.Element {
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<Intensity>('All');
+  const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const visibleWorkouts = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -34,8 +74,8 @@ export default function Explore(): JSX.Element {
       const matchesFilter = activeFilter === 'All' || item.intensity === activeFilter;
       const matchesQuery =
         normalized.length === 0 ||
-        item.name.toLowerCase().includes(normalized) ||
-        item.type.toLowerCase().includes(normalized);
+        item.title.toLowerCase().includes(normalized) ||
+        item.subtitle?.toLowerCase().includes(normalized);
 
       return matchesFilter && matchesQuery;
     });
@@ -83,18 +123,18 @@ export default function Explore(): JSX.Element {
 
         <View style={styles.cardList}>
           {visibleWorkouts.map((item) => (
-            <View key={item.id} style={styles.workoutCard}>
-              <View style={styles.workoutHeader}>
-                <Text style={styles.workoutName}>{item.name}</Text>
-                <Text style={styles.workoutDuration}>{item.duration}</Text>
-              </View>
-              <Text style={styles.workoutType}>{item.type}</Text>
-              <View style={styles.badgeRow}>
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{item.intensity}</Text>
-                </View>
-              </View>
-            </View>
+            <Card
+              key={item.id}
+              title={item.title}
+              subtitle={item.subtitle}
+              duration={item.duration}
+              badges={[item.intensity]}
+              onPress={() => {
+                setSelectedRoutine(item);
+                setModalVisible(true);
+              }}
+              accessibilityLabel={`Open ${item.title} routine details`}
+            />
           ))}
 
           {visibleWorkouts.length === 0 ? (
@@ -105,6 +145,19 @@ export default function Explore(): JSX.Element {
           ) : null}
         </View>
       </ScrollView>
+
+      <RoutineDetailsModal
+        visible={modalVisible}
+        routine={selectedRoutine}
+        onClose={() => {
+          setModalVisible(false);
+          setSelectedRoutine(null);
+        }}
+        onStart={() => {
+          setModalVisible(false);
+          setSelectedRoutine(null);
+        }}
+      />
 
       <BottomTabNav activeTab="explore" />
     </SafeAreaView>
@@ -164,26 +217,6 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: UiTheme.font.subtitle, fontWeight: '800', color: UiTheme.colors.textPrimary },
   sectionMeta: { fontSize: UiTheme.font.caption, fontWeight: '700', color: UiTheme.colors.textSecondary },
   cardList: { gap: UiTheme.spacing.sm },
-  workoutCard: {
-    backgroundColor: UiTheme.colors.surface,
-    borderRadius: UiTheme.radius.lg,
-    borderWidth: 1,
-    borderColor: UiTheme.colors.border,
-    padding: UiTheme.spacing.md,
-    gap: UiTheme.spacing.xs,
-  },
-  workoutHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  workoutName: { color: UiTheme.colors.textPrimary, fontSize: 16, fontWeight: '800', flex: 1, marginRight: UiTheme.spacing.sm },
-  workoutDuration: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.caption, fontWeight: '700' },
-  workoutType: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.body },
-  badgeRow: { marginTop: UiTheme.spacing.xs, flexDirection: 'row' },
-  badge: {
-    backgroundColor: UiTheme.colors.surfaceMuted,
-    borderRadius: UiTheme.radius.sm,
-    paddingVertical: 4,
-    paddingHorizontal: UiTheme.spacing.sm,
-  },
-  badgeText: { color: UiTheme.colors.textPrimary, fontSize: UiTheme.font.caption, fontWeight: '700' },
   emptyState: {
     alignItems: 'center',
     paddingVertical: UiTheme.spacing.xl,

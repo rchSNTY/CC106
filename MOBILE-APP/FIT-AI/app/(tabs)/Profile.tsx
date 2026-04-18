@@ -1,41 +1,78 @@
 import { UiTheme } from '@/constants/ui-theme';
-import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Href, useRouter } from 'expo-router';
-import React, { JSX } from 'react';
-import { Platform, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { JSX, useMemo, useState } from 'react';
+import { Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 
+import { ConfirmationModal } from '@/components/confirmation-modal';
+import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { useUserProfile } from '@/stores/user-profile';
+
+type PendingAction = 'edit' | 'logout' | null;
 
 export default function Profile(): JSX.Element {
   const router = useRouter();
   const { profile } = useUserProfile();
+  const { width, height } = useWindowDimensions();
+  const isCompact = width < 390 || height < 700;
+  const headerGap = Math.max(12, Math.min(24, Math.round(width * 0.06)));
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const heightValue = profile.height ? `${profile.height} ${profile.heightUnit}` : 'Not set';
   const fieldValue = (value: string) => (value ? value : 'Not set');
 
+  const confirmationConfig = useMemo(() => {
+    if (pendingAction === 'edit') {
+      return {
+        title: 'Edit profile?',
+        message: 'This will take you to the profile editing screen.',
+        confirmText: 'Continue',
+        isDangerous: false,
+        onConfirm: () => router.push('/user' as Href),
+      };
+    }
+
+    if (pendingAction === 'logout') {
+      return {
+        title: 'Sign out?',
+        message: 'You will be taken back to the login screen.',
+        confirmText: 'Sign out',
+        isDangerous: true,
+        onConfirm: () => router.push('/login' as Href),
+      };
+    }
+
+    return null;
+  }, [pendingAction, router]);
+
   function handleLogout() {
-    router.push('/login' as Href);
+    setPendingAction('logout');
+  }
+
+  function handleEditProfile() {
+    setPendingAction('edit');
+  }
+
+  function closeConfirmation() {
+    setPendingAction(null);
   }
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={UiTheme.colors.page} />
 
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-        <Ionicons name="chevron-back" size={24} color={UiTheme.colors.textPrimary} />
-        <Text style={styles.backButtonText}>Back</Text>
-      </TouchableOpacity>
-
-      <View style={styles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.container, isCompact && styles.containerCompact]}
+      >
         <View style={styles.header}>
           <Image
             source={profile.avatarUrl ? { uri: profile.avatarUrl } : require('@/assets/images/user-logo.png')}
-            style={styles.avatar}
+            style={[styles.avatar, isCompact && styles.avatarCompact, { marginRight: headerGap }]}
             contentFit="cover"
           />
           <View style={styles.headerTextCol}>
-            <Text style={styles.headerTitle}>{fieldValue(profile.name)}</Text>
-            <Text style={styles.headerSubtitle}>{fieldValue(profile.gender)}</Text>
+            <Text style={[styles.headerTitle, isCompact && styles.headerTitleCompact]}>{fieldValue(profile.name)}</Text>
+            <Text style={[styles.headerSubtitle, isCompact && styles.headerSubtitleCompact]}>{fieldValue(profile.gender)}</Text>
             <View style={styles.headerMetaRow}>
               <Text style={styles.headerMetaText}>{profile.age ? `${profile.age} yrs` : 'Age not set'}</Text>
               <Text style={styles.headerMetaText}>{profile.birthday || 'Birthday not set'}</Text>
@@ -79,55 +116,74 @@ export default function Profile(): JSX.Element {
             <Text style={styles.fieldValue}>{fieldValue(profile.workout)}</Text>
           </View>
 
-          <TouchableOpacity onPress={() => router.push('/user' as Href)} style={styles.editButton} activeOpacity={0.85}>
-            <Text style={styles.editText}>Edit Profile</Text>
-          </TouchableOpacity>
+          <View style={styles.actionRow}>
+            <TouchableOpacity onPress={handleEditProfile} style={[styles.actionButton, styles.editButton]} activeOpacity={0.85}>
+              <Text style={styles.editText}>Edit Profile</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton} activeOpacity={0.85}>
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogout} style={[styles.actionButton, styles.logoutButton]} activeOpacity={0.85}>
+              <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </ScrollView>
+
+      {confirmationConfig ? (
+        <ConfirmationModal
+          visible
+          title={confirmationConfig.title}
+          message={confirmationConfig.message}
+          confirmText={confirmationConfig.confirmText}
+          cancelText="Cancel"
+          isDangerous={confirmationConfig.isDangerous}
+          onCancel={closeConfirmation}
+          onConfirm={() => {
+            closeConfirmation();
+            confirmationConfig.onConfirm();
+          }}
+        />
+      ) : null}
+
+      <BottomTabNav activeTab="Profile" />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: UiTheme.colors.page },
-  backButton: {
-    marginTop: UiTheme.spacing.xxl,
-    marginLeft: UiTheme.spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  backButtonText: { color: UiTheme.colors.textPrimary, fontSize: 16, marginLeft: 4, fontWeight: '600' },
   container: {
-    flex: 1,
-    padding: UiTheme.spacing.xl,
-    justifyContent: 'center',
+    flexGrow: 1,
+    paddingHorizontal: UiTheme.spacing.xl,
+    paddingBottom: UiTheme.nav.height + UiTheme.spacing.xl,
   },
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: UiTheme.spacing.xxl },
+  containerCompact: {
+    paddingHorizontal: UiTheme.spacing.lg,
+    paddingBottom: UiTheme.nav.height + UiTheme.spacing.lg,
+  },
+  header: { flexDirection: 'row', alignItems: 'center', marginTop: UiTheme.spacing.xl, marginBottom: UiTheme.spacing.xl },
   avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
     backgroundColor: UiTheme.colors.surfaceMuted,
-    marginRight: UiTheme.spacing.xl,
     borderWidth: 1,
     borderColor: UiTheme.colors.border,
   },
-  headerTextCol: { justifyContent: 'center' },
+  avatarCompact: { width: 84, height: 84, borderRadius: 42, marginBottom: UiTheme.spacing.md },
+  headerTextCol: { flex: 1, justifyContent: 'center' },
   headerTitle: { fontSize: 24, fontWeight: '800', color: UiTheme.colors.textPrimary, marginBottom: 4, letterSpacing: 1 },
+  headerTitleCompact: { fontSize: 22 },
   headerSubtitle: { fontSize: 18, fontWeight: '600', color: UiTheme.colors.textSecondary, letterSpacing: 1 },
-  headerMetaRow: { flexDirection: 'row', gap: UiTheme.spacing.sm, marginTop: 6 },
+  headerSubtitleCompact: { fontSize: 16 },
+  headerMetaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: UiTheme.spacing.sm, marginTop: 6 },
   headerMetaText: { fontSize: 14, fontWeight: '600', color: UiTheme.colors.textSecondary },
   formSection: { gap: UiTheme.spacing.md },
   fieldRow: {
     backgroundColor: UiTheme.colors.surface,
     borderRadius: UiTheme.radius.lg,
-    height: 56,
+    minHeight: 56,
     paddingHorizontal: UiTheme.spacing.lg,
+    paddingVertical: UiTheme.spacing.sm,
     shadowColor: UiTheme.colors.textPrimary,
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -144,19 +200,30 @@ const styles = StyleSheet.create({
     color: UiTheme.colors.textPrimary,
     fontWeight: '600',
     fontFamily: Platform.select({ ios: 'Courier', android: 'monospace', default: 'monospace' }),
+    flexShrink: 1,
   },
   fieldValue: {
     fontSize: 15,
     color: UiTheme.colors.textSecondary,
     fontWeight: '700',
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: UiTheme.spacing.sm,
+    marginTop: UiTheme.spacing.xs,
+  },
+  actionButton: {
+    flex: 1,
+    borderRadius: UiTheme.radius.md,
+    minHeight: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: UiTheme.spacing.sm,
   },
   editButton: {
     backgroundColor: UiTheme.colors.accent,
-    borderRadius: UiTheme.radius.md,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: UiTheme.spacing.xs,
   },
   editText: {
     color: UiTheme.colors.surface,
@@ -165,11 +232,6 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     backgroundColor: UiTheme.colors.danger,
-    borderRadius: UiTheme.radius.md,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: UiTheme.spacing.md,
     shadowColor: UiTheme.colors.textPrimary,
     shadowOpacity: 0.08,
     shadowRadius: 6,
