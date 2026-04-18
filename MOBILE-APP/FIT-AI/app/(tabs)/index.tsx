@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { Href, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Modal,
   NativeScrollEvent,
   NativeSyntheticEvent,
   SafeAreaView,
@@ -36,6 +37,7 @@ export default function LandingScreen() {
   const sliderRef = useRef<ScrollView>(null);
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const slideWidth = Math.max(width - UiTheme.spacing.lg * 2, 280);
 
@@ -107,11 +109,6 @@ export default function LandingScreen() {
           ))}
         </View>
 
-        <View style={styles.previewCard}>
-          <ThemedText style={styles.previewLabel}>Now Viewing</ThemedText>
-          <ThemedText style={styles.previewTitle}>{currentSlide.title}</ThemedText>
-        </View>
-
         <View style={styles.navHintRow}>
           <TouchableOpacity
             onPress={() => goToSlide(Math.max(activeIndex - 1, 0))}
@@ -129,14 +126,41 @@ export default function LandingScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/signup' as Href)}>
-          <ThemedText type="defaultSemiBold" style={styles.primaryButtonText}>Create Account</ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push('/login' as Href)}>
-          <ThemedText type="defaultSemiBold" style={styles.secondaryButtonText}>I already have an account</ThemedText>
+        <TouchableOpacity style={styles.primaryButton} onPress={() => setModalVisible(true)}>
+          <ThemedText type="defaultSemiBold" style={styles.primaryButtonText}>Start my journey</ThemedText>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ThemedText type="title" style={styles.modalTitle}>Get Started</ThemedText>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => {
+                setModalVisible(false);
+                router.push('/signup' as Href);
+              }}
+            >
+              <ThemedText type="defaultSemiBold" style={styles.modalButtonText}>Create Account</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalButtonSecondary}
+              onPress={() => {
+                setModalVisible(false);
+                router.push('/login' as Href);
+              }}
+            >
+              <ThemedText type="defaultSemiBold" style={styles.modalButtonTextSecondary}>I already have an account</ThemedText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -181,7 +205,7 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
   },
   slideCard: {
-    minHeight: 180,
+    minHeight: 250,
     backgroundColor: UiTheme.colors.surface,
     borderWidth: 1,
     borderColor: UiTheme.colors.border,
@@ -280,6 +304,50 @@ const styles = StyleSheet.create({
     backgroundColor: UiTheme.colors.surface,
   },
   secondaryButtonText: {
+    color: UiTheme.colors.textPrimary,
+    fontWeight: '700',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: UiTheme.colors.surface,
+    borderRadius: UiTheme.radius.lg,
+    padding: UiTheme.spacing.lg,
+    width: '80%',
+    alignItems: 'center',
+    gap: UiTheme.spacing.md,
+  },
+  modalTitle: {
+    color: UiTheme.colors.textPrimary,
+    fontSize: 24,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  modalButton: {
+    backgroundColor: UiTheme.colors.accent,
+    borderRadius: UiTheme.radius.sm,
+    paddingVertical: 13,
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: UiTheme.colors.surface,
+    fontWeight: '800',
+  },
+  modalButtonSecondary: {
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+    borderRadius: UiTheme.radius.sm,
+    paddingVertical: 13,
+    width: '100%',
+    alignItems: 'center',
+    backgroundColor: UiTheme.colors.surface,
+  },
+  modalButtonTextSecondary: {
     color: UiTheme.colors.textPrimary,
     fontWeight: '700',
   },
