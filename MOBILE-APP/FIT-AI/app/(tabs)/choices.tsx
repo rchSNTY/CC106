@@ -1,22 +1,25 @@
 import { Href, useRouter } from 'expo-router'
 import React, { JSX, useState } from 'react'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
 
+import { ConfirmationModal } from '@/components/confirmation-modal'
 import { ThemedText } from '@/components/themed-text'
 import { ThemedView } from '@/components/themed-view'
 import { UiTheme } from '@/constants/ui-theme'
 import { useThemeColor } from '@/hooks/use-theme-color'
+import { useUserProfile } from '@/stores/user-profile'
 
 type Step = 1 | 2
 
 type OptionButtonProps = {
   label: string
+  description: string
   selected: boolean
   tint: string
   onPress: () => void
 }
 
-function OptionButton({ label, selected, tint, onPress }: OptionButtonProps): JSX.Element {
+function OptionButton({ label, description, selected, tint, onPress }: OptionButtonProps): JSX.Element {
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -27,6 +30,7 @@ function OptionButton({ label, selected, tint, onPress }: OptionButtonProps): JS
       ]}
     >
       <ThemedText style={[styles.optionText, selected ? styles.optionTextSelected : {}]}>{label.toUpperCase()}</ThemedText>
+      <ThemedText style={[styles.optionDesc, selected ? styles.optionDescSelected : {}]}>{description}</ThemedText>
     </TouchableOpacity>
   )
 }
@@ -34,30 +38,49 @@ function OptionButton({ label, selected, tint, onPress }: OptionButtonProps): JS
 export default function ChoicesScreen(): JSX.Element {
   const tint = useThemeColor({}, 'tint')
   const router = useRouter()
+  const { updateProfile } = useUserProfile()
 
   const [step, setStep] = useState<Step>(1)
   const [activity, setActivity] = useState<string | null>(null)
   const [workout, setWorkout] = useState<string | null>(null)
+  const [showConfirmation, setShowConfirmation] = useState(false)
 
-  const activityOptions = ['Light', 'Moderate', 'Intense']
-  const workoutOptions = ['Cardio', 'Bodyweight', 'Weight']
+  const activityOptions = [
+    { label: 'Light', desc: 'Gentle workouts, perfect for beginners or recovery days.' },
+    { label: 'Moderate', desc: 'Balanced intensity for regular fitness enthusiasts.' },
+    { label: 'Intense', desc: 'High-energy sessions for advanced users seeking maximum results.' },
+  ]
+  const workoutOptions = [
+    { label: 'Cardio', desc: 'Focus on heart health and endurance with running or cycling.' },
+    { label: 'Bodyweight', desc: 'Strength training using your own body weight, no equipment needed.' },
+    { label: 'Weight', desc: 'Build muscle with resistance training and weights.' },
+  ]
 
   function goToStepTwo() {
     if (!activity) {
-      return
+      Alert.alert('Selection Required', 'Please select an activity level to continue.');
+      return;
     }
-    setStep(2)
+    setStep(2);
   }
 
   function finishChoices() {
-    if (!workout) {
-      return
+    if (!activity || !workout) {
+      Alert.alert('Selection Required', 'Please complete both steps to begin your fitness journey.');
+      return;
     }
-    router.push('/Homepage' as Href)
+    setShowConfirmation(true);
+  }
+
+  function handleConfirmFinish() {
+    setShowConfirmation(false);
+    updateProfile({ activityLevel: activity!, workout: workout! });
+    router.push('/Homepage' as Href);
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <>
+      <ThemedView style={styles.container}>
       <View style={styles.card}>
         <View style={styles.progressWrap}>
           <View style={[styles.progressDot, step >= 1 ? { backgroundColor: tint, borderColor: tint } : {}]}>
@@ -77,11 +100,12 @@ export default function ChoicesScreen(): JSX.Element {
             <View style={styles.optionsWrap}>
               {activityOptions.map((opt) => (
                 <OptionButton
-                  key={opt}
-                  label={opt}
-                  selected={activity === opt}
+                  key={opt.label}
+                  label={opt.label}
+                  description={opt.desc}
+                  selected={activity === opt.label}
                   tint={tint}
-                  onPress={() => setActivity(opt)}
+                  onPress={() => setActivity(opt.label)}
                 />
               ))}
             </View>
@@ -103,11 +127,12 @@ export default function ChoicesScreen(): JSX.Element {
             <View style={styles.optionsWrap}>
               {workoutOptions.map((opt) => (
                 <OptionButton
-                  key={opt}
-                  label={opt}
-                  selected={workout === opt}
+                  key={opt.label}
+                  label={opt.label}
+                  description={opt.desc}
+                  selected={workout === opt.label}
                   tint={tint}
-                  onPress={() => setWorkout(opt)}
+                  onPress={() => setWorkout(opt.label)}
                 />
               ))}
             </View>
@@ -129,7 +154,18 @@ export default function ChoicesScreen(): JSX.Element {
           </>
         )}
         </View>
-    </ThemedView>
+      </ThemedView>
+
+      <ConfirmationModal
+        visible={showConfirmation}
+        title="Complete Setup"
+        message={`Activity Level: ${activity}\nWorkout Type: ${workout}\n\nReady to start your fitness journey?`}
+        confirmText="Start"
+        cancelText="Review"
+        onConfirm={handleConfirmFinish}
+        onCancel={() => setShowConfirmation(false)}
+      />
+    </>
   )
 }
 
@@ -220,6 +256,16 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   optionTextSelected: {
+    color: UiTheme.colors.surface,
+  },
+  optionDesc: {
+    fontSize: UiTheme.font.caption,
+    color: UiTheme.colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginTop: UiTheme.spacing.xs,
+  },
+  optionDescSelected: {
     color: UiTheme.colors.surface,
   },
   primaryButton: {

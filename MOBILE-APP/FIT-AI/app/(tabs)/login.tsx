@@ -3,24 +3,48 @@ import { Href, Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
+import { ErrorText } from '@/components/ErrorText';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UiTheme } from '@/constants/ui-theme';
+import { useFormValidation, ValidationRule } from '@/hooks/useFormValidation';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
-  const canSubmit = username.trim().length > 0 && password.length > 0;
+
+  const validationRules: Record<string, ValidationRule<string>[]> = {
+    username: [
+      { validate: (val) => val.trim().length > 0, message: 'Username is required' },
+      { validate: (val) => val.trim().length >= 3, message: 'Username must be at least 3 characters' },
+    ],
+    password: [
+      { validate: (val) => val.length > 0, message: 'Password is required' },
+    ],
+  };
+
+  const { validateField, validateAll, setFieldTouched, getFieldError } = useFormValidation();
+
+  const handleUsernameChange = (text: string) => {
+    setUsername(text);
+    validateField('username', text, validationRules.username);
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    validateField('password', text, validationRules.password);
+  };
+
+  const canSubmit = username.trim().length >= 3 && password.length > 0 && !getFieldError('username') && !getFieldError('password');
 
   function handleLogin() {
-    const normalizedUsername = username.trim();
-
-    if (!normalizedUsername || !password) {
-      Alert.alert('Missing fields', 'Please provide both username and password.');
+    if (!validateAll({ username, password }, validationRules)) {
+      Alert.alert('Validation Error', 'Please fix the errors before submitting.');
       return;
     }
 
+    const normalizedUsername = username.trim();
     Alert.alert('Success', `Welcome back, ${normalizedUsername}!`);
     router.push('/user' as Href);
   }
@@ -34,21 +58,25 @@ export default function LoginScreen() {
         <ThemedText style={styles.label}>Username</ThemedText>
         <TextInput
           value={username}
-          onChangeText={setUsername}
+          onChangeText={handleUsernameChange}
+          onBlur={() => setFieldTouched('username')}
           placeholder="Enter username"
-          style={styles.input}
+          style={[styles.input, getFieldError('username') && styles.inputError]}
           autoCapitalize="none"
           autoCorrect={false}
         />
+        <ErrorText error={getFieldError('username')} />
 
         <ThemedText style={styles.label}>Password</ThemedText>
         <TextInput
           value={password}
-          onChangeText={setPassword}
+          onChangeText={handlePasswordChange}
+          onBlur={() => setFieldTouched('password')}
           placeholder="Password"
           secureTextEntry
-          style={styles.input}
+          style={[styles.input, getFieldError('password') && styles.inputError]}
         />
+        <ErrorText error={getFieldError('password')} />
 
         <View style={{ marginTop: 8 }}>
           
@@ -86,6 +114,9 @@ const styles = StyleSheet.create({
     borderRadius: UiTheme.radius.sm,
     backgroundColor: UiTheme.colors.surface,
     fontSize: 16,
+  },
+  inputError: {
+    borderColor: UiTheme.colors.danger,
   },
   button: {
     marginTop: 8,

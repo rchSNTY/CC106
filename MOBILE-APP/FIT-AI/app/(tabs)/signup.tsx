@@ -1,59 +1,101 @@
 import { Image } from 'expo-image';
 import { Href, Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
+import { ErrorText } from '@/components/ErrorText';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UiTheme } from '@/constants/ui-theme';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useFormValidation, ValidationRule } from '@/hooks/useFormValidation';
 
 export default function SignupScreen() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const textColor = useThemeColor({}, 'text');
   const [accepted, setAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
 
+  const validationRules: Record<string, ValidationRule<string>[]> = {
+    username: [
+      { validate: (val) => val.trim().length > 0, message: 'Username is required' },
+      { validate: (val) => val.trim().length >= 3, message: 'Username must be at least 3 characters' },
+      { validate: (val) => /^[a-zA-Z0-9_]+$/.test(val.trim()), message: 'Username can only contain letters, numbers, and underscores' },
+    ],
+    email: [
+      { validate: (val) => val.trim().length > 0, message: 'Email is required' },
+      { validate: (val) => /\S+@\S+\.\S+/.test(val.trim()), message: 'Please enter a valid email address' },
+    ],
+    password: [
+      { validate: (val) => val.length > 0, message: 'Password is required' },
+      { validate: (val) => val.length >= 8, message: 'Password must be at least 8 characters' },
+      { validate: (val) => /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(val), message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' },
+    ],
+    confirmPassword: [
+      { validate: (val) => val === password, message: 'Passwords do not match' },
+    ],
+  };
+
+  const { validateField, validateAll, setFieldTouched, getFieldError } = useFormValidation();
+
+  const handleUsernameChange = (text: string) => {
+    setUsername(text);
+    validateField('username', text, validationRules.username);
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    validateField('email', text, validationRules.email);
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    validateField('password', text, validationRules.password);
+    if (confirmPassword) {
+      validateField('confirmPassword', confirmPassword, validationRules.confirmPassword);
+    }
+  };
+
+  const handleConfirmPasswordChange = (text: string) => {
+    setConfirmPassword(text);
+    validateField('confirmPassword', text, validationRules.confirmPassword);
+  };
+
   const hasMinPassword = password.length >= 8;
   const canSubmit =
     accepted &&
-    username.trim().length > 0 &&
+    username.trim().length >= 3 &&
     email.trim().length > 0 &&
-    password.length > 0 &&
-    confirmPassword.length > 0;
+    password.length >= 8 &&
+    confirmPassword.length > 0 &&
+    !getFieldError('username') &&
+    !getFieldError('email') &&
+    !getFieldError('password') &&
+    !getFieldError('confirmPassword');
 
-  function validateEmail(e: string) {
-    return /\S+@\S+\.\S+/.test(e);
-  }
-
-  function handleSignup() {
-    if (!username.trim() || !email.trim() || !password || !confirmPassword) {
-      Alert.alert('Missing fields', 'Please fill in all fields.');
-      return;
-    }
-    if (!validateEmail(email)) {
-      Alert.alert('Invalid email', 'Please enter a valid email address.');
-      return;
-    }
-    if (!hasMinPassword) {
-      Alert.alert('Weak password', 'Password must be at least 8 characters.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      Alert.alert('Password mismatch', 'Passwords do not match.');
+  async function handleSignup() {
+    if (!validateAll({ username, email, password, confirmPassword }, validationRules)) {
+      Alert.alert('Validation Error', 'Please fix the errors before submitting.');
       return;
     }
 
-    Alert.alert('Account created', `Welcome, ${username}! Please log in.`);
-    setUsername('');
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    router.push('/login' as Href);
+    setIsLoading(true);
+    // Simulate async operation
+    setTimeout(() => {
+      Alert.alert('Account created', `Welcome, ${username}! Please log in.`);
+      setUsername('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setAccepted(false);
+      router.push('/login' as Href);
+      setIsLoading(false);
+    }, 2000);
   }
 
   return (
@@ -65,44 +107,52 @@ export default function SignupScreen() {
         <ThemedText style={styles.label}>Username</ThemedText>
         <TextInput
           value={username}
-          onChangeText={setUsername}
+          onChangeText={handleUsernameChange}
+          onBlur={() => setFieldTouched('username')}
           placeholder="Enter username"
-          style={styles.input}
+          style={[styles.input, getFieldError('username') && styles.inputError]}
           autoCapitalize="none"
           autoCorrect={false}
         />
+        <ErrorText error={getFieldError('username')} />
 
         <ThemedText style={styles.label}>Email</ThemedText>
         <TextInput
           value={email}
-          onChangeText={setEmail}
+          onChangeText={handleEmailChange}
+          onBlur={() => setFieldTouched('email')}
           placeholder="juandelacruz@gmail.com"
           keyboardType="email-address"
-          style={styles.input}
+          style={[styles.input, getFieldError('email') && styles.inputError]}
           autoCapitalize="none"
           autoCorrect={false}
         />
+        <ErrorText error={getFieldError('email')} />
 
         <ThemedText style={styles.label}>Password</ThemedText>
         <TextInput
           value={password}
-          onChangeText={setPassword}
+          onChangeText={handlePasswordChange}
+          onBlur={() => setFieldTouched('password')}
           placeholder="Password"
           secureTextEntry
-          style={styles.input}
+          style={[styles.input, getFieldError('password') && styles.inputError]}
         />
         {!hasMinPassword && password.length > 0 ? (
-          <ThemedText style={styles.inlineHint}>Use at least 8 characters.</ThemedText>
+          <ThemedText style={styles.inlineHint}>Use at least 8 characters with uppercase, lowercase, and number.</ThemedText>
         ) : null}
+        <ErrorText error={getFieldError('password')} />
 
         <ThemedText style={styles.label}>Confirm Password</ThemedText>
         <TextInput
           value={confirmPassword}
-          onChangeText={setConfirmPassword}
+          onChangeText={handleConfirmPasswordChange}
+          onBlur={() => setFieldTouched('confirmPassword')}
           placeholder="Confirm Password"
           secureTextEntry
-          style={styles.input}
+          style={[styles.input, getFieldError('confirmPassword') && styles.inputError]}
         />
+        <ErrorText error={getFieldError('confirmPassword')} />
 
         <View style={{ marginTop: 8 }}>
           <Pressable onPress={() => setAccepted((s) => !s)} style={styles.checkboxRow}>
@@ -112,8 +162,12 @@ export default function SignupScreen() {
             </ThemedText>
           </Pressable>
 
-          <TouchableOpacity onPress={handleSignup} style={[styles.button, !canSubmit && styles.buttonDisabled]} activeOpacity={0.9} disabled={!canSubmit}>
-            <ThemedText type="defaultSemiBold" style={styles.buttonText}>Signup</ThemedText>
+          <TouchableOpacity onPress={handleSignup} style={[styles.button, !canSubmit && styles.buttonDisabled]} activeOpacity={0.9} disabled={!canSubmit || isLoading}>
+            {isLoading ? (
+              <ActivityIndicator color={UiTheme.colors.surface} />
+            ) : (
+              <ThemedText type="defaultSemiBold" style={styles.buttonText}>Signup</ThemedText>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -167,6 +221,9 @@ const styles = StyleSheet.create({
     borderRadius: UiTheme.radius.sm,
     backgroundColor: UiTheme.colors.surface,
     fontSize: 16,
+  },
+  inputError: {
+    borderColor: UiTheme.colors.danger,
   },
   inlineHint: {
     marginTop: -6,

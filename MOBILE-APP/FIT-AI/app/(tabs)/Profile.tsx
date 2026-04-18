@@ -5,16 +5,13 @@ import { Href, useRouter } from 'expo-router';
 import React, { JSX } from 'react';
 import { Platform, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const PROFILE_DATA = {
-  name: 'User Name',
-  gender: 'Female',
-  height: '165 cm',
-  weight: '60 kg',
-  activityLevel: 'Moderate',
-};
+import { useUserProfile } from '@/stores/user-profile';
 
 export default function Profile(): JSX.Element {
   const router = useRouter();
+  const { profile } = useUserProfile();
+  const heightValue = profile.height ? `${profile.height} ${profile.heightUnit}` : 'Not set';
+  const fieldValue = (value: string) => (value ? value : 'Not set');
 
   function handleLogout() {
     router.push('/login' as Href);
@@ -31,32 +28,55 @@ export default function Profile(): JSX.Element {
 
       <View style={styles.container}>
         <View style={styles.header}>
-          <Image source={require('@/assets/images/user-logo.png')} style={styles.avatar} contentFit="cover" />
+          <Image
+            source={profile.avatarUrl ? { uri: profile.avatarUrl } : require('@/assets/images/user-logo.png')}
+            style={styles.avatar}
+            contentFit="cover"
+          />
           <View style={styles.headerTextCol}>
-            <Text style={styles.headerTitle}>{PROFILE_DATA.name}</Text>
-            <Text style={styles.headerSubtitle}>{PROFILE_DATA.gender}</Text>
+            <Text style={styles.headerTitle}>{fieldValue(profile.name)}</Text>
+            <Text style={styles.headerSubtitle}>{fieldValue(profile.gender)}</Text>
+            <View style={styles.headerMetaRow}>
+              <Text style={styles.headerMetaText}>{profile.age ? `${profile.age} yrs` : 'Age not set'}</Text>
+              <Text style={styles.headerMetaText}>{profile.birthday || 'Birthday not set'}</Text>
+            </View>
           </View>
         </View>
 
         <View style={styles.formSection}>
           <View style={styles.fieldRow}>
             <Text style={styles.fieldLabel}>Gender</Text>
-            <Text style={styles.fieldValue}>{PROFILE_DATA.gender}</Text>
+            <Text style={styles.fieldValue}>{fieldValue(profile.gender)}</Text>
+          </View>
+
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Age</Text>
+            <Text style={styles.fieldValue}>{fieldValue(profile.age)}</Text>
+          </View>
+
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Birthday</Text>
+            <Text style={styles.fieldValue}>{fieldValue(profile.birthday)}</Text>
           </View>
 
           <View style={styles.fieldRow}>
             <Text style={styles.fieldLabel}>Height</Text>
-            <Text style={styles.fieldValue}>{PROFILE_DATA.height}</Text>
+            <Text style={styles.fieldValue}>{heightValue}</Text>
           </View>
 
           <View style={styles.fieldRow}>
             <Text style={styles.fieldLabel}>Weight</Text>
-            <Text style={styles.fieldValue}>{PROFILE_DATA.weight}</Text>
+            <Text style={styles.fieldValue}>{fieldValue(profile.weight)}</Text>
           </View>
 
           <View style={styles.fieldRow}>
             <Text style={styles.fieldLabel}>Activity Level</Text>
-            <Text style={styles.fieldValue}>{PROFILE_DATA.activityLevel}</Text>
+            <Text style={styles.fieldValue}>{fieldValue(profile.activityLevel)}</Text>
+          </View>
+
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Workout Type</Text>
+            <Text style={styles.fieldValue}>{fieldValue(profile.workout)}</Text>
           </View>
 
           <TouchableOpacity onPress={() => router.push('/user' as Href)} style={styles.editButton} activeOpacity={0.85}>
@@ -100,6 +120,8 @@ const styles = StyleSheet.create({
   headerTextCol: { justifyContent: 'center' },
   headerTitle: { fontSize: 24, fontWeight: '800', color: UiTheme.colors.textPrimary, marginBottom: 4, letterSpacing: 1 },
   headerSubtitle: { fontSize: 18, fontWeight: '600', color: UiTheme.colors.textSecondary, letterSpacing: 1 },
+  headerMetaRow: { flexDirection: 'row', gap: UiTheme.spacing.sm, marginTop: 6 },
+  headerMetaText: { fontSize: 14, fontWeight: '600', color: UiTheme.colors.textSecondary },
   formSection: { gap: UiTheme.spacing.md },
   fieldRow: {
     backgroundColor: UiTheme.colors.surface,
