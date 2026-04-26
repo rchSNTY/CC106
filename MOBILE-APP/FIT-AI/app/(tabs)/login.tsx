@@ -1,18 +1,22 @@
 import { Image } from 'expo-image';
 import { Href, Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { ErrorText } from '@/components/ErrorText';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UiTheme } from '@/constants/ui-theme';
 import { useFormValidation, ValidationRule } from '@/hooks/useFormValidation';
+import { getApiErrorMessage, getProfile, login } from '@/services/backend';
+import { useUserProfile } from '@/stores/user-profile';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { setProfile } = useUserProfile();
 
   const validationRules: Record<string, ValidationRule<string>[]> = {
     username: [
@@ -36,17 +40,29 @@ export default function LoginScreen() {
     validateField('password', text, validationRules.password);
   };
 
-  const canSubmit = username.trim().length >= 3 && password.length > 0 && !getFieldError('username') && !getFieldError('password');
+  const canSubmit = username.trim().length >= 3 && password.length > 0 && !getFieldError('username') && !getFieldError('password') && !isLoading;
 
-  function handleLogin() {
+  async function handleLogin() {
     if (!validateAll({ username, password }, validationRules)) {
       Alert.alert('Validation Error', 'Please fix the errors before submitting.');
       return;
     }
 
-    const normalizedUsername = username.trim();
-    Alert.alert('Success', `Welcome back, ${normalizedUsername}!`);
-    router.push('/user' as Href);
+    try {
+      setIsLoading(true);
+      await login({ username: username.trim(), password });
+      const profile = await getProfile();
+      if (profile) {
+        setProfile(profile);
+      }
+
+      Alert.alert('Success', `Welcome back, ${username.trim()}!`);
+      router.push('/Homepage' as Href);
+    } catch (error) {
+      Alert.alert('Login Failed', getApiErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -81,7 +97,7 @@ export default function LoginScreen() {
         <View style={{ marginTop: 8 }}>
           
           <TouchableOpacity onPress={handleLogin} style={[styles.button, !canSubmit && styles.buttonDisabled]} activeOpacity={0.9} disabled={!canSubmit}>
-            <ThemedText type="defaultSemiBold" style={styles.buttonText}>Login</ThemedText>
+            {isLoading ? <ActivityIndicator color={UiTheme.colors.surface} /> : <ThemedText type="defaultSemiBold" style={styles.buttonText}>Login</ThemedText>}
           </TouchableOpacity>
         </View>
 

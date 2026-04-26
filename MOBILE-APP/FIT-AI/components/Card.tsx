@@ -3,7 +3,6 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { UiTheme } from '@/constants/ui-theme';
-import { useThemeColor } from '@/hooks/use-theme-color';
 
 export type CardProps = {
   title?: string;
@@ -32,8 +31,8 @@ export function Card({
   footer,
   children,
 }: CardProps) {
-  const borderColor = useThemeColor({}, 'border');
-  const surfaceColor = useThemeColor({}, 'surface');
+  const borderColor = UiTheme.colors.border;
+  const surfaceColor = UiTheme.colors.surface;
 
   const cardStyle = [
     styles.container,

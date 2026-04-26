@@ -1,0 +1,181 @@
+{
+  "users": [
+    {
+      "id": "user-ef9b283b-1c25-483b-9399-e55a67842b68",
+      "username": "smoke_27ab8aab",
+      "email": "smoke_27ab8aab@example.com",
+      "passwordHash": "$2a$10$sggJhDfrgvtUPh7LE2Gu/ODbhHe.E74eFvtPQBzCG.Gr9gMPQ8lRe",
+      "createdAt": "2026-04-26T07:16:56.462Z"
+    },
+    {
+      "id": "user-9893f2af-d10f-4f8b-ac97-e270e71db3e0",
+      "username": "testuser",
+      "email": "testuser.fitai@example.com",
+      "passwordHash": "$2a$10$KeuHA78NiNbuW16heaYLvOxE9btRbUj8xeHRx5nGum9J1/JZ06moG",
+      "createdAt": "2026-04-26T07:24:57.907Z"
+    }
+  ],
+  "userProfiles": [
+    {
+      "userId": "user-ef9b283b-1c25-483b-9399-e55a67842b68",
+      "profile": {
+        "height": "175",
+        "activityLevel": "Moderate",
+        "weight": "70",
+        "avatarUrl": null,
+        "heightUnit": "cm",
+        "birthday": "2006-01-01",
+        "name": "Smoke User",
+        "gender": "Male",
+        "age": "20",
+        "workout": "Cardio"
+      },
+      "updatedAt": "2026-04-26T07:16:56.477Z"
+    },
+    {
+      "userId": "user-9893f2af-d10f-4f8b-ac97-e270e71db3e0",
+      "profile": {
+        "avatarUrl": null,
+        "name": "User1",
+        "age": "25",
+        "birthday": "2000-12-12",
+        "gender": "Male",
+        "height": "170",
+        "heightUnit": "cm",
+        "weight": "60",
+        "activityLevel": "Moderate",
+        "workout": "Weight"
+      },
+      "updatedAt": "2026-04-26T07:28:36.634Z"
+    }
+  ],
+  "workouts": [
+    {
+      "id": "w-1",
+      "title": "Morning Mobility Flow",
+      "subtitle": "Bodyweight",
+      "intensity": "Light",
+      "duration": "15 min",
+      "exercises": [
+        {
+          "id": "e-1",
+          "name": "Cat-Cow Stretch",
+          "detail": "Slow movement to warm up the spine.",
+          "reps": "10 reps"
+        },
+        {
+          "id": "e-2",
+          "name": "Hip Circles",
+          "detail": "Mobilize the hips in both directions.",
+          "reps": "8 each side"
+        },
+        {
+          "id": "e-3",
+          "name": "Shoulder Rolls",
+          "detail": "Improve upper body mobility and posture.",
+          "reps": "10 reps"
+        }
+      ]
+    },
+    {
+      "id": "w-2",
+      "title": "Endurance Burn",
+      "subtitle": "Cardio",
+      "intensity": "Moderate",
+      "duration": "30 min",
+      "exercises": [
+        {
+          "id": "e-4",
+          "name": "Jumping Jacks",
+          "detail": "Raise heart rate steadily.",
+          "reps": "2 min"
+        },
+        {
+          "id": "e-5",
+          "name": "Mountain Climbers",
+          "detail": "Drive knees toward chest at a steady pace.",
+          "reps": "45 sec"
+        },
+        {
+          "id": "e-6",
+          "name": "High Knees",
+          "detail": "Maintain a quick rhythm with tall posture.",
+          "reps": "60 sec"
+        }
+      ]
+    },
+    {
+      "id": "w-3",
+      "title": "Strength Circuit",
+      "subtitle": "Weights",
+      "intensity": "Intense",
+      "duration": "45 min",
+      "exercises": [
+        {
+          "id": "e-7",
+          "name": "Goblet Squat",
+          "detail": "Hold weight at chest and squat deeply.",
+          "reps": "12 reps"
+        },
+        {
+          "id": "e-8",
+          "name": "Dumbbell Row",
+          "detail": "Pull weight toward hip with control.",
+          "reps": "10 reps each side"
+        },
+        {
+          "id": "e-9",
+          "name": "Plank Hold",
+          "detail": "Maintain a solid core line.",
+          "reps": "60 sec"
+        }
+      ]
+    },
+    {
+      "id": "w-4",
+      "title": "Core Starter",
+      "subtitle": "Bodyweight",
+      "intensity": "Moderate",
+      "duration": "20 min",
+      "exercises": [
+        {
+          "id": "e-10",
+          "name": "Dead Bug",
+          "detail": "Slow, controlled core stability work.",
+          "reps": "12 reps each side"
+        },
+        {
+          "id": "e-11",
+          "name": "Side Plank",
+          "detail": "Hold posture with hips lifted.",
+          "reps": "30 sec each side"
+        },
+        {
+          "id": "e-12",
+          "name": "Glute Bridge",
+          "detail": "Activate posterior chain and core.",
+          "reps": "15 reps"
+        }
+      ]
+    }
+  ],
+  "favorites": [
+    {
+      "id": "fav-ebc38e84-3ca1-40e0-959c-51a80dda0a0b",
+      "userId": "user-ef9b283b-1c25-483b-9399-e55a67842b68",
+      "workoutId": "w-1",
+      "createdAt": "2026-04-26T07:16:56.487Z"
+    }
+  ],
+  "history": [
+    {
+      "id": "hist-8a950b9c-53ae-4d09-aab7-3b446d2d75ff",
+      "userId": "user-ef9b283b-1c25-483b-9399-e55a67842b68",
+      "workoutId": "w-1",
+      "date": "2026-04-26",
+      "duration": "25 min",
+      "intensity": "Moderate",
+      "notes": "smoke test"
+    }
+  ]
+}

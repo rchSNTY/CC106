@@ -1,16 +1,44 @@
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { UiTheme } from '@/constants/ui-theme';
+import { getApiErrorMessage, listFavorites } from '@/services/backend';
 import { Href, useRouter } from 'expo-router';
-import React, { JSX } from 'react';
+import React, { JSX, useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-const FAVORITES = [
-  { id: 1, title: 'Low Impact Starter', type: 'Bodyweight', duration: '20 min' },
-  { id: 2, title: 'Cardio Ladder', type: 'Cardio', duration: '30 min' },
-];
 
 export default function Favorites(): JSX.Element {
   const router = useRouter();
+  const [favorites, setFavorites] = useState<Array<{ id: string; title: string; subtitle: string; duration: string }>>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+        const result = await listFavorites();
+        if (!isMounted) {
+          return;
+        }
+        setFavorites(result);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+        setErrorMessage(getApiErrorMessage(error));
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -24,25 +52,28 @@ export default function Favorites(): JSX.Element {
 
         <Text style={styles.subtitle}>Your saved routines for faster workout starts.</Text>
 
+        {isLoading ? <Text style={styles.statusText}>Loading favorites...</Text> : null}
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
         <View style={styles.list}>
-          {FAVORITES.map((item) => (
+          {favorites.map((item) => (
             <View key={item.id} style={styles.favoriteCard}>
               <View>
                 <Text style={styles.favoriteTitle}>{item.title}</Text>
-                <Text style={styles.favoriteMeta}>{item.type}</Text>
+                <Text style={styles.favoriteMeta}>{item.subtitle}</Text>
               </View>
               <Text style={styles.favoriteDuration}>{item.duration}</Text>
             </View>
           ))}
         </View>
 
-        <View style={styles.emptyHintCard}>
+        {!isLoading && !errorMessage && favorites.length === 0 ? <View style={styles.emptyHintCard}>
           <Text style={styles.emptyHintTitle}>Want more personalization?</Text>
           <Text style={styles.emptyHintSubtitle}>Open Explore and save workouts based on your activity level.</Text>
           <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/explore' as Href)}>
             <Text style={styles.ctaText}>Go to Explore</Text>
           </TouchableOpacity>
-        </View>
+        </View> : null}
       </ScrollView>
 
       <BottomTabNav activeTab="Favorites" />
@@ -99,4 +130,6 @@ const styles = StyleSheet.create({
     paddingVertical: UiTheme.spacing.xs + 2,
   },
   ctaText: { color: UiTheme.colors.surface, fontWeight: '800' },
+  statusText: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.body, fontWeight: '600' },
+  errorText: { color: UiTheme.colors.danger, fontSize: UiTheme.font.body, fontWeight: '600' },
 });

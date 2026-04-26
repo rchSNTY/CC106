@@ -5,7 +5,7 @@ import { ThemedText } from '@/components/themed-text';
 import { UiTheme } from '@/constants/ui-theme';
 
 export type RoutineExercise = {
-  id: number;
+  id: number | string;
   name: string;
   detail: string;
   reps?: string;
@@ -13,7 +13,7 @@ export type RoutineExercise = {
 };
 
 export type Routine = {
-  id: number;
+  id: number | string;
   title: string;
   subtitle?: string;
   duration: string;

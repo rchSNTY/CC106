@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Href, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { ErrorText } from '@/components/ErrorText';
 import { useUserProfile } from '@/stores/user-profile';
@@ -11,6 +11,7 @@ import { ThemedText } from '@/components/themed-text';
 import { UiTheme } from '@/constants/ui-theme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useFormValidation, ValidationRule } from '@/hooks/useFormValidation';
+import { getApiErrorMessage, uploadAvatar, upsertProfile } from '@/services/backend';
 
 export default function UserProfile() {
   const router = useRouter();
@@ -24,6 +25,7 @@ export default function UserProfile() {
   const [height, setHeight] = useState('');
   const [heightUnit, setHeightUnit] = useState<'cm' | 'ft'>('cm');
   const [weight, setWeight] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   const { updateProfile } = useUserProfile();
 
   const validationRules: Record<string, ValidationRule<string>[]> = {
@@ -97,7 +99,7 @@ export default function UserProfile() {
     }
   }
 
-  function handleDone() {
+  async function handleDone() {
     const isValid = validateAll({
       name,
       birthday,
@@ -110,22 +112,35 @@ export default function UserProfile() {
       return;
     }
 
-    const ageValue = Number(age);
-    const heightValue = Number(height);
-    const weightValue = Number(weight);
+    try {
+      setIsSaving(true);
 
-    updateProfile({
-      avatarUrl,
-      name: name.trim(),
-      age: age.trim(),
-      birthday: birthday.trim(),
-      gender,
-      height: height.trim(),
-      heightUnit,
-      weight: weight.trim(),
-    });
+      let nextAvatarUrl = avatarUrl;
+      if (avatarUrl && !avatarUrl.startsWith('http')) {
+        nextAvatarUrl = await uploadAvatar(avatarUrl);
+      }
 
-    router.push('/choices' as Href);
+      const payload = {
+        avatarUrl: nextAvatarUrl,
+        name: name.trim(),
+        age: age.trim(),
+        birthday: birthday.trim(),
+        gender,
+        height: height.trim(),
+        heightUnit,
+        weight: weight.trim(),
+        activityLevel: 'Moderate',
+        workout: '',
+      };
+
+      const savedProfile = await upsertProfile(payload);
+      updateProfile(savedProfile);
+      router.push('/choices' as Href);
+    } catch (error) {
+      Alert.alert('Save Failed', getApiErrorMessage(error));
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -223,8 +238,8 @@ export default function UserProfile() {
           />
           <ErrorText error={getFieldError('weight')} />
 
-          <TouchableOpacity onPress={handleDone} style={[styles.doneButton, styles.doneButtonColored]} activeOpacity={0.9}>
-            <ThemedText type="defaultSemiBold" style={styles.doneText}>Done</ThemedText>
+          <TouchableOpacity onPress={handleDone} style={[styles.doneButton, styles.doneButtonColored, isSaving && styles.buttonDisabled]} activeOpacity={0.9} disabled={isSaving}>
+            {isSaving ? <ActivityIndicator color={UiTheme.colors.surface} /> : <ThemedText type="defaultSemiBold" style={styles.doneText}>Done</ThemedText>}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -312,6 +327,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   doneText: { color: UiTheme.colors.surface, fontSize: 16 },
+  buttonDisabled: { opacity: 0.7 },
 
   inputError: {
     borderColor: UiTheme.colors.danger,

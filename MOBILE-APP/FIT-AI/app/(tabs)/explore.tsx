@@ -2,83 +2,57 @@ import { Card } from '@/components/Card';
 import RoutineDetailsModal, { type Routine } from '@/components/RoutineDetailsModal';
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { UiTheme } from '@/constants/ui-theme';
+import { getApiErrorMessage, listWorkouts } from '@/services/backend';
 import { Image } from 'expo-image';
-import React, { JSX, useMemo, useState } from 'react';
+import React, { JSX, useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 type Intensity = 'All' | 'Light' | 'Moderate' | 'Intense';
 
 const FILTERS: Intensity[] = ['All', 'Light', 'Moderate', 'Intense'];
 
-const WORKOUTS: Routine[] = [
-  {
-    id: 1,
-    title: 'Morning Mobility Flow',
-    subtitle: 'Bodyweight',
-    intensity: 'Light',
-    duration: '15 min',
-    exercises: [
-      { id: 1, name: 'Cat-Cow Stretch', detail: 'Slow movement to warm up the spine.', reps: '10 reps' },
-      { id: 2, name: 'Hip Circles', detail: 'Mobilize the hips in both directions.', reps: '8 each side' },
-      { id: 3, name: 'Shoulder Rolls', detail: 'Improve upper body mobility and posture.', reps: '10 reps' },
-    ],
-  },
-  {
-    id: 2,
-    title: 'Endurance Burn',
-    subtitle: 'Cardio',
-    intensity: 'Moderate',
-    duration: '30 min',
-    exercises: [
-      { id: 1, name: 'Jumping Jacks', detail: 'Raise heart rate steadily.', reps: '2 min' },
-      { id: 2, name: 'Mountain Climbers', detail: 'Drive knees toward chest at a steady pace.', reps: '45 sec' },
-      { id: 3, name: 'High Knees', detail: 'Maintain a quick rhythm with tall posture.', reps: '60 sec' },
-    ],
-  },
-  {
-    id: 3,
-    title: 'Strength Circuit',
-    subtitle: 'Weights',
-    intensity: 'Intense',
-    duration: '45 min',
-    exercises: [
-      { id: 1, name: 'Goblet Squat', detail: 'Hold weight at chest and squat deeply.', reps: '12 reps' },
-      { id: 2, name: 'Dumbbell Row', detail: 'Pull weight toward hip with control.', reps: '10 reps each side' },
-      { id: 3, name: 'Plank Hold', detail: 'Maintain a solid core line.', reps: '60 sec' },
-    ],
-  },
-  {
-    id: 4,
-    title: 'Core Starter',
-    subtitle: 'Bodyweight',
-    intensity: 'Moderate',
-    duration: '20 min',
-    exercises: [
-      { id: 1, name: 'Dead Bug', detail: 'Slow, controlled core stability work.', reps: '12 reps each side' },
-      { id: 2, name: 'Side Plank', detail: 'Hold posture with hips lifted.', reps: '30 sec each side' },
-      { id: 3, name: 'Glute Bridge', detail: 'Activate posterior chain and core.', reps: '15 reps' },
-    ],
-  },
-];
-
 export default function Explore(): JSX.Element {
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<Intensity>('All');
+  const [workouts, setWorkouts] = useState<Routine[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const visibleWorkouts = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
+  useEffect(() => {
+    let isMounted = true;
 
-    return WORKOUTS.filter((item) => {
-      const matchesFilter = activeFilter === 'All' || item.intensity === activeFilter;
-      const matchesQuery =
-        normalized.length === 0 ||
-        item.title.toLowerCase().includes(normalized) ||
-        item.subtitle?.toLowerCase().includes(normalized);
+    (async () => {
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+        const result = await listWorkouts(activeFilter, query);
+        if (!isMounted) {
+          return;
+        }
 
-      return matchesFilter && matchesQuery;
-    });
+        setWorkouts(
+          result.map((item) => ({
+            ...item,
+            exercises: item.exercises.map((exercise) => ({ ...exercise })),
+          })),
+        );
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+        setErrorMessage(getApiErrorMessage(error));
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
   }, [activeFilter, query]);
 
   return (
@@ -118,17 +92,20 @@ export default function Explore(): JSX.Element {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Results</Text>
-          <Text style={styles.sectionMeta}>{visibleWorkouts.length} items</Text>
+          <Text style={styles.sectionMeta}>{workouts.length} items</Text>
         </View>
 
+        {isLoading ? <Text style={styles.statusText}>Loading workouts...</Text> : null}
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
         <View style={styles.cardList}>
-          {visibleWorkouts.map((item) => (
+          {workouts.map((item) => (
             <Card
               key={item.id}
               title={item.title}
               subtitle={item.subtitle}
               duration={item.duration}
-              badges={[item.intensity]}
+              badges={item.intensity ? [item.intensity] : []}
               onPress={() => {
                 setSelectedRoutine(item);
                 setModalVisible(true);
@@ -137,7 +114,7 @@ export default function Explore(): JSX.Element {
             />
           ))}
 
-          {visibleWorkouts.length === 0 ? (
+          {!isLoading && !errorMessage && workouts.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyTitle}>No workouts found</Text>
               <Text style={styles.emptySubtitle}>Try another search keyword or switch filter.</Text>
@@ -228,4 +205,6 @@ const styles = StyleSheet.create({
   },
   emptyTitle: { color: UiTheme.colors.textPrimary, fontSize: 16, fontWeight: '800' },
   emptySubtitle: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.body },
+  statusText: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.body, fontWeight: '600' },
+  errorText: { color: UiTheme.colors.danger, fontSize: UiTheme.font.body, fontWeight: '600' },
 });

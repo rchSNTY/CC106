@@ -2,66 +2,83 @@ import { Card } from '@/components/Card';
 import RoutineDetailsModal, { type Routine } from '@/components/RoutineDetailsModal';
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { UiTheme } from '@/constants/ui-theme';
+import { getApiErrorMessage, listHistory, listWorkouts } from '@/services/backend';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { JSX, useState } from 'react';
+import React, { JSX, useEffect, useMemo, useState } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type HistoryRoutine = Routine & {
   date: string;
 };
 
-const WORKOUT_HISTORY: HistoryRoutine[] = [
-  {
-    id: 1,
-    date: 'March 5, 2026',
-    title: 'Intense Bodyweight',
-    subtitle: 'Completed',
-    intensity: 'Intense',
-    duration: '45 min',
-    exercises: [
-      { id: 1, name: 'Push-Up Circuit', detail: 'Three sets to near failure.', reps: '12 reps' },
-      { id: 2, name: 'Walking Lunges', detail: 'Keep hips level and stride steady.', reps: '16 steps' },
-      { id: 3, name: 'Plank Variations', detail: 'Hold each position with control.', reps: '40 sec' },
-    ],
-  },
-  {
-    id: 2,
-    date: 'March 3, 2026',
-    title: 'Moderate Cardio',
-    subtitle: 'Completed',
-    intensity: 'Moderate',
-    duration: '30 min',
-    exercises: [
-      { id: 1, name: 'Jog Intervals', detail: 'Alternate running and walking.', reps: '20 min' },
-      { id: 2, name: 'Jump Rope', detail: 'Stay light on your feet.', reps: '5 min' },
-    ],
-  },
-  {
-    id: 3,
-    date: 'March 1, 2026',
-    title: 'Light Mobility',
-    subtitle: 'Completed',
-    intensity: 'Light',
-    duration: '20 min',
-    exercises: [
-      { id: 1, name: 'Thoracic Rotations', detail: 'Move through full range slowly.', reps: '10 reps' },
-      { id: 2, name: 'Ankle Mobility', detail: 'Focus on dorsiflexion and circles.', reps: '8 each side' },
-    ],
-  },
-];
-
 const WEEK_DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const DONE_DAYS = new Set<number>([0, 1, 3]);
 
 export default function Log(): JSX.Element {
   const router = useRouter();
+  const [historyWorkouts, setHistoryWorkouts] = useState<HistoryRoutine[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const workouts = WORKOUT_HISTORY.length;
-  const totalMinutes = WORKOUT_HISTORY.reduce((sum, item) => sum + parseInt(item.duration, 10), 0);
-  const averageMinutes = Math.round(totalMinutes / workouts);
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+        const [history, workouts] = await Promise.all([listHistory(), listWorkouts('All', '')]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        const byId = new Map(workouts.map((workout) => [workout.id, workout]));
+        const merged = history
+          .map((item) => {
+            const workout = byId.get(item.workoutId);
+            if (!workout) {
+              return null;
+            }
+
+            return {
+              ...workout,
+              date: item.date,
+              intensity: item.intensity,
+              duration: item.duration,
+            } as HistoryRoutine;
+          })
+          .filter((item): item is HistoryRoutine => Boolean(item));
+
+        setHistoryWorkouts(merged);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+        setErrorMessage(getApiErrorMessage(error));
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const workouts = historyWorkouts.length;
+  const totalMinutes = historyWorkouts.reduce((sum, item) => sum + parseInt(item.duration, 10), 0);
+  const averageMinutes = useMemo(() => {
+    if (workouts === 0) {
+      return 0;
+    }
+    return Math.round(totalMinutes / workouts);
+  }, [totalMinutes, workouts]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -116,8 +133,10 @@ export default function Log(): JSX.Element {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Workout History</Text>
+          {isLoading ? <Text style={styles.statusText}>Loading workout history...</Text> : null}
+          {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
           <View style={styles.historyList}>
-            {WORKOUT_HISTORY.map((item) => (
+            {historyWorkouts.map((item) => (
               <Card
                 key={item.id}
                 title={item.title}
@@ -131,6 +150,7 @@ export default function Log(): JSX.Element {
                 accessibilityLabel={`Open ${item.title} workout details`}
               />
             ))}
+            {!isLoading && !errorMessage && historyWorkouts.length === 0 ? <Text style={styles.statusText}>No history yet. Start a workout to track your progress.</Text> : null}
           </View>
         </View>
       </ScrollView>
@@ -208,4 +228,6 @@ const styles = StyleSheet.create({
   historyDate: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.caption, fontWeight: '700' },
   historyTitle: { color: UiTheme.colors.textPrimary, fontSize: 16, fontWeight: '800' },
   historyDuration: { color: UiTheme.colors.textSecondary, fontWeight: '800', fontSize: UiTheme.font.body },
+  statusText: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.body, fontWeight: '600' },
+  errorText: { color: UiTheme.colors.danger, fontSize: UiTheme.font.body, fontWeight: '600' },
 });

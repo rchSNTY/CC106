@@ -6,13 +6,14 @@ import { Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, Toucha
 
 import { ConfirmationModal } from '@/components/confirmation-modal';
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
+import { logout } from '@/services/backend';
 import { useUserProfile } from '@/stores/user-profile';
 
 type PendingAction = 'edit' | 'logout' | null;
 
 export default function Profile(): JSX.Element {
   const router = useRouter();
-  const { profile } = useUserProfile();
+  const { profile, resetProfile } = useUserProfile();
   const { width, height } = useWindowDimensions();
   const isCompact = width < 390 || height < 700;
   const headerGap = Math.max(12, Math.min(24, Math.round(width * 0.06)));
@@ -37,7 +38,11 @@ export default function Profile(): JSX.Element {
         message: 'You will be taken back to the login screen.',
         confirmText: 'Sign out',
         isDangerous: true,
-        onConfirm: () => router.push('/login' as Href),
+        onConfirm: async () => {
+          await logout();
+          resetProfile();
+          router.push('/login' as Href);
+        },
       };
     }
 
@@ -139,9 +144,9 @@ export default function Profile(): JSX.Element {
           cancelText="Cancel"
           isDangerous={confirmationConfig.isDangerous}
           onCancel={closeConfirmation}
-          onConfirm={() => {
+          onConfirm={async () => {
             closeConfirmation();
-            confirmationConfig.onConfirm();
+            await confirmationConfig.onConfirm();
           }}
         />
       ) : null}

@@ -9,6 +9,8 @@ import { ThemedView } from '@/components/themed-view';
 import { UiTheme } from '@/constants/ui-theme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useFormValidation, ValidationRule } from '@/hooks/useFormValidation';
+import { getApiErrorMessage, register } from '@/services/backend';
+import { useUserProfile } from '@/stores/user-profile';
 
 export default function SignupScreen() {
   const [username, setUsername] = useState('');
@@ -17,6 +19,7 @@ export default function SignupScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { updateProfile } = useUserProfile();
   const textColor = useThemeColor({}, 'text');
   const [accepted, setAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
@@ -84,18 +87,31 @@ export default function SignupScreen() {
       return;
     }
 
-    setIsLoading(true);
-    // Simulate async operation
-    setTimeout(() => {
-      Alert.alert('Account created', `Welcome, ${username}! Please log in.`);
+    try {
+      setIsLoading(true);
+      await register({
+        username: username.trim(),
+        email: email.trim(),
+        password,
+        confirmPassword,
+      });
+
+      updateProfile({
+        name: username.trim(),
+      });
+
+      Alert.alert('Account created', `Welcome, ${username.trim()}! Let\'s set up your profile.`);
       setUsername('');
       setEmail('');
       setPassword('');
       setConfirmPassword('');
       setAccepted(false);
-      router.push('/login' as Href);
+      router.push('/user' as Href);
+    } catch (error) {
+      Alert.alert('Signup Failed', getApiErrorMessage(error));
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   }
 
   return (

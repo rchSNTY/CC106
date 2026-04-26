@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text'
 import { ThemedView } from '@/components/themed-view'
 import { UiTheme } from '@/constants/ui-theme'
 import { useThemeColor } from '@/hooks/use-theme-color'
+import { getApiErrorMessage, upsertProfile } from '@/services/backend'
 import { useUserProfile } from '@/stores/user-profile'
 
 type Step = 1 | 2
@@ -38,7 +39,7 @@ function OptionButton({ label, description, selected, tint, onPress }: OptionBut
 export default function ChoicesScreen(): JSX.Element {
   const tint = useThemeColor({}, 'tint')
   const router = useRouter()
-  const { updateProfile } = useUserProfile()
+  const { profile, updateProfile } = useUserProfile()
 
   const [step, setStep] = useState<Step>(1)
   const [activity, setActivity] = useState<string | null>(null)
@@ -72,10 +73,17 @@ export default function ChoicesScreen(): JSX.Element {
     setShowConfirmation(true);
   }
 
-  function handleConfirmFinish() {
+  async function handleConfirmFinish() {
     setShowConfirmation(false);
-    updateProfile({ activityLevel: activity!, workout: workout! });
-    router.push('/Homepage' as Href);
+    const mergedProfile = { ...profile, activityLevel: activity!, workout: workout! };
+    updateProfile(mergedProfile);
+
+    try {
+      await upsertProfile(mergedProfile);
+      router.push('/Homepage' as Href);
+    } catch (error) {
+      Alert.alert('Save Failed', getApiErrorMessage(error));
+    }
   }
 
   return (
