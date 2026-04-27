@@ -1,19 +1,19 @@
-import { readDb, writeDb } from '../repositories/json-db';
+import { getHistoryCollection, getWorkoutsCollection } from '../repositories/collections';
 import type { HistoryItem, Intensity } from '../types/models';
 import { HttpError } from '../utils/errors';
 import { createId } from '../utils/id';
 
 export async function listHistory(userId: string): Promise<HistoryItem[]> {
-  const db = await readDb();
-  return db.history
-    .filter((item) => item.userId === userId)
-    .sort((a, b) => b.date.localeCompare(a.date));
+  const historyCollection = getHistoryCollection();
+  const history = await historyCollection.find({ userId }).sort({ date: -1 }).toArray();
+  return history;
 }
 
 export async function addHistory(userId: string, input: { workoutId: string; date: string; duration: string; intensity: Intensity; notes?: string }): Promise<HistoryItem> {
-  const db = await readDb();
+  const historyCollection = getHistoryCollection();
+  const workoutsCollection = getWorkoutsCollection();
 
-  const workoutExists = db.workouts.some((w) => w.id === input.workoutId);
+  const workoutExists = await workoutsCollection.findOne({ id: input.workoutId });
   if (!workoutExists) {
     throw new HttpError(404, 'Workout not found.');
   }
@@ -32,7 +32,6 @@ export async function addHistory(userId: string, input: { workoutId: string; dat
     notes: input.notes,
   };
 
-  db.history.push(item);
-  await writeDb(db);
+  await historyCollection.insertOne(item);
   return item;
 }

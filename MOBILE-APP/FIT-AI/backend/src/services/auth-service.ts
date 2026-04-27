@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt, { type JwtPayload } from 'jsonwebtoken';
 
 import { env } from '../config/env';
-import { readDb, writeDb } from '../repositories/json-db';
+import { getUsersCollection, getUserProfilesCollection } from '../repositories/collections';
 import type { User, UserProfile } from '../types/models';
 import { HttpError } from '../utils/errors';
 import { createId } from '../utils/id';
@@ -58,14 +58,14 @@ export async function registerUser(input: RegisterInput): Promise<AuthResponse> 
     throw new HttpError(400, 'Password must be at least 8 characters.');
   }
 
-  const db = await readDb();
+  const usersCollection = getUsersCollection();
 
-  const existingUsername = db.users.find((u) => u.username.toLowerCase() === username.toLowerCase());
+  const existingUsername = await usersCollection.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } });
   if (existingUsername) {
     throw new HttpError(409, 'Username is already taken.');
   }
 
-  const existingEmail = db.users.find((u) => u.email.toLowerCase() === email);
+  const existingEmail = await usersCollection.findOne({ email });
   if (existingEmail) {
     throw new HttpError(409, 'Email is already registered.');
   }
@@ -80,8 +80,7 @@ export async function registerUser(input: RegisterInput): Promise<AuthResponse> 
     createdAt: new Date().toISOString(),
   };
 
-  db.users.push(user);
-  await writeDb(db);
+  await usersCollection.insertOne(user);
 
   const token = signToken(user.id);
 
@@ -92,10 +91,10 @@ export async function registerUser(input: RegisterInput): Promise<AuthResponse> 
 }
 
 export async function loginUser(input: LoginInput): Promise<AuthResponse> {
-  const db = await readDb();
+  const usersCollection = getUsersCollection();
   const username = input.username.trim().toLowerCase();
 
-  const user = db.users.find((u) => u.username.toLowerCase() === username);
+  const user = await usersCollection.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } });
 
   if (!user) {
     throw new HttpError(401, 'Invalid username or password.');
@@ -113,8 +112,8 @@ export async function loginUser(input: LoginInput): Promise<AuthResponse> {
 }
 
 export async function getCurrentUser(userId: string): Promise<SafeUser> {
-  const db = await readDb();
-  const user = db.users.find((u) => u.id === userId);
+  const usersCollection = getUsersCollection();
+  const user = await usersCollection.findOne({ id: userId });
 
   if (!user) {
     throw new HttpError(404, 'User not found.');
@@ -124,26 +123,27 @@ export async function getCurrentUser(userId: string): Promise<SafeUser> {
 }
 
 export async function saveUserProfile(userId: string, profile: UserProfile): Promise<UserProfile> {
-  const db = await readDb();
-  const existing = db.userProfiles.find((record) => record.userId === userId);
+  const userProfilesCollection = getUserProfilesCollection();
+  const existing = await userProfilesCollection.findOne({ userId });
 
   if (existing) {
-    existing.profile = profile;
-    existing.updatedAt = new Date().toISOString();
+    await userProfilesCollection.updateOne(
+      { userId },
+      { $set: { profile, updatedAt: new Date().toISOString() } }
+    );
   } else {
-    db.userProfiles.push({
+    await userProfilesCollection.insertOne({
       userId,
       profile,
       updatedAt: new Date().toISOString(),
     });
   }
 
-  await writeDb(db);
   return profile;
 }
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
-  const db = await readDb();
-  const found = db.userProfiles.find((record) => record.userId === userId);
+  const userProfilesCollection = getUserProfilesCollection();
+  const found = await userProfilesCollection.findOne({ userId });
   return found?.profile ?? null;
 }

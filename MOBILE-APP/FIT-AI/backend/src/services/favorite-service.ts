@@ -1,46 +1,48 @@
-import { readDb, writeDb } from '../repositories/json-db';
+import { getFavoritesCollection, getWorkoutsCollection } from '../repositories/collections';
 import type { Workout } from '../types/models';
 import { HttpError } from '../utils/errors';
 import { createId } from '../utils/id';
 
 export async function listFavorites(userId: string): Promise<Workout[]> {
-  const db = await readDb();
-  const favoriteIds = db.favorites.filter((f) => f.userId === userId).map((f) => f.workoutId);
+  const favoritesCollection = getFavoritesCollection();
+  const workoutsCollection = getWorkoutsCollection();
 
-  return db.workouts.filter((w) => favoriteIds.includes(w.id));
+  const favorites = await favoritesCollection.find({ userId }).toArray();
+  const favoriteIds = favorites.map((f) => f.workoutId);
+
+  const workouts = await workoutsCollection.find({ id: { $in: favoriteIds } }).toArray();
+
+  return workouts;
 }
 
 export async function addFavorite(userId: string, workoutId: string): Promise<void> {
-  const db = await readDb();
+  const favoritesCollection = getFavoritesCollection();
+  const workoutsCollection = getWorkoutsCollection();
 
-  const workout = db.workouts.find((w) => w.id === workoutId);
+  const workout = await workoutsCollection.findOne({ id: workoutId });
   if (!workout) {
     throw new HttpError(404, 'Workout not found.');
   }
 
-  const alreadyExists = db.favorites.some((f) => f.userId === userId && f.workoutId === workoutId);
+  const alreadyExists = await favoritesCollection.findOne({ userId, workoutId });
   if (alreadyExists) {
     return;
   }
 
-  db.favorites.push({
+  await favoritesCollection.insertOne({
     id: createId('fav'),
     userId,
     workoutId,
     createdAt: new Date().toISOString(),
   });
-
-  await writeDb(db);
 }
 
 export async function removeFavorite(userId: string, workoutId: string): Promise<void> {
-  const db = await readDb();
-  const next = db.favorites.filter((f) => !(f.userId === userId && f.workoutId === workoutId));
+  const favoritesCollection = getFavoritesCollection();
 
-  if (next.length === db.favorites.length) {
+  const result = await favoritesCollection.deleteOne({ userId, workoutId });
+
+  if (result.deletedCount === 0) {
     throw new HttpError(404, 'Favorite entry not found.');
   }
-
-  db.favorites = next;
-  await writeDb(db);
 }

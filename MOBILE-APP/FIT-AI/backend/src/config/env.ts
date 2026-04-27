@@ -19,4 +19,7 @@ export const env = {
   baseUrl: process.env.BASE_URL ?? `http://localhost:${process.env.PORT ?? 4000}`,
   dbPath: path.resolve(process.cwd(), 'data', 'db.json'),
   uploadsDir: path.resolve(process.cwd(), 'uploads', 'avatars'),
+  // MongoDB configuration
+  mongoUri: process.env.MONGO_URI ?? 'mongodb://localhost:27017',
+  mongoDbName: process.env.MONGO_DB_NAME ?? 'fitai',
 };

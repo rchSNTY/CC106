@@ -1,3 +1,5 @@
+import { ObjectId } from 'mongodb';
+
 export type ActivityLevel = 'Light' | 'Moderate' | 'Intense';
 
 export type WorkoutType = 'Cardio' | 'Bodyweight' | 'Weight';
@@ -12,6 +14,7 @@ export type Exercise = {
 };
 
 export type Workout = {
+  _id?: ObjectId;
   id: string;
   title: string;
   subtitle: string;
@@ -34,6 +37,7 @@ export type UserProfile = {
 };
 
 export type User = {
+  _id?: ObjectId;
   id: string;
   username: string;
   email: string;
@@ -42,6 +46,7 @@ export type User = {
 };
 
 export type Favorite = {
+  _id?: ObjectId;
   id: string;
   userId: string;
   workoutId: string;
@@ -49,6 +54,7 @@ export type Favorite = {
 };
 
 export type HistoryItem = {
+  _id?: ObjectId;
   id: string;
   userId: string;
   workoutId: string;
@@ -59,6 +65,7 @@ export type HistoryItem = {
 };
 
 export type UserProfileRecord = {
+  _id?: ObjectId;
   userId: string;
   profile: UserProfile;
   updatedAt: string;
