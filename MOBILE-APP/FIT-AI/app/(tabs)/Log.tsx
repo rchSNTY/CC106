@@ -2,11 +2,12 @@ import { Card } from '@/components/Card';
 import RoutineDetailsModal, { type Routine } from '@/components/RoutineDetailsModal';
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { UiTheme } from '@/constants/ui-theme';
-import { getApiErrorMessage, listHistory, listWorkouts } from '@/services/backend';
+import { ApiError, addFavorite, getApiErrorMessage, listFavorites, listHistory, listWorkouts, removeFavorite } from '@/services/backend';
+import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { JSX, useEffect, useMemo, useState } from 'react';
-import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { JSX, useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type HistoryRoutine = Routine & {
   date: string;
@@ -22,6 +23,8 @@ export default function Log(): JSX.Element {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -69,6 +72,97 @@ export default function Log(): JSX.Element {
     return () => {
       isMounted = false;
     };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+
+      (async () => {
+        try {
+          const favorites = await listFavorites();
+          if (!isMounted) {
+            return;
+          }
+
+          setFavoriteIds(new Set(favorites.map((item) => item.id)));
+        } catch (error) {
+          if (!isMounted) {
+            return;
+          }
+
+          if (error instanceof ApiError && error.status === 401) {
+            setFavoriteIds(new Set());
+          }
+        }
+      })();
+
+      return () => {
+        isMounted = false;
+      };
+    }, []),
+  );
+
+  const selectedWorkoutId = selectedRoutine ? String(selectedRoutine.id) : null;
+  const selectedIsFavorite = useMemo(() => {
+    if (!selectedWorkoutId) {
+      return false;
+    }
+
+    return favoriteIds.has(selectedWorkoutId);
+  }, [favoriteIds, selectedWorkoutId]);
+
+  const handleToggleFavorite = useCallback(async () => {
+    if (!selectedWorkoutId || isFavoriteLoading) {
+      return;
+    }
+
+    const wasFavorite = favoriteIds.has(selectedWorkoutId);
+
+    await performToggleFavorite(selectedWorkoutId, wasFavorite);
+  }, [favoriteIds, isFavoriteLoading, router, selectedWorkoutId]);
+
+  const performToggleFavorite = useCallback(async (workoutId: string, removing: boolean) => {
+    setIsFavoriteLoading(true);
+    setFavoriteIds((current) => {
+      const next = new Set(current);
+      if (removing) {
+        next.delete(workoutId);
+      } else {
+        next.add(workoutId);
+      }
+      return next;
+    });
+
+    try {
+      if (removing) {
+        await removeFavorite(workoutId);
+      } else {
+        await addFavorite(workoutId);
+      }
+    } catch (error) {
+      setFavoriteIds((current) => {
+        const next = new Set(current);
+        if (removing) {
+          next.add(workoutId);
+        } else {
+          next.delete(workoutId);
+        }
+        return next;
+      });
+
+      if (error instanceof ApiError && error.status === 401) {
+        Alert.alert('Login required', 'Please log in to save favorites.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Login', onPress: () => router.push('/login') },
+        ]);
+        return;
+      }
+
+      Alert.alert('Favorites error', getApiErrorMessage(error));
+    } finally {
+      setIsFavoriteLoading(false);
+    }
   }, []);
 
   const workouts = historyWorkouts.length;
@@ -158,6 +252,9 @@ export default function Log(): JSX.Element {
       <RoutineDetailsModal
         visible={modalVisible}
         routine={selectedRoutine}
+        isFavorite={selectedIsFavorite}
+        isFavoriteLoading={isFavoriteLoading}
+        onToggleFavorite={handleToggleFavorite}
         onClose={() => {
           setModalVisible(false);
           setSelectedRoutine(null);

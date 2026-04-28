@@ -159,6 +159,23 @@ export default function ActiveWorkout() {
               <ThemedText style={styles.equipmentValue}>{currentExercise.equipment}</ThemedText>
             </View>
           )}
+
+          {/* Steps List */}
+          {currentExercise?.steps && currentExercise.steps.length > 0 && (
+            <View style={styles.stepsContainer}>
+              <ThemedText type="defaultSemiBold" style={styles.stepsTitle}>
+                How to do it:
+              </ThemedText>
+              {currentExercise.steps.map((step, index) => (
+                <View key={index} style={styles.stepItem}>
+                  <View style={styles.stepNumber}>
+                    <ThemedText style={styles.stepNumberText}>{index + 1}</ThemedText>
+                  </View>
+                  <ThemedText style={styles.stepText}>{step}</ThemedText>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </View>
 
@@ -342,6 +359,44 @@ const styles = StyleSheet.create({
     fontSize: UiTheme.font.caption,
     fontWeight: '700',
     color: UiTheme.colors.accent,
+  },
+  stepsContainer: {
+    marginTop: UiTheme.spacing.lg,
+    paddingTop: UiTheme.spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: UiTheme.colors.border,
+    width: '100%',
+  },
+  stepsTitle: {
+    fontSize: UiTheme.font.subtitle,
+    color: UiTheme.colors.textPrimary,
+    marginBottom: UiTheme.spacing.md,
+    textAlign: 'center',
+  },
+  stepItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: UiTheme.spacing.sm,
+    gap: UiTheme.spacing.sm,
+  },
+  stepNumber: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: UiTheme.colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepNumberText: {
+    color: UiTheme.colors.surface,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  stepText: {
+    flex: 1,
+    fontSize: UiTheme.font.body,
+    color: UiTheme.colors.textSecondary,
+    lineHeight: 22,
   },
   navContainer: {
     flexDirection: 'row',

@@ -61,19 +61,22 @@
           "id": "e-1",
           "name": "Cat-Cow Stretch",
           "detail": "Slow movement to warm up the spine.",
-          "reps": "10 reps"
+          "reps": "10 reps",
+          "steps": ["Start on hands and knees with wrists under shoulders", "Inhale, arch your back and lift your head and tailbone (Cow pose)", "Exhale, round your spine and tuck your chin to your chest (Cat pose)", "Flow smoothly between these two positions", "Keep movements slow and controlled"]
         },
         {
           "id": "e-2",
           "name": "Hip Circles",
           "detail": "Mobilize the hips in both directions.",
-          "reps": "8 each side"
+          "reps": "8 each side",
+          "steps": ["Stand with feet hip-width apart and hands on hips", "Make large circles with your hips clockwise", "Complete 8 circles going clockwise", "Reverse direction and make 8 circles counterclockwise", "Keep your core engaged and upper body stable"]
         },
         {
           "id": "e-3",
           "name": "Shoulder Rolls",
           "detail": "Improve upper body mobility and posture.",
-          "reps": "10 reps"
+          "reps": "10 reps",
+          "steps": ["Stand or sit with arms relaxed at your sides", "Roll shoulders forward in a circular motion", "Complete 10 forward rolls", "Reverse direction and roll shoulders backward", "Keep movements slow and deliberate"]
         }
       ]
     },
@@ -88,19 +91,22 @@
           "id": "e-4",
           "name": "Jumping Jacks",
           "detail": "Raise heart rate steadily.",
-          "reps": "2 min"
+          "reps": "2 min",
+          "steps": ["Stand with feet together and arms at your sides", "Jump while spreading legs wide and raising arms overhead", "Jump back to starting position", "Repeat continuously at a steady pace", "Land softly on the balls of your feet"]
         },
         {
           "id": "e-5",
           "name": "Mountain Climbers",
           "detail": "Drive knees toward chest at a steady pace.",
-          "reps": "45 sec"
+          "reps": "45 sec",
+          "steps": ["Start in a high plank position with hands under shoulders", "Drive one knee toward your chest", "Quickly switch legs, extending the other leg back", "Continue alternating legs at a fast pace", "Keep your core tight and hips level"]
         },
         {
           "id": "e-6",
           "name": "High Knees",
           "detail": "Maintain a quick rhythm with tall posture.",
-          "reps": "60 sec"
+          "reps": "60 sec",
+          "steps": ["Stand tall with feet hip-width apart", "Run in place, lifting knees as high as possible", "Pump your arms in running motion", "Land on the balls of your feet", "Maintain a quick, steady rhythm throughout"]
         }
       ]
     },
@@ -115,19 +121,22 @@
           "id": "e-7",
           "name": "Goblet Squat",
           "detail": "Hold weight at chest and squat deeply.",
-          "reps": "12 reps"
+          "reps": "12 reps",
+          "steps": ["Hold a dumbbell or kettlebell at chest level", "Stand with feet shoulder-width apart", "Push your hips back and bend knees to lower into squat", "Keep chest up and core engaged", "Push through heels to return to standing"]
         },
         {
           "id": "e-8",
           "name": "Dumbbell Row",
           "detail": "Pull weight toward hip with control.",
-          "reps": "10 reps each side"
+          "reps": "10 reps each side",
+          "steps": ["Place one knee and hand on a bench for support", "Hold dumbbell in opposite hand with arm extended", "Pull dumbbell up to your hip, squeezing shoulder blade", "Lower with control back to starting position", "Complete all reps on one side, then switch"]
         },
         {
           "id": "e-9",
           "name": "Plank Hold",
           "detail": "Maintain a solid core line.",
-          "reps": "60 sec"
+          "reps": "60 sec",
+          "steps": ["Start in forearm plank position", "Keep elbows directly under shoulders", "Engage your core and keep body in straight line", "Don't let hips sag or pike up", "Hold position while breathing steadily"]
         }
       ]
     },
@@ -142,19 +151,22 @@
           "id": "e-10",
           "name": "Dead Bug",
           "detail": "Slow, controlled core stability work.",
-          "reps": "12 reps each side"
+          "reps": "12 reps each side",
+          "steps": ["Lie on your back with arms extended toward ceiling", "Lift legs with knees bent at 90 degrees", "Lower opposite arm and leg toward floor slowly", "Return to starting position with control", "Alternate sides keeping core engaged throughout"]
         },
         {
           "id": "e-11",
           "name": "Side Plank",
           "detail": "Hold posture with hips lifted.",
-          "reps": "30 sec each side"
+          "reps": "30 sec each side",
+          "steps": ["Lie on your side with legs extended", "Place forearm on ground under shoulder", "Lift hips off the ground, forming straight line", "Engage core and hold position", "Complete hold time, then switch to other side"]
         },
         {
           "id": "e-12",
           "name": "Glute Bridge",
           "detail": "Activate posterior chain and core.",
-          "reps": "15 reps"
+          "reps": "15 reps",
+          "steps": ["Lie on your back with knees bent and feet flat", "Push through heels to lift hips toward ceiling", "Squeeze glutes at the top of the movement", "Lower hips back down with control", "Keep core engaged throughout the movement"]
         }
       ]
     }

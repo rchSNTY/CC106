@@ -12,6 +12,7 @@ export type ApiExercise = {
   name: string;
   detail: string;
   reps?: string;
+  steps?: string[];
 };
 
 export type ApiWorkout = {

@@ -1,44 +1,117 @@
+import { Card } from '@/components/Card';
+import RoutineDetailsModal, { type Routine } from '@/components/RoutineDetailsModal';
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { UiTheme } from '@/constants/ui-theme';
-import { getApiErrorMessage, listFavorites } from '@/services/backend';
+import { ApiError, addFavorite, getApiErrorMessage, listFavorites, removeFavorite } from '@/services/backend';
+import { useFocusEffect } from '@react-navigation/native';
 import { Href, useRouter } from 'expo-router';
-import React, { JSX, useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { JSX, useCallback, useMemo, useState } from 'react';
+import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function Favorites(): JSX.Element {
   const router = useRouter();
-  const [favorites, setFavorites] = useState<Array<{ id: string; title: string; subtitle: string; duration: string }>>([]);
+  const [favorites, setFavorites] = useState<Routine[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    (async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage(null);
-        const result = await listFavorites();
-        if (!isMounted) {
-          return;
-        }
-        setFavorites(result);
-      } catch (error) {
-        if (!isMounted) {
-          return;
-        }
-        setErrorMessage(getApiErrorMessage(error));
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+  const loadFavorites = useCallback(async (isMountedRef: () => boolean) => {
+    try {
+      setIsLoading(true);
+      setErrorMessage(null);
+      const result = await listFavorites();
+      if (!isMountedRef()) {
+        return;
       }
-    })();
-
-    return () => {
-      isMounted = false;
-    };
+      setFavorites(
+        result.map((item) => ({
+          ...item,
+          exercises: item.exercises.map((exercise) => ({ ...exercise, steps: (exercise as any).steps ?? [] })),
+        })),
+      );
+    } catch (error) {
+      if (!isMountedRef()) {
+        return;
+      }
+      setErrorMessage(getApiErrorMessage(error));
+    } finally {
+      if (isMountedRef()) {
+        setIsLoading(false);
+      }
+    }
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+      void loadFavorites(() => isMounted);
+
+      return () => {
+        isMounted = false;
+      };
+    }, [loadFavorites]),
+  );
+
+  const selectedWorkoutId = selectedRoutine ? String(selectedRoutine.id) : null;
+  const selectedIsFavorite = useMemo(() => {
+    if (!selectedWorkoutId) {
+      return false;
+    }
+
+    return favorites.some((fav) => String(fav.id) === selectedWorkoutId);
+  }, [favorites, selectedWorkoutId]);
+
+  const handleToggleFavorite = useCallback(async () => {
+    if (!selectedWorkoutId || isFavoriteLoading) {
+      return;
+    }
+
+    const wasFavorite = selectedIsFavorite;
+
+    await performToggleFavorite(selectedWorkoutId, wasFavorite);
+  }, [favorites, isFavoriteLoading, router, selectedRoutine, selectedIsFavorite, selectedWorkoutId]);
+
+  const performToggleFavorite = useCallback(async (workoutId: string, removing: boolean) => {
+    setIsFavoriteLoading(true);
+    setFavorites((current) => {
+      if (removing) {
+        return current.filter((fav) => String(fav.id) !== workoutId);
+      } else if (selectedRoutine) {
+        return [...current, selectedRoutine];
+      }
+      return current;
+    });
+
+    try {
+      if (removing) {
+        await removeFavorite(workoutId);
+      } else {
+        await addFavorite(workoutId);
+      }
+    } catch (error) {
+      setFavorites((current) => {
+        if (removing && selectedRoutine) {
+          return [...current, selectedRoutine];
+        } else {
+          return current.filter((fav) => String(fav.id) !== workoutId);
+        }
+      });
+
+      if (error instanceof ApiError && error.status === 401) {
+        Alert.alert('Login required', 'Please log in to save favorites.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Login', onPress: () => router.push('/login') },
+        ]);
+        return;
+      }
+
+      Alert.alert('Favorites error', getApiErrorMessage(error));
+    } finally {
+      setIsFavoriteLoading(false);
+    }
+  }, [selectedRoutine]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -57,13 +130,18 @@ export default function Favorites(): JSX.Element {
 
         <View style={styles.list}>
           {favorites.map((item) => (
-            <View key={item.id} style={styles.favoriteCard}>
-              <View>
-                <Text style={styles.favoriteTitle}>{item.title}</Text>
-                <Text style={styles.favoriteMeta}>{item.subtitle}</Text>
-              </View>
-              <Text style={styles.favoriteDuration}>{item.duration}</Text>
-            </View>
+            <Card
+              key={item.id}
+              title={item.title}
+              subtitle={item.subtitle}
+              duration={item.duration}
+              badges={item.intensity ? [item.intensity] : []}
+              onPress={() => {
+                setSelectedRoutine(item);
+                setModalVisible(true);
+              }}
+              accessibilityLabel={`Open ${item.title} routine details`}
+            />
           ))}
         </View>
 
@@ -75,6 +153,28 @@ export default function Favorites(): JSX.Element {
           </TouchableOpacity>
         </View> : null}
       </ScrollView>
+
+      <RoutineDetailsModal
+        visible={modalVisible}
+        routine={selectedRoutine}
+        isFavorite={selectedIsFavorite}
+        isFavoriteLoading={isFavoriteLoading}
+        onToggleFavorite={handleToggleFavorite}
+        onClose={() => {
+          setModalVisible(false);
+          setSelectedRoutine(null);
+        }}
+        onStart={() => {
+          if (selectedRoutine) {
+            setModalVisible(false);
+            router.push({
+              pathname: '/active-workout',
+              params: { routine: JSON.stringify(selectedRoutine) },
+            });
+            setSelectedRoutine(null);
+          }
+        }}
+      />
 
       <BottomTabNav activeTab="Favorites" />
     </SafeAreaView>
@@ -98,19 +198,7 @@ const styles = StyleSheet.create({
   headlineAction: { fontSize: UiTheme.font.body, fontWeight: '800', color: UiTheme.colors.accent },
   subtitle: { fontSize: UiTheme.font.body, color: UiTheme.colors.textSecondary, marginBottom: UiTheme.spacing.xs },
   list: { gap: UiTheme.spacing.sm },
-  favoriteCard: {
-    backgroundColor: UiTheme.colors.surface,
-    borderRadius: UiTheme.radius.lg,
-    borderColor: UiTheme.colors.border,
-    borderWidth: 1,
-    padding: UiTheme.spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  favoriteTitle: { color: UiTheme.colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  favoriteMeta: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.body },
-  favoriteDuration: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.caption, fontWeight: '700' },
+
   emptyHintCard: {
     marginTop: UiTheme.spacing.sm,
     backgroundColor: UiTheme.colors.surface,
