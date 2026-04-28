@@ -6,12 +6,14 @@ import { getApiErrorMessage, listWorkouts } from '@/services/backend';
 import { Image } from 'expo-image';
 import React, { JSX, useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
 type Intensity = 'All' | 'Light' | 'Moderate' | 'Intense';
 
 const FILTERS: Intensity[] = ['All', 'Light', 'Moderate', 'Intense'];
 
 export default function Explore(): JSX.Element {
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<Intensity>('All');
   const [workouts, setWorkouts] = useState<Routine[]>([]);
@@ -131,8 +133,14 @@ export default function Explore(): JSX.Element {
           setSelectedRoutine(null);
         }}
         onStart={() => {
-          setModalVisible(false);
-          setSelectedRoutine(null);
+          if (selectedRoutine) {
+            setModalVisible(false);
+            router.push({
+              pathname: '/active-workout',
+              params: { routine: JSON.stringify(selectedRoutine) },
+            });
+            setSelectedRoutine(null);
+          }
         }}
       />
 

@@ -136,9 +136,9 @@ export default function Log(): JSX.Element {
           {isLoading ? <Text style={styles.statusText}>Loading workout history...</Text> : null}
           {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
           <View style={styles.historyList}>
-            {historyWorkouts.map((item) => (
+            {historyWorkouts.map((item, index) => (
               <Card
-                key={item.id}
+                key={`${item.id}-${index}`}
                 title={item.title}
                 subtitle={item.date}
                 duration={item.duration}
@@ -163,8 +163,14 @@ export default function Log(): JSX.Element {
           setSelectedRoutine(null);
         }}
         onStart={() => {
-          setModalVisible(false);
-          setSelectedRoutine(null);
+          if (selectedRoutine) {
+            setModalVisible(false);
+            router.push({
+              pathname: '/active-workout',
+              params: { routine: JSON.stringify(selectedRoutine) },
+            });
+            setSelectedRoutine(null);
+          }
         }}
       />
 

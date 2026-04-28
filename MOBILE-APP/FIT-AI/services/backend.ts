@@ -229,5 +229,20 @@ export async function listHistory(): Promise<ApiHistoryItem[]> {
   return result.history;
 }
 
+export async function createHistoryEntry(entry: {
+  workoutId: string;
+  title: string;
+  date: string;
+  duration: string;
+  intensity: string;
+  completed: boolean;
+}): Promise<ApiHistoryItem> {
+  const result = await apiRequest<{ historyItem: ApiHistoryItem }>('/history', {
+    method: 'POST',
+    body: entry,
+  });
+  return result.historyItem;
+}
+
 export { ApiError };
 

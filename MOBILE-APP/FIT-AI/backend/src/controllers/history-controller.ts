@@ -21,12 +21,14 @@ export async function createHistory(req: Request, res: Response): Promise<void> 
     return;
   }
 
-  const { workoutId, date, duration, intensity, notes } = req.body as {
+  const { workoutId, date, duration, intensity, notes, title, completed } = req.body as {
     workoutId?: string;
     date?: string;
     duration?: string;
     intensity?: Intensity;
     notes?: string;
+    title?: string;
+    completed?: boolean;
   };
 
   if (!workoutId || !date || !duration || !intensity) {
@@ -35,5 +37,5 @@ export async function createHistory(req: Request, res: Response): Promise<void> 
   }
 
   const item = await addHistory(userId, { workoutId, date, duration, intensity, notes });
-  res.status(201).json({ history: item });
+  res.status(201).json({ historyItem: { ...item, title, completed } });
 }
