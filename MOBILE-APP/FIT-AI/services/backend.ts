@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 const AUTH_TOKEN_KEY = 'fitai_auth_token';
 const PROFILE_KEY = 'fitai_profile_cache';
@@ -182,11 +183,24 @@ export async function upsertProfile(profile: ApiUserProfile): Promise<ApiUserPro
 
 export async function uploadAvatar(fileUri: string): Promise<string> {
   const formData = new FormData();
-  formData.append('avatar', {
-    uri: fileUri,
-    type: 'image/jpeg',
-    name: `avatar-${Date.now()}.jpg`,
-  } as unknown as Blob);
+
+  if (Platform.OS === 'web') {
+    const response = await fetch(fileUri);
+    const blob = await response.blob();
+
+    const mimeType = blob.type || 'image/jpeg';
+    const ext = mimeType.includes('png') ? '.png' : mimeType.includes('webp') ? '.webp' : '.jpg';
+    formData.append('avatar', blob, `avatar-${Date.now()}${ext}`);
+  } else {
+    formData.append(
+      'avatar',
+      {
+        uri: fileUri,
+        type: 'image/jpeg',
+        name: `avatar-${Date.now()}.jpg`,
+      } as any,
+    );
+  }
 
   const result = await apiRequest<{ avatarUrl: string }>('/profile/avatar', {
     method: 'POST',
