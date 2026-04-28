@@ -4,9 +4,9 @@ import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { UiTheme } from '@/constants/ui-theme';
 import { getApiErrorMessage, listWorkouts } from '@/services/backend';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import React, { JSX, useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useRouter } from 'expo-router';
 
 type Intensity = 'All' | 'Light' | 'Moderate' | 'Intense';
 

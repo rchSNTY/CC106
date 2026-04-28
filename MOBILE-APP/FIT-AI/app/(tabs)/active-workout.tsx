@@ -1,11 +1,11 @@
+import { ConfirmationModal } from '@/components/confirmation-modal';
+import { type Routine } from '@/components/RoutineDetailsModal';
 import { ThemedText } from '@/components/themed-text';
 import { UiTheme } from '@/constants/ui-theme';
-import { getApiErrorMessage, createHistoryEntry } from '@/services/backend';
-import { ConfirmationModal } from '@/components/confirmation-modal';
+import { createHistoryEntry, getApiErrorMessage } from '@/services/backend';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { type Routine, type RoutineExercise } from '@/components/RoutineDetailsModal';
+import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function ActiveWorkout() {
   const router = useRouter();
