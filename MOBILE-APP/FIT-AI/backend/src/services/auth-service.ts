@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt, { type JwtPayload } from 'jsonwebtoken';
 
 import { env } from '../config/env';
-import { getUsersCollection, getUserProfilesCollection } from '../repositories/collections';
+import { getUserProfilesCollection, getUsersCollection } from '../repositories/collections';
 import type { User, UserProfile } from '../types/models';
 import { HttpError } from '../utils/errors';
 import { createId } from '../utils/id';

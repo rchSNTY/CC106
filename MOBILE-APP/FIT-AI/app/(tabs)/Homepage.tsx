@@ -1,18 +1,90 @@
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { UiTheme } from '@/constants/ui-theme';
+import { ApiError, getApiErrorMessage, listHistory } from '@/services/backend';
+import { useUserProfile } from '@/stores/user-profile';
+import { getTotalWorkoutMinutes, getWeeklyCompletedWorkouts, getWorkoutStreakDays } from '@/utils/history-stats';
+import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { Href, useRouter } from 'expo-router';
-import React, { JSX } from 'react';
+import React, { JSX, useCallback, useEffect, useMemo, useState } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-const STATS = [
-  { label: 'Weekly Goal', value: '3 / 5' },
-  { label: 'Minutes', value: '135' },
-  { label: 'Streak', value: '2 days' },
-];
 
 export default function Homepage(): JSX.Element {
   const router = useRouter();
+  const { profile } = useUserProfile();
+  const [history, setHistory] = useState<Array<{ date: string; duration: string }>>([]);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState<string | null>(null);
+
+  const loadHistory = useCallback(async () => {
+    try {
+      setIsStatsLoading(true);
+      setStatsError(null);
+      const nextHistory = await listHistory();
+      setHistory(nextHistory);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        setHistory([]);
+        setStatsError(null);
+        return;
+      }
+
+      setHistory([]);
+      setStatsError(getApiErrorMessage(error));
+    } finally {
+      setIsStatsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadHistory();
+  }, [loadHistory]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadHistory();
+    }, [loadHistory]),
+  );
+
+  const weeklyCompleted = useMemo(() => getWeeklyCompletedWorkouts(history), [history]);
+  const totalMinutes = useMemo(() => getTotalWorkoutMinutes(history), [history]);
+  const streakDays = useMemo(() => getWorkoutStreakDays(history), [history]);
+
+  const displayName = profile.name.trim() ? profile.name.trim() : 'User';
+  const weeklyGoalTarget = Number.isFinite(profile.weeklyGoal) && profile.weeklyGoal > 0 ? profile.weeklyGoal : 5;
+  const activityLevel = profile.activityLevel.trim() ? profile.activityLevel.trim() : 'Moderate';
+
+  const workoutFocus = useMemo(() => {
+    const workoutType = profile.workout.trim();
+
+    if (!workoutType) {
+      return `${activityLevel} full-body routine`;
+    }
+
+    const normalized = workoutType.toLowerCase();
+    if (normalized === 'cardio') {
+      return `${activityLevel} cardio endurance`;
+    }
+
+    if (normalized === 'bodyweight') {
+      return `${activityLevel} bodyweight strength`;
+    }
+
+    if (normalized === 'weight') {
+      return `${activityLevel} resistance training`;
+    }
+
+    return `${activityLevel} ${workoutType}`;
+  }, [activityLevel, profile.workout]);
+
+  const stats = useMemo(
+    () => [
+      { label: 'Weekly Goal', value: isStatsLoading ? '...' : `${weeklyCompleted} / ${weeklyGoalTarget}` },
+      { label: 'Minutes', value: isStatsLoading ? '...' : `${totalMinutes}` },
+      { label: 'Streak', value: isStatsLoading ? '...' : `${streakDays} ${streakDays === 1 ? 'day' : 'days'}` },
+    ],
+    [isStatsLoading, streakDays, totalMinutes, weeklyCompleted, weeklyGoalTarget],
+  );
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -23,13 +95,13 @@ export default function Homepage(): JSX.Element {
           <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
           <View>
             <Text style={styles.kicker}>FIT AI</Text>
-            <Text style={styles.welcomeText}>Welcome back, User</Text>
+            <Text style={styles.welcomeText}>Welcome back, {displayName}</Text>
           </View>
         </View>
 
         <View style={styles.heroCard}>
-          <Text style={styles.heroTitle}>Today&apos;s Focus</Text>
-          <Text style={styles.heroSubtitle}>Moderate Cardio + Core Stability</Text>
+          <Text style={styles.heroTitle}>Workout Focus</Text>
+          <Text style={styles.heroSubtitle}>{workoutFocus}</Text>
           <View style={styles.heroActions}>
             <TouchableOpacity style={styles.primaryAction} onPress={() => router.push('/choices' as Href)}>
               <Text style={styles.primaryActionText}>Change Plan</Text>
@@ -41,13 +113,14 @@ export default function Homepage(): JSX.Element {
         </View>
 
         <View style={styles.statsRow}>
-          {STATS.map((item) => (
+          {stats.map((item) => (
             <View key={item.label} style={styles.statCard}>
               <Text style={styles.statLabel}>{item.label}</Text>
               <Text style={styles.statValue}>{item.value}</Text>
             </View>
           ))}
         </View>
+        {statsError ? <Text style={styles.statsErrorText}>{statsError}</Text> : null}
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Quick Launch</Text>
@@ -135,6 +208,7 @@ const styles = StyleSheet.create({
   },
   statLabel: { color: UiTheme.colors.textSecondary, fontWeight: '600', fontSize: UiTheme.font.caption },
   statValue: { color: UiTheme.colors.textPrimary, fontWeight: '800', fontSize: 16 },
+  statsErrorText: { color: '#b91c1c', fontSize: UiTheme.font.caption, marginTop: 2 },
   sectionHeader: { marginTop: UiTheme.spacing.xs },
   sectionTitle: { fontSize: UiTheme.font.subtitle, fontWeight: '800', color: UiTheme.colors.textPrimary },
   quickGrid: { gap: UiTheme.spacing.sm },

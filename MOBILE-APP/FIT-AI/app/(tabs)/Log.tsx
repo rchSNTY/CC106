@@ -3,6 +3,7 @@ import RoutineDetailsModal, { type Routine } from '@/components/RoutineDetailsMo
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { UiTheme } from '@/constants/ui-theme';
 import { ApiError, addFavorite, getApiErrorMessage, listFavorites, listHistory, listWorkouts, removeFavorite } from '@/services/backend';
+import { getAverageWorkoutMinutes, getCompletedWeekdayIndexesForCurrentWeek, getTotalWorkoutMinutes } from '@/utils/history-stats';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -14,7 +15,6 @@ type HistoryRoutine = Routine & {
 };
 
 const WEEK_DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-const DONE_DAYS = new Set<number>([0, 1, 3]);
 
 export default function Log(): JSX.Element {
   const router = useRouter();
@@ -166,13 +166,9 @@ export default function Log(): JSX.Element {
   }, []);
 
   const workouts = historyWorkouts.length;
-  const totalMinutes = historyWorkouts.reduce((sum, item) => sum + parseInt(item.duration, 10), 0);
-  const averageMinutes = useMemo(() => {
-    if (workouts === 0) {
-      return 0;
-    }
-    return Math.round(totalMinutes / workouts);
-  }, [totalMinutes, workouts]);
+  const totalMinutes = useMemo(() => getTotalWorkoutMinutes(historyWorkouts), [historyWorkouts]);
+  const averageMinutes = useMemo(() => getAverageWorkoutMinutes(historyWorkouts), [historyWorkouts]);
+  const doneDays = useMemo(() => getCompletedWeekdayIndexesForCurrentWeek(historyWorkouts), [historyWorkouts]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -214,7 +210,7 @@ export default function Log(): JSX.Element {
           <Text style={styles.sectionTitle}>Weekly Streak</Text>
           <View style={styles.streakRow}>
             {WEEK_DAYS.map((day, index) => {
-              const done = DONE_DAYS.has(index);
+              const done = doneDays.has(index);
 
               return (
                 <View key={`${day}-${index}`} style={[styles.dayCircle, done ? styles.dayDone : styles.dayIdle]}>

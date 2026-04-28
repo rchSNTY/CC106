@@ -20,6 +20,18 @@ export default function Profile(): JSX.Element {
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const heightValue = profile.height ? `${profile.height} ${profile.heightUnit}` : 'Not set';
   const fieldValue = (value: string) => (value ? value : 'Not set');
+  const weeklyGoalValue = profile.weeklyGoal > 0 ? `${profile.weeklyGoal} / week` : 'Not set';
+
+  const fields = [
+    { label: 'Birthday', value: fieldValue(profile.birthday) },
+    { label: 'Age', value: profile.age ? profile.age : '00' },
+    { label: 'Gender', value: fieldValue(profile.gender) },
+    { label: 'Weekly Goal', value: weeklyGoalValue },
+    { label: 'Height', value: heightValue },
+    { label: 'Weight', value: fieldValue(profile.weight) },
+    { label: 'Activity Level', value: fieldValue(profile.activityLevel) },
+    { label: 'Workout Type', value: fieldValue(profile.workout) },
+  ];
 
   const confirmationConfig = useMemo(() => {
     if (pendingAction === 'edit') {
@@ -88,39 +100,13 @@ export default function Profile(): JSX.Element {
         </View>
 
         <View style={styles.formSection}>
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>Gender</Text>
-            <Text style={styles.fieldValue}>{fieldValue(profile.gender)}</Text>
-          </View>
-
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>Age</Text>
-            <Text style={styles.fieldValue}>{fieldValue(profile.age)}</Text>
-          </View>
-
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>Birthday</Text>
-            <Text style={styles.fieldValue}>{fieldValue(profile.birthday)}</Text>
-          </View>
-
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>Height</Text>
-            <Text style={styles.fieldValue}>{heightValue}</Text>
-          </View>
-
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>Weight</Text>
-            <Text style={styles.fieldValue}>{fieldValue(profile.weight)}</Text>
-          </View>
-
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>Activity Level</Text>
-            <Text style={styles.fieldValue}>{fieldValue(profile.activityLevel)}</Text>
-          </View>
-
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>Workout Type</Text>
-            <Text style={styles.fieldValue}>{fieldValue(profile.workout)}</Text>
+          <View style={styles.fieldGrid}>
+            {fields.map((item) => (
+              <View key={item.label} style={[styles.fieldCard, isCompact && styles.fieldCardCompact]}>
+                <Text style={styles.fieldLabel}>{item.label}</Text>
+                <Text style={styles.fieldValue}>{item.value}</Text>
+              </View>
+            ))}
           </View>
 
           <View style={styles.actionRow}>
@@ -191,10 +177,15 @@ const styles = StyleSheet.create({
   headerMetaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: UiTheme.spacing.sm, marginTop: 6 },
   headerMetaText: { fontSize: 14, fontWeight: '600', color: UiTheme.colors.textSecondary },
   formSection: { gap: UiTheme.spacing.md },
-  fieldRow: {
+  fieldGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: UiTheme.spacing.sm,
+  },
+  fieldCard: {
     backgroundColor: UiTheme.colors.surface,
     borderRadius: UiTheme.radius.lg,
-    minHeight: 56,
+    minHeight: 92,
     paddingHorizontal: UiTheme.spacing.lg,
     paddingVertical: UiTheme.spacing.sm,
     shadowColor: UiTheme.colors.textPrimary,
@@ -204,23 +195,25 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: UiTheme.colors.border,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    justifyContent: 'center',
+    width: '48.5%',
+  },
+  fieldCardCompact: {
+    width: '100%',
   },
   fieldLabel: {
-    fontSize: 15,
+    fontSize: 13,
     color: UiTheme.colors.textPrimary,
     fontWeight: '600',
     fontFamily: Platform.select({ ios: 'Courier', android: 'monospace', default: 'monospace' }),
-    flexShrink: 1,
+    letterSpacing: 0.6,
+    marginBottom: 6,
   },
   fieldValue: {
-    fontSize: 15,
+    fontSize: 16,
     color: UiTheme.colors.textSecondary,
     fontWeight: '700',
-    flexShrink: 1,
-    textAlign: 'right',
+    lineHeight: 22,
   },
   actionRow: {
     flexDirection: 'row',

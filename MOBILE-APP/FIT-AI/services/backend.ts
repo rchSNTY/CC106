@@ -35,6 +35,7 @@ export type ApiUserProfile = {
   weight: string;
   activityLevel: string;
   workout: string;
+  weeklyGoal: number;
 };
 
 export type ApiHistoryItem = {

@@ -13,6 +13,7 @@ export type UserProfile = {
   weight: string;
   activityLevel: string;
   workout: string;
+  weeklyGoal: number;
 };
 
 const defaultProfile: UserProfile = {
@@ -26,6 +27,7 @@ const defaultProfile: UserProfile = {
   weight: '',
   activityLevel: 'Moderate',
   workout: '',
+  weeklyGoal: 5,
 };
 
 type UserProfileContextType = {
@@ -38,7 +40,16 @@ type UserProfileContextType = {
 const UserProfileContext = createContext<UserProfileContextType | null>(null);
 
 export function UserProfileProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState<UserProfile>(defaultProfile);
+  const [profile, setProfileState] = useState<UserProfile>(defaultProfile);
+
+  const normalizeProfile = (nextProfile: Partial<UserProfile>): UserProfile => ({
+    ...defaultProfile,
+    ...nextProfile,
+    weeklyGoal:
+      typeof nextProfile.weeklyGoal === 'number' && Number.isFinite(nextProfile.weeklyGoal) && nextProfile.weeklyGoal > 0
+        ? Math.round(nextProfile.weeklyGoal)
+        : defaultProfile.weeklyGoal,
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -49,7 +60,7 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      setProfile(cached);
+      setProfileState(normalizeProfile(cached));
     })();
 
     return () => {
@@ -61,15 +72,22 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
     void saveProfileCache(profile);
   }, [profile]);
 
+  const setProfile: Dispatch<SetStateAction<UserProfile>> = (nextProfile) => {
+    setProfileState((current) => {
+      const resolved = typeof nextProfile === 'function' ? nextProfile(current) : nextProfile;
+      return normalizeProfile(resolved);
+    });
+  };
+
   const value = useMemo(
     () => ({
       profile,
       setProfile,
       updateProfile: (nextProfile: Partial<UserProfile>) => {
-        setProfile((current) => ({ ...current, ...nextProfile }));
+        setProfile((current) => normalizeProfile({ ...current, ...nextProfile }));
       },
       resetProfile: () => {
-        setProfile(defaultProfile);
+        setProfileState(defaultProfile);
       },
     }),
     [profile],

@@ -34,6 +34,7 @@ export type UserProfile = {
   weight: string;
   activityLevel: ActivityLevel;
   workout: WorkoutType | '';
+  weeklyGoal: number;
 };
 
 export type User = {

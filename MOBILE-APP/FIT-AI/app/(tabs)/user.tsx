@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Href, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { ErrorText } from '@/components/ErrorText';
@@ -25,8 +25,10 @@ export default function UserProfile() {
   const [height, setHeight] = useState('');
   const [heightUnit, setHeightUnit] = useState<'cm' | 'ft'>('cm');
   const [weight, setWeight] = useState('');
+  const [weeklyGoal, setWeeklyGoal] = useState('5');
   const [isSaving, setIsSaving] = useState(false);
-  const { updateProfile } = useUserProfile();
+  const [formError, setFormError] = useState<string | null>(null);
+  const { updateProfile, profile } = useUserProfile();
 
   const validationRules: Record<string, ValidationRule<string>[]> = {
     name: [
@@ -49,9 +51,28 @@ export default function UserProfile() {
       { validate: (val) => val.trim().length > 0, message: 'Weight is required' },
       { validate: (val) => !isNaN(Number(val.trim())) && Number(val.trim()) > 0, message: 'Weight must be a positive number' },
     ],
+    weeklyGoal: [
+      { validate: (val) => val.trim().length > 0, message: 'Weekly goal is required' },
+      { validate: (val) => /^\d+$/.test(val.trim()), message: 'Weekly goal must be a whole number' },
+      { validate: (val) => Number(val.trim()) >= 1 && Number(val.trim()) <= 14, message: 'Weekly goal must be between 1 and 14' },
+    ],
   };
 
   const { validateField, validateAll, setFieldTouched, getFieldError } = useFormValidation();
+
+  useEffect(() => {
+    if (profile.name && profile.name !== 'User Name') {
+      setAvatarUrl(profile.avatarUrl);
+      setName(profile.name);
+      setBirthday(profile.birthday);
+      setAge(profile.age);
+      setGender((profile.gender as 'Male' | 'Female') || 'Male');
+      setHeight(profile.height);
+      setHeightUnit((profile.heightUnit as 'cm' | 'ft') || 'cm');
+      setWeight(profile.weight);
+      setWeeklyGoal(String(profile.weeklyGoal || 5));
+    }
+  }, [profile]);
 
   function calculateAge(birthDateStr: string): string {
     const birthDate = new Date(birthDateStr);
@@ -67,23 +88,33 @@ export default function UserProfile() {
 
   const handleNameChange = (text: string) => {
     setName(text);
+    setFormError(null);
     validateField('name', text, validationRules.name);
   };
 
   const handleBirthdayChange = (text: string) => {
     setBirthday(text);
+    setFormError(null);
     validateField('birthday', text, validationRules.birthday);
     setAge(calculateAge(text));
   };
 
   const handleHeightChange = (text: string) => {
     setHeight(text);
+    setFormError(null);
     validateField('height', text, validationRules.height);
   };
 
   const handleWeightChange = (text: string) => {
     setWeight(text);
+    setFormError(null);
     validateField('weight', text, validationRules.weight);
+  };
+
+  const handleWeeklyGoalChange = (text: string) => {
+    setWeeklyGoal(text);
+    setFormError(null);
+    validateField('weeklyGoal', text, validationRules.weeklyGoal);
   };
 
   async function pickImage() {
@@ -105,15 +136,17 @@ export default function UserProfile() {
       birthday,
       height,
       weight,
+      weeklyGoal,
     }, validationRules);
 
     if (!isValid) {
-      Alert.alert('Validation Error', 'Please correct the errors above before proceeding.');
+      setFormError('Please correct the errors below to continue.');
       return;
     }
 
     try {
       setIsSaving(true);
+      setFormError(null);
 
       let nextAvatarUrl = avatarUrl;
       if (avatarUrl && !avatarUrl.startsWith('http')) {
@@ -131,6 +164,7 @@ export default function UserProfile() {
         weight: weight.trim(),
         activityLevel: 'Moderate',
         workout: '',
+        weeklyGoal: Number(weeklyGoal.trim()),
       };
 
       const savedProfile = await upsertProfile(payload);
@@ -162,6 +196,8 @@ export default function UserProfile() {
         </View>
 
         <View style={styles.form}>
+          {formError ? <ThemedText style={styles.formErrorText}>{formError}</ThemedText> : null}
+
           <ThemedText style={styles.label}>Name</ThemedText>
           <TextInput
             value={name}
@@ -237,6 +273,17 @@ export default function UserProfile() {
             style={[styles.input, getFieldError('weight') && styles.inputError]}
           />
           <ErrorText error={getFieldError('weight')} />
+
+          <ThemedText style={styles.label}>Weekly Goal (workouts/week)</ThemedText>
+          <TextInput
+            value={weeklyGoal}
+            onChangeText={handleWeeklyGoalChange}
+            onBlur={() => setFieldTouched('weeklyGoal')}
+            placeholder="e.g. 5"
+            keyboardType="number-pad"
+            style={[styles.input, getFieldError('weeklyGoal') && styles.inputError]}
+          />
+          <ErrorText error={getFieldError('weeklyGoal')} />
 
           <TouchableOpacity onPress={handleDone} style={[styles.doneButton, styles.doneButtonColored, isSaving && styles.buttonDisabled]} activeOpacity={0.9} disabled={isSaving}>
             {isSaving ? <ActivityIndicator color={UiTheme.colors.surface} /> : <ThemedText type="defaultSemiBold" style={styles.doneText}>Done</ThemedText>}
@@ -336,4 +383,11 @@ const styles = StyleSheet.create({
 
   photoButtonColored: { backgroundColor: UiTheme.colors.accent, borderColor: UiTheme.colors.accent },
   doneButtonColored: { backgroundColor: UiTheme.colors.accent },
+  formErrorText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: UiTheme.colors.danger,
+    marginBottom: UiTheme.spacing.md,
+    paddingHorizontal: UiTheme.spacing.sm,
+  },
 });

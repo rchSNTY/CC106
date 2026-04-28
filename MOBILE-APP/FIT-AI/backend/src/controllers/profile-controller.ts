@@ -5,6 +5,28 @@ import { env } from '../config/env';
 import { getUserProfile, saveUserProfile } from '../services/auth-service';
 import type { UserProfile } from '../types/models';
 
+function normalizeWeeklyGoal(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return Math.round(value);
+  }
+
+  if (typeof value === 'string' && /^\d+$/.test(value.trim())) {
+    const parsed = Number(value.trim());
+    if (parsed > 0) {
+      return Math.round(parsed);
+    }
+  }
+
+  return 5;
+}
+
+function normalizeProfile(profile: UserProfile): UserProfile {
+  return {
+    ...profile,
+    weeklyGoal: normalizeWeeklyGoal(profile.weeklyGoal),
+  };
+}
+
 export async function getProfile(req: Request, res: Response): Promise<void> {
   const userId = req.user?.userId;
   if (!userId) {
@@ -13,7 +35,7 @@ export async function getProfile(req: Request, res: Response): Promise<void> {
   }
 
   const profile = await getUserProfile(userId);
-  res.status(200).json({ profile });
+  res.status(200).json({ profile: profile ? normalizeProfile(profile) : null });
 }
 
 export async function upsertProfile(req: Request, res: Response): Promise<void> {
@@ -33,7 +55,16 @@ export async function upsertProfile(req: Request, res: Response): Promise<void> 
     }
   }
 
-  const saved = await saveUserProfile(userId, payload);
+  const weeklyGoal = normalizeWeeklyGoal(payload.weeklyGoal);
+  if (weeklyGoal < 1 || weeklyGoal > 14) {
+    res.status(400).json({ message: 'weeklyGoal must be between 1 and 14.' });
+    return;
+  }
+
+  const saved = await saveUserProfile(userId, {
+    ...payload,
+    weeklyGoal,
+  });
   res.status(200).json({ profile: saved });
 }
 
@@ -63,10 +94,11 @@ export async function uploadProfileAvatar(req: Request, res: Response): Promise<
     weight: '',
     activityLevel: 'Moderate',
     workout: '',
+    weeklyGoal: 5,
   };
 
   const saved = await saveUserProfile(userId, {
-    ...currentProfile,
+    ...normalizeProfile(currentProfile),
     avatarUrl,
   });
 
