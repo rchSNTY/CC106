@@ -48,22 +48,30 @@ interface GeneratedWorkout {
   exercises: GeneratedExercise[];
 }
 
+interface GeneratedWorkoutBundle {
+  workouts: GeneratedWorkout[];
+}
+
 // System prompt for AI
 const SYSTEM_PROMPT = `You are a fitness expert AI that generates personalized workout routines.
 Generate a workout based on the user's profile information.
 
 Output ONLY valid JSON in this exact format:
 {
-  "title": "Workout Name",
-  "subtitle": "Cardio|Bodyweight|Weights",
-  "intensity": "Light|Moderate|Intense",
-  "duration": "X min",
-  "exercises": [
+  "workouts": [
     {
-      "name": "Exercise name",
-      "detail": "Brief description",
-      "reps": "8 reps or 30 sec",
-      "steps": ["Step 1", "Step 2", "Step 3"]
+      "title": "Workout Name",
+      "subtitle": "Cardio|Bodyweight|Weights",
+      "intensity": "Light|Moderate|Intense",
+      "duration": "X min",
+      "exercises": [
+        {
+          "name": "Exercise name",
+          "detail": "Brief description",
+          "reps": "8 reps or 30 sec",
+          "steps": ["Step 1", "Step 2", "Step 3"]
+        }
+      ]
     }
   ]
 }
@@ -74,6 +82,7 @@ Consider the user's:
 - Age and fitness level when choosing exercises
 - Weekly goal to determine appropriate duration
 
+Generate exactly 3 distinct workouts in one response.
 Generate 3-5 exercises per workout. Keep exercises appropriate for the user's profile.
 
 Important: every exercise must include a "steps" array with 3-5 clear, practical instructions that explain how to perform the movement safely and correctly.`;
@@ -187,7 +196,7 @@ Generate a workout that matches their activity level and workout preferences.
 `;
 }
 
-function parseAIResponse(response: string): GeneratedWorkout {
+function parseAIResponse(response: string): GeneratedWorkout[] {
   // Extract JSON from response (in case there's any extra text)
   const jsonMatch = response.match(/\{[\s\S]*\}/);
   
@@ -195,33 +204,39 @@ function parseAIResponse(response: string): GeneratedWorkout {
     throw new HttpError(502, 'AI response did not contain valid JSON. Please try again.');
   }
 
-  let parsed: GeneratedWorkout;
+  let parsed: GeneratedWorkoutBundle;
   try {
-    parsed = JSON.parse(jsonMatch[0]) as GeneratedWorkout;
+    parsed = JSON.parse(jsonMatch[0]) as GeneratedWorkoutBundle;
   } catch (error) {
     throw new HttpError(502, 'Failed to parse AI response as JSON. Please try again.');
   }
 
-  // Validate required fields
-  if (!parsed.title || !parsed.subtitle || !parsed.intensity || !parsed.duration || !parsed.exercises) {
-    throw new HttpError(502, 'AI response missing required workout fields. Please try again.');
+  if (!Array.isArray(parsed.workouts) || parsed.workouts.length !== 3) {
+    throw new HttpError(502, 'AI response must include exactly 3 workouts. Please try again.');
   }
 
-  // Validate exercises
-  if (!Array.isArray(parsed.exercises) || parsed.exercises.length === 0) {
-    throw new HttpError(502, 'AI response must contain at least one exercise. Please try again.');
-  }
+  for (const workout of parsed.workouts) {
+    // Validate required fields
+    if (!workout.title || !workout.subtitle || !workout.intensity || !workout.duration || !workout.exercises) {
+      throw new HttpError(502, 'AI response missing required workout fields. Please try again.');
+    }
 
-  for (const exercise of parsed.exercises) {
-    if (!Array.isArray(exercise.steps) || exercise.steps.length === 0) {
-      throw new HttpError(502, 'AI response must include steps for each exercise. Please try again.');
+    // Validate exercises
+    if (!Array.isArray(workout.exercises) || workout.exercises.length === 0) {
+      throw new HttpError(502, 'AI response must contain at least one exercise. Please try again.');
+    }
+
+    for (const exercise of workout.exercises) {
+      if (!Array.isArray(exercise.steps) || exercise.steps.length === 0) {
+        throw new HttpError(502, 'AI response must include steps for each exercise. Please try again.');
+      }
     }
   }
 
-  return parsed;
+  return parsed.workouts;
 }
 
-function convertToWorkout(generated: GeneratedWorkout, userId?: string): Workout {
+function convertToWorkout(generated: GeneratedWorkout): Workout {
   const exercises: Exercise[] = generated.exercises.map((ex) => ({
     id: createId('e'),
     name: ex.name,
@@ -240,7 +255,7 @@ function convertToWorkout(generated: GeneratedWorkout, userId?: string): Workout
   };
 }
 
-export async function generateAiWorkout(profile: AiWorkoutRequest, userId?: string): Promise<Workout> {
+export async function generateAiWorkout(profile: AiWorkoutRequest, userId?: string): Promise<Workout[]> {
   // Build prompt from user profile
   const userPrompt = buildUserPrompt(profile);
   
@@ -248,16 +263,16 @@ export async function generateAiWorkout(profile: AiWorkoutRequest, userId?: stri
   const aiResponse = await callOpenRouter(userPrompt);
   
   // Parse and validate response
-  const generatedWorkout = parseAIResponse(aiResponse);
+  const generatedWorkouts = parseAIResponse(aiResponse);
   
   // Convert to our Workout type
-  const workout = convertToWorkout(generatedWorkout, userId);
+  const workouts = generatedWorkouts.map((generatedWorkout) => convertToWorkout(generatedWorkout));
 
   // Persist the generated workout so it can be favorited later.
   const workoutsCollection = getWorkoutsCollection();
-  await workoutsCollection.insertOne(workout);
+  await workoutsCollection.insertMany(workouts);
   
-  return workout;
+  return workouts;
 }
 
 export async function getAiServiceStatus(): Promise<{ available: boolean; message: string }> {

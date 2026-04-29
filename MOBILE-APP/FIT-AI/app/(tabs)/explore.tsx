@@ -142,7 +142,7 @@ export default function Explore(): JSX.Element {
         weeklyGoal: profile.weeklyGoal,
       });
 
-      const aiWorkout = await generateAiWorkout({
+      const aiWorkouts = await generateAiWorkout({
         name: profile.name,
         age: profile.age,
         gender: profile.gender,
@@ -153,23 +153,22 @@ export default function Explore(): JSX.Element {
         weeklyGoal: profile.weeklyGoal,
       });
 
-      // Convert to Routine format with empty steps
-      await saveGeneratedAiWorkout(aiWorkout);
-
-      const routine: Routine = {
+      const routines: Routine[] = aiWorkouts.map((aiWorkout) => ({
         ...aiWorkout,
         exercises: aiWorkout.exercises.map((exercise) => ({
           ...exercise,
           steps: exercise.steps ?? [],
         })),
-      };
+      }));
 
-      // Add generated workout to the top of the list
-      setWorkouts((prev) => [routine, ...prev]);
+      await Promise.all(aiWorkouts.map((workout) => saveGeneratedAiWorkout(workout)));
+
+      // Add generated workouts to the top of the list
+      setWorkouts((prev) => [...routines, ...prev]);
       setActiveFilter('All');
       setQuery('');
       
-      Alert.alert('Success', 'AI workout generated successfully!');
+      Alert.alert('Success', '3 AI workouts generated successfully!');
     } catch (error) {
       const err = getApiErrorMessage(error);
       Alert.alert('Generation Failed', err);

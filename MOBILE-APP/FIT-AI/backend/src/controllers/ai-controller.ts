@@ -36,8 +36,8 @@ export async function generateWorkout(req: Request, res: Response): Promise<void
   }
 
   try {
-    const workout = await generateAiWorkout(profile);
-    res.status(200).json({ workout });
+    const workouts = await generateAiWorkout(profile);
+    res.status(200).json({ workouts });
   } catch (error) {
     if (error instanceof HttpError) {
       // Log detailed error to backend console for debugging

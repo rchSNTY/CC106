@@ -241,12 +241,12 @@ export async function generateAiWorkout(profile: {
   activityLevel: string;
   workout: string;
   weeklyGoal: number;
-}): Promise<ApiWorkout> {
-  const result = await apiRequest<{ workout: ApiWorkout }>('/ai/generate', {
+}): Promise<ApiWorkout[]> {
+  const result = await apiRequest<{ workouts: ApiWorkout[] }>('/ai/generate', {
     method: 'POST',
     body: profile,
   });
-  return result.workout;
+  return result.workouts;
 }
 
 export async function loadGeneratedAiWorkouts(): Promise<ApiWorkout[]> {
