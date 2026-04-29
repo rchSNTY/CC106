@@ -22,4 +22,7 @@ export const env = {
   // MongoDB configuration
   mongoUri: process.env.MONGO_URI ?? 'mongodb://localhost:27017',
   mongoDbName: process.env.MONGO_DB_NAME ?? 'fitai',
+  // AI Service configuration (OpenRouter)
+  openrouterApiKey: process.env.OPENROUTER_API_KEY,
+  openrouterModel: process.env.OPENROUTER_MODEL ?? 'google/gemma-4-31b-it:free',
 };

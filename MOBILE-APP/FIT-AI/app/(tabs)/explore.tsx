@@ -1,11 +1,14 @@
 import { Card } from '@/components/Card';
+import { ConfirmationModal } from '@/components/confirmation-modal';
 import RoutineDetailsModal, { type Routine } from '@/components/RoutineDetailsModal';
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { UiTheme } from '@/constants/ui-theme';
-import { ApiError, addFavorite, getApiErrorMessage, listFavorites, listWorkouts, removeFavorite } from '@/services/backend';
+import { ApiError, addFavorite, generateAiWorkout, getApiErrorMessage, listFavorites, listWorkouts, loadGeneratedAiWorkouts, removeFavorite, saveGeneratedAiWorkout } from '@/services/backend';
+import { useUserProfile } from '@/stores/user-profile';
+import { getAiWorkoutPreset } from '@/utils/ai-workout';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { JSX, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -15,6 +18,8 @@ const FILTERS: Intensity[] = ['All', 'Light', 'Moderate', 'Intense'];
 
 export default function Explore(): JSX.Element {
   const router = useRouter();
+  const params = useLocalSearchParams<{ ai?: string; intensity?: string; search?: string }>();
+  const { profile } = useUserProfile();
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<Intensity>('All');
   const [workouts, setWorkouts] = useState<Routine[]>([]);
@@ -24,6 +29,23 @@ export default function Explore(): JSX.Element {
   const [modalVisible, setModalVisible] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+  const [showAiPrompt, setShowAiPrompt] = useState(false);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+
+  const aiPreset = useMemo(() => getAiWorkoutPreset(profile), [profile]);
+
+  useEffect(() => {
+    if (params.ai !== '1') {
+      return;
+    }
+
+    const nextIntensity = params.intensity === 'Light' || params.intensity === 'Moderate' || params.intensity === 'Intense'
+      ? params.intensity
+      : aiPreset.intensity;
+
+    setActiveFilter(nextIntensity);
+    setQuery(typeof params.search === 'string' ? params.search : aiPreset.search);
+  }, [aiPreset.intensity, aiPreset.search, params.ai, params.intensity, params.search]);
 
   useEffect(() => {
     let isMounted = true;
@@ -32,17 +54,34 @@ export default function Explore(): JSX.Element {
       try {
         setIsLoading(true);
         setErrorMessage(null);
-        const result = await listWorkouts(activeFilter, query);
+        const [result, cachedGenerated] = await Promise.all([
+          listWorkouts(activeFilter, query),
+          loadGeneratedAiWorkouts(),
+        ]);
+
+        const visibleCached = cachedGenerated.filter((item) => {
+          const matchesIntensity = activeFilter === 'All' || item.intensity === activeFilter;
+          const search = query.trim().toLowerCase();
+          const matchesSearch =
+            search.length === 0 ||
+            item.title.toLowerCase().includes(search) ||
+            item.subtitle.toLowerCase().includes(search);
+
+          return matchesIntensity && matchesSearch;
+        });
+
         if (!isMounted) {
           return;
         }
 
-        setWorkouts(
-          result.map((item) => ({
+        const merged = [...visibleCached, ...result]
+          .filter((item, index, self) => self.findIndex((candidate) => candidate.id === item.id) === index)
+          .map((item) => ({
             ...item,
             exercises: item.exercises.map((exercise) => ({ ...exercise, steps: (exercise as any).steps ?? [] })),
-          })),
-        );
+          }));
+
+        setWorkouts(merged);
       } catch (error) {
         if (!isMounted) {
           return;
@@ -59,6 +98,86 @@ export default function Explore(): JSX.Element {
       isMounted = false;
     };
   }, [activeFilter, query]);
+
+  const handleAiLaunch = () => {
+    if (!aiPreset.isReady) {
+      Alert.alert('Profile incomplete', 'Complete your profile first so AI suggestions can match your goal.');
+      return;
+    }
+
+    setShowAiPrompt(true);
+  };
+
+  const handleAiConfirm = useCallback(async () => {
+    setShowAiPrompt(false);
+    setIsGeneratingAi(true);
+    setErrorMessage(null);
+
+    // Validate profile before sending
+    if (!profile.name || !profile.name.trim()) {
+      Alert.alert('Incomplete Profile', 'Please enter your name in your profile.');
+      setIsGeneratingAi(false);
+      return;
+    }
+    if (!profile.activityLevel || !profile.activityLevel.trim()) {
+      Alert.alert('Incomplete Profile', 'Please select an activity level in your profile.');
+      setIsGeneratingAi(false);
+      return;
+    }
+    if (!profile.workout || !profile.workout.trim()) {
+      Alert.alert('Incomplete Profile', 'Please select a workout type in your profile.');
+      setIsGeneratingAi(false);
+      return;
+    }
+
+    try {
+      console.log('Sending AI generation request with profile:', {
+        name: profile.name,
+        age: profile.age,
+        gender: profile.gender,
+        height: profile.height,
+        weight: profile.weight,
+        activityLevel: profile.activityLevel,
+        workout: profile.workout,
+        weeklyGoal: profile.weeklyGoal,
+      });
+
+      const aiWorkout = await generateAiWorkout({
+        name: profile.name,
+        age: profile.age,
+        gender: profile.gender,
+        height: profile.height,
+        weight: profile.weight,
+        activityLevel: profile.activityLevel,
+        workout: profile.workout,
+        weeklyGoal: profile.weeklyGoal,
+      });
+
+      // Convert to Routine format with empty steps
+      await saveGeneratedAiWorkout(aiWorkout);
+
+      const routine: Routine = {
+        ...aiWorkout,
+        exercises: aiWorkout.exercises.map((exercise) => ({
+          ...exercise,
+          steps: exercise.steps ?? [],
+        })),
+      };
+
+      // Add generated workout to the top of the list
+      setWorkouts((prev) => [routine, ...prev]);
+      setActiveFilter('All');
+      setQuery('');
+      
+      Alert.alert('Success', 'AI workout generated successfully!');
+    } catch (error) {
+      const err = getApiErrorMessage(error);
+      Alert.alert('Generation Failed', err);
+      setErrorMessage(err);
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  }, [profile]);
 
   useFocusEffect(
     useCallback(() => {
@@ -160,6 +279,19 @@ export default function Explore(): JSX.Element {
         <Text style={styles.browseTitle}>Discover Workouts</Text>
         <Text style={styles.browseSubtitle}>Search routines and narrow by intensity.</Text>
 
+        <TouchableOpacity 
+          style={[styles.aiBanner, isGeneratingAi && styles.aiBannerDisabled]} 
+          onPress={handleAiLaunch} 
+          activeOpacity={0.9}
+          disabled={isGeneratingAi}
+        >
+          <View style={styles.aiBannerTextWrap}>
+            <Text style={styles.aiBannerTitle}>{aiPreset.title}</Text>
+            <Text style={styles.aiBannerSubtitle}>{aiPreset.subtitle}</Text>
+          </View>
+          <Text style={styles.aiBannerAction}>{isGeneratingAi ? 'Generating...' : 'Generate'}</Text>
+        </TouchableOpacity>
+
         <View style={styles.searchWrap}>
           <Image source={require('@/assets/images/search.png')} style={styles.searchIcon} contentFit="contain" />
           <TextInput
@@ -242,6 +374,16 @@ export default function Explore(): JSX.Element {
         }}
       />
 
+      <ConfirmationModal
+        visible={showAiPrompt}
+        title="Generate AI Workout?"
+        message={`Generate a new AI workout based on your ${profile.activityLevel.trim() || 'activity level'} and ${profile.workout.trim() || 'workout'} preferences.`}
+        confirmText="Generate"
+        cancelText="Cancel"
+        onConfirm={handleAiConfirm}
+        onCancel={() => setShowAiPrompt(false)}
+      />
+
       <BottomTabNav activeTab="explore" />
     </SafeAreaView>
   );
@@ -264,6 +406,37 @@ const styles = StyleSheet.create({
     color: UiTheme.colors.textSecondary,
     fontSize: UiTheme.font.body,
     marginTop: -4,
+  },
+  aiBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: UiTheme.spacing.sm,
+    backgroundColor: UiTheme.colors.surface,
+    borderRadius: UiTheme.radius.lg,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.accent,
+    padding: UiTheme.spacing.md,
+  },
+  aiBannerTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  aiBannerTitle: {
+    color: UiTheme.colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  aiBannerSubtitle: {
+    color: UiTheme.colors.textSecondary,
+    fontSize: UiTheme.font.body,
+  },
+  aiBannerAction: {
+    color: UiTheme.colors.accent,
+    fontWeight: '900',
+  },
+  aiBannerDisabled: {
+    opacity: 0.6,
   },
   searchWrap: {
     width: '100%',

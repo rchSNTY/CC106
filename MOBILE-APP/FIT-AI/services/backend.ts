@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 
 const AUTH_TOKEN_KEY = 'fitai_auth_token';
 const PROFILE_KEY = 'fitai_profile_cache';
+const GENERATED_AI_WORKOUTS_KEY = 'fitai_generated_ai_workouts';
 
 const API_BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api').replace(/\/$/, '');
 
@@ -91,7 +92,11 @@ async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Pro
   const data = text ? JSON.parse(text) : {};
 
   if (!response.ok) {
-    throw new ApiError(response.status, data?.message ?? 'Request failed');
+    // Log the error response for debugging
+    console.log(`API Error Response (${response.status}):`, data);
+    
+    const errorMessage = data?.message ?? data?.error ?? 'Request failed';
+    throw new ApiError(response.status, errorMessage);
   }
 
   return data as T;
@@ -225,6 +230,56 @@ export async function listWorkouts(intensity: 'All' | Intensity, search: string)
     token: null,
   });
   return result.workouts;
+}
+
+export async function generateAiWorkout(profile: {
+  name: string;
+  age: string;
+  gender: string;
+  height: string;
+  weight: string;
+  activityLevel: string;
+  workout: string;
+  weeklyGoal: number;
+}): Promise<ApiWorkout> {
+  const result = await apiRequest<{ workout: ApiWorkout }>('/ai/generate', {
+    method: 'POST',
+    body: profile,
+  });
+  return result.workout;
+}
+
+export async function loadGeneratedAiWorkouts(): Promise<ApiWorkout[]> {
+  const raw = await AsyncStorage.getItem(GENERATED_AI_WORKOUTS_KEY);
+
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed as ApiWorkout[];
+  } catch {
+    return [];
+  }
+}
+
+export async function saveGeneratedAiWorkout(workout: ApiWorkout): Promise<void> {
+  const existing = await loadGeneratedAiWorkouts();
+  const next = [workout, ...existing.filter((item) => item.id !== workout.id)].slice(0, 10);
+
+  await AsyncStorage.setItem(GENERATED_AI_WORKOUTS_KEY, JSON.stringify(next));
+}
+
+export async function checkAiStatus(): Promise<{ available: boolean; message: string }> {
+  const result = await apiRequest<{ available: boolean; message: string }>('/ai/status', {
+    token: null,
+  });
+  return result;
 }
 
 export async function listFavorites(): Promise<ApiWorkout[]> {

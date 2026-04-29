@@ -11,6 +11,7 @@ export type Exercise = {
   name: string;
   detail: string;
   reps: string;
+  steps?: string[];
 };
 
 export type Workout = {

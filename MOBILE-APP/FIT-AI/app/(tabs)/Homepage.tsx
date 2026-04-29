@@ -1,13 +1,15 @@
+import { ConfirmationModal } from '@/components/confirmation-modal';
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { UiTheme } from '@/constants/ui-theme';
 import { ApiError, getApiErrorMessage, listHistory } from '@/services/backend';
 import { useUserProfile } from '@/stores/user-profile';
+import { getAiWorkoutPreset } from '@/utils/ai-workout';
 import { getTotalWorkoutMinutes, getWeeklyCompletedWorkouts, getWorkoutStreakDays } from '@/utils/history-stats';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { Href, useRouter } from 'expo-router';
 import React, { JSX, useCallback, useEffect, useMemo, useState } from 'react';
-import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function Homepage(): JSX.Element {
   const router = useRouter();
@@ -15,6 +17,9 @@ export default function Homepage(): JSX.Element {
   const [history, setHistory] = useState<Array<{ date: string; duration: string }>>([]);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState<string | null>(null);
+  const [showAiPrompt, setShowAiPrompt] = useState(false);
+
+  const aiPreset = useMemo(() => getAiWorkoutPreset(profile), [profile]);
 
   const loadHistory = useCallback(async () => {
     try {
@@ -77,6 +82,27 @@ export default function Homepage(): JSX.Element {
     return `${activityLevel} ${workoutType}`;
   }, [activityLevel, profile.workout]);
 
+  const handleAiLaunch = () => {
+    if (!aiPreset.isReady) {
+      Alert.alert('Profile incomplete', 'Complete your profile first so AI suggestions can match your goal.');
+      return;
+    }
+
+    setShowAiPrompt(true);
+  };
+
+  const handleAiConfirm = () => {
+    setShowAiPrompt(false);
+    router.push({
+      pathname: '/explore',
+      params: {
+        ai: '1',
+        intensity: aiPreset.intensity,
+        search: aiPreset.search,
+      },
+    });
+  };
+
   const stats = useMemo(
     () => [
       { label: 'Weekly Goal', value: isStatsLoading ? '...' : `${weeklyCompleted} / ${weeklyGoalTarget}` },
@@ -112,6 +138,17 @@ export default function Homepage(): JSX.Element {
           </View>
         </View>
 
+        <TouchableOpacity style={styles.aiCard} onPress={handleAiLaunch} activeOpacity={0.9}>
+          <View style={styles.aiBadge}>
+            <Text style={styles.aiBadgeText}>AI</Text>
+          </View>
+          <View style={styles.aiContent}>
+            <Text style={styles.aiTitle}>{aiPreset.title}</Text>
+            <Text style={styles.aiSubtitle}>{aiPreset.subtitle}</Text>
+          </View>
+          <Text style={styles.aiActionText}>Generate</Text>
+        </TouchableOpacity>
+
         <View style={styles.statsRow}>
           {stats.map((item) => (
             <View key={item.label} style={styles.statCard}>
@@ -138,6 +175,16 @@ export default function Homepage(): JSX.Element {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <ConfirmationModal
+        visible={showAiPrompt}
+        title="Preview AI Suggestions?"
+        message={`We’ll use ${profile.activityLevel.trim() || 'your'} ${profile.workout.trim() || 'workout'} preference to prefill matching workouts on Explore.`}
+        confirmText="Continue"
+        cancelText="Not now"
+        onConfirm={handleAiConfirm}
+        onCancel={() => setShowAiPrompt(false)}
+      />
 
       <BottomTabNav activeTab="Homepage" />
     </SafeAreaView>
@@ -195,6 +242,29 @@ const styles = StyleSheet.create({
     borderColor: UiTheme.colors.border,
   },
   secondaryActionText: { color: UiTheme.colors.textPrimary, fontWeight: '700' },
+  aiCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: UiTheme.spacing.sm,
+    backgroundColor: UiTheme.colors.surface,
+    borderRadius: UiTheme.radius.lg,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.accent,
+    padding: UiTheme.spacing.md,
+  },
+  aiBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 999,
+    backgroundColor: UiTheme.colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aiBadgeText: { color: UiTheme.colors.surface, fontWeight: '900', fontSize: UiTheme.font.caption },
+  aiContent: { flex: 1, gap: 2 },
+  aiTitle: { color: UiTheme.colors.textPrimary, fontWeight: '900', fontSize: 16 },
+  aiSubtitle: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.body },
+  aiActionText: { color: UiTheme.colors.accent, fontWeight: '900' },
   statsRow: { flexDirection: 'row', gap: UiTheme.spacing.sm },
   statCard: {
     flex: 1,
