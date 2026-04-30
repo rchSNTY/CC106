@@ -395,7 +395,7 @@ export default function Explore(): JSX.Element {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="dark-content" backgroundColor={UiTheme.colors.page} />
 
       {/* Fixed Header Section - Not Scrollable */}
       <View style={styles.headerContainer}>
@@ -410,7 +410,7 @@ export default function Explore(): JSX.Element {
               value={workoutView}
               options={[
                 { key: 'presets', label: 'Presets' },
-                { key: 'generated', label: generatedWorkoutCount > 0 ? `AI (${generatedWorkoutCount})` : 'AI' },
+                { key: 'generated', label: generatedWorkoutCount > 0 ? `AI` : 'AI' },
               ]}
               onChange={(next) => {
                 if (next === 'presets') {
@@ -645,7 +645,6 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: UiTheme.colors.page },
   headerContainer: {
     paddingHorizontal: UiTheme.spacing.lg,
-    paddingTop: UiTheme.spacing.lg,
     gap: UiTheme.spacing.md,
   },
   headerTopRow: {
@@ -661,6 +660,7 @@ const styles = StyleSheet.create({
   },
   viewSwitcherTopRight: {
     alignSelf: 'flex-start',
+    width: 140,
   },
   resultsHeaderContainer: {
     paddingHorizontal: UiTheme.spacing.lg,
@@ -684,7 +684,7 @@ const styles = StyleSheet.create({
   browseSubtitle: {
     color: UiTheme.colors.textSecondary,
     fontSize: UiTheme.font.body,
-    marginTop: -4,
+    paddingTop: 4,
   },
   aiBanner: {
     flexDirection: 'row',

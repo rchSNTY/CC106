@@ -154,10 +154,11 @@ const styles = StyleSheet.create({
     paddingBottom: UiTheme.nav.height + UiTheme.spacing.lg,
   },
   pageTitle: {
-    marginTop: UiTheme.spacing.xxl + UiTheme.spacing.lg,
+    marginTop: UiTheme.spacing.lg,
     color: UiTheme.colors.textPrimary,
     fontSize: UiTheme.font.title,
     fontWeight: '800',
+    paddingBottom: UiTheme.spacing.xs,
   },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: UiTheme.spacing.xl },
   avatar: {
@@ -185,7 +186,7 @@ const styles = StyleSheet.create({
   fieldCard: {
     backgroundColor: UiTheme.colors.surface,
     borderRadius: UiTheme.radius.lg,
-    minHeight: 92,
+    minHeight: 50,
     paddingHorizontal: UiTheme.spacing.lg,
     paddingVertical: UiTheme.spacing.sm,
     shadowColor: UiTheme.colors.textPrimary,
@@ -199,7 +200,7 @@ const styles = StyleSheet.create({
     width: '48.5%',
   },
   fieldCardCompact: {
-    width: '100%',
+    width: '48%',
   },
   fieldLabel: {
     fontSize: 13,

@@ -1,8 +1,9 @@
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Href, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { ErrorText } from '@/components/ErrorText';
 import { useUserProfile } from '@/stores/user-profile';
@@ -20,6 +21,8 @@ export default function UserProfile() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [birthday, setBirthday] = useState('');
+  const [isBirthdayPickerOpen, setIsBirthdayPickerOpen] = useState(false);
+  const [birthdayDraftDate, setBirthdayDraftDate] = useState<Date>(new Date());
   const [age, setAge] = useState('');
   const [gender, setGender] = useState<'Male' | 'Female'>('Male');
   const [height, setHeight] = useState('');
@@ -30,6 +33,27 @@ export default function UserProfile() {
   const [formError, setFormError] = useState<string | null>(null);
   const { updateProfile, profile } = useUserProfile();
 
+  function parseLocalDate(value: string): Date | null {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+    if (!match) return null;
+
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+
+    const date = new Date(year, month - 1, day);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+    return date;
+  }
+
+  function formatLocalDate(date: Date): string {
+    const y = String(date.getFullYear()).padStart(4, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
   const validationRules: Record<string, ValidationRule<string>[]> = {
     name: [
       { validate: (val) => val.trim().length > 0, message: 'Name is required' },
@@ -38,10 +62,15 @@ export default function UserProfile() {
     birthday: [
       { validate: (val) => val.trim().length > 0, message: 'Birthday is required' },
       { validate: (val) => /^\d{4}-\d{2}-\d{2}$/.test(val.trim()), message: 'Birthday must be in YYYY-MM-DD format' },
-      { validate: (val) => {
-        const date = new Date(val.trim());
-        return !isNaN(date.getTime()) && date <= new Date();
-      }, message: 'Please enter a valid past date' },
+      {
+        validate: (val) => {
+          const date = parseLocalDate(val.trim());
+          if (!date) return false;
+          const today = new Date();
+          const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+          return date <= todayStart;
+        }, message: 'Please enter a valid past date'
+      },
     ],
     height: [
       { validate: (val) => val.trim().length > 0, message: 'Height is required' },
@@ -65,6 +94,8 @@ export default function UserProfile() {
       setAvatarUrl(profile.avatarUrl);
       setName(profile.name);
       setBirthday(profile.birthday);
+      const parsedBirthday = parseLocalDate(profile.birthday);
+      if (parsedBirthday) setBirthdayDraftDate(parsedBirthday);
       setAge(profile.age);
       setGender((profile.gender as 'Male' | 'Female') || 'Male');
       setHeight(profile.height);
@@ -75,8 +106,8 @@ export default function UserProfile() {
   }, [profile]);
 
   function calculateAge(birthDateStr: string): string {
-    const birthDate = new Date(birthDateStr);
-    if (isNaN(birthDate.getTime())) return '';
+    const birthDate = parseLocalDate(birthDateStr);
+    if (!birthDate) return '';
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
@@ -97,6 +128,32 @@ export default function UserProfile() {
     setFormError(null);
     validateField('birthday', text, validationRules.birthday);
     setAge(calculateAge(text));
+  };
+
+  const openBirthdayPicker = () => {
+    setFormError(null);
+    setBirthdayDraftDate(parseLocalDate(birthday) ?? new Date());
+    setIsBirthdayPickerOpen(true);
+  };
+
+  const closeBirthdayPicker = () => {
+    setIsBirthdayPickerOpen(false);
+    setFieldTouched('birthday');
+  };
+
+  const commitBirthdayDate = (date: Date) => {
+    handleBirthdayChange(formatLocalDate(date));
+    setFieldTouched('birthday');
+  };
+
+  const handleBirthdayPickerChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      closeBirthdayPicker();
+      if (event.type === 'set' && selectedDate) commitBirthdayDate(selectedDate);
+      return;
+    }
+
+    if (selectedDate) setBirthdayDraftDate(selectedDate);
   };
 
   const handleHeightChange = (text: string) => {
@@ -178,130 +235,170 @@ export default function UserProfile() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Pressable onPress={pickImage} style={[styles.avatarWrap, !avatarUrl && { borderColor: tint, borderWidth: 1 }]}>
-            <Image
-              source={avatarUrl ? { uri: avatarUrl } : require('@/assets/images/user-logo.png')}
-              style={styles.avatar}
-              contentFit={avatarUrl ? 'cover' : 'contain'}
-              transition={500}
-            />
-          </Pressable>
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={UiTheme.colors.page} />
 
-          <TouchableOpacity onPress={pickImage} style={[styles.photoButton, styles.photoButtonColored]}>
-            <ThemedText style={{ color: UiTheme.colors.surface }}>{avatarUrl ? 'Change photo' : 'Add photo'}</ThemedText>
-          </TouchableOpacity>
-        </View>
+      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <Pressable onPress={pickImage} style={[styles.avatarWrap, !avatarUrl && { borderColor: tint, borderWidth: 1 }]}>
+              <Image
+                source={avatarUrl ? { uri: avatarUrl } : require('@/assets/images/user-logo.png')}
+                style={styles.avatar}
+                contentFit={avatarUrl ? 'cover' : 'contain'}
+                transition={500}
+              />
+            </Pressable>
 
-        <View style={styles.form}>
-          {formError ? <ThemedText style={styles.formErrorText}>{formError}</ThemedText> : null}
-
-          <ThemedText style={styles.label}>Name</ThemedText>
-          <TextInput
-            value={name}
-            onChangeText={handleNameChange}
-            onBlur={() => setFieldTouched('name')}
-            placeholder="Name"
-            style={[styles.input, getFieldError('name') && styles.inputError]}
-          />
-          <ErrorText error={getFieldError('name')} />
-
-          <ThemedText style={styles.label}>Birthday</ThemedText>
-          <TextInput
-            value={birthday}
-            onChangeText={handleBirthdayChange}
-            onBlur={() => setFieldTouched('birthday')}
-            placeholder="YYYY-MM-DD"
-            style={[styles.input, getFieldError('birthday') && styles.inputError]}
-          />
-          <ErrorText error={getFieldError('birthday')} />
-
-          <ThemedText style={styles.label}>Age</ThemedText>
-          <TextInput
-            value={age}
-            editable={false}
-            placeholder="Calculated automatically"
-            style={[styles.input, { backgroundColor: UiTheme.colors.surfaceMuted }]}
-          />
-
-          <ThemedText style={styles.label}>Gender</ThemedText>
-          <View style={styles.genderContainer}>
-            {['Male', 'Female'].map((gen) => (
-              <TouchableOpacity
-                key={gen}
-                onPress={() => setGender(gen as 'Male' | 'Female')}
-                style={[
-                  styles.genderButton,
-                  gender === gen && styles.genderButtonSelected,
-                ]}
-              >
-                <ThemedText style={gender === gen ? styles.genderTextSelected : styles.genderText}>
-                  {gen}
-                </ThemedText>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <ThemedText style={styles.label}>Height ({heightUnit})</ThemedText>
-          <View style={styles.rowSmall}>
-            <TextInput
-              value={height}
-              onChangeText={handleHeightChange}
-              onBlur={() => setFieldTouched('height')}
-              placeholder={`Number (${heightUnit})`}
-              keyboardType="decimal-pad"
-              style={[styles.input, { flex: 1 }, getFieldError('height') && styles.inputError]}
-            />
-            <TouchableOpacity
-              onPress={() => setHeightUnit((v) => (v === 'cm' ? 'ft' : 'cm'))}
-              style={[styles.unitButton, { borderColor: tint }]}
-            >
-              <ThemedText style={{ color: tint }}>{heightUnit}</ThemedText>
+            <TouchableOpacity onPress={pickImage} style={[styles.photoButton, styles.photoButtonColored]}>
+              <ThemedText style={{ color: UiTheme.colors.surface }}>{avatarUrl ? 'Change photo' : 'Add photo'}</ThemedText>
             </TouchableOpacity>
           </View>
-          <ErrorText error={getFieldError('height')} />
 
-          <ThemedText style={styles.label}>Weight (kg)</ThemedText>
-          <TextInput
-            value={weight}
-            onChangeText={handleWeightChange}
-            onBlur={() => setFieldTouched('weight')}
-            placeholder="e.g. 70"
-            keyboardType="decimal-pad"
-            style={[styles.input, getFieldError('weight') && styles.inputError]}
-          />
-          <ErrorText error={getFieldError('weight')} />
+          <View style={styles.form}>
+            {formError ? <ThemedText style={styles.formErrorText}>{formError}</ThemedText> : null}
 
-          <ThemedText style={styles.label}>Weekly Goal (workouts/week)</ThemedText>
-          <TextInput
-            value={weeklyGoal}
-            onChangeText={handleWeeklyGoalChange}
-            onBlur={() => setFieldTouched('weeklyGoal')}
-            placeholder="e.g. 5"
-            keyboardType="number-pad"
-            style={[styles.input, getFieldError('weeklyGoal') && styles.inputError]}
-          />
-          <ErrorText error={getFieldError('weeklyGoal')} />
+            <ThemedText style={styles.label}>Name</ThemedText>
+            <TextInput
+              value={name}
+              onChangeText={handleNameChange}
+              onBlur={() => setFieldTouched('name')}
+              placeholder="Name"
+              style={[styles.input, getFieldError('name') && styles.inputError]}
+            />
+            <ErrorText error={getFieldError('name')} />
 
-          <TouchableOpacity onPress={handleDone} style={[styles.doneButton, styles.doneButtonColored, isSaving && styles.buttonDisabled]} activeOpacity={0.9} disabled={isSaving}>
-            {isSaving ? <ActivityIndicator color={UiTheme.colors.surface} /> : <ThemedText type="defaultSemiBold" style={styles.doneText}>Done</ThemedText>}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <ThemedText style={styles.label}>Birthday</ThemedText>
+            <Pressable onPress={openBirthdayPicker}>
+              <View style={[styles.input, styles.pressableInput, getFieldError('birthday') && styles.inputError]}>
+                <ThemedText style={{ fontSize: 16, color: birthday ? UiTheme.colors.textPrimary : UiTheme.colors.textSecondary }}>
+                  {birthday || 'Select date'}
+                </ThemedText>
+              </View>
+            </Pressable>
+            {isBirthdayPickerOpen ? (
+              Platform.OS === 'ios' ? (
+                <View style={styles.datePickerWrap}>
+                  <DateTimePicker
+                    value={birthdayDraftDate}
+                    mode="date"
+                    maximumDate={new Date()}
+                    display="inline"
+                    onChange={handleBirthdayPickerChange}
+                  />
+                  <View style={styles.datePickerButtons}>
+                    <TouchableOpacity onPress={closeBirthdayPicker} style={[styles.datePickerButton, { borderColor: tint }]}>
+                      <ThemedText style={{ color: tint }}>Cancel</ThemedText>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => {
+                        commitBirthdayDate(birthdayDraftDate);
+                        setIsBirthdayPickerOpen(false);
+                      }}
+                      style={[styles.datePickerButton, styles.datePickerButtonFilled]}
+                    >
+                      <ThemedText style={{ color: UiTheme.colors.surface }}>Done</ThemedText>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <DateTimePicker
+                  value={birthdayDraftDate}
+                  mode="date"
+                  maximumDate={new Date()}
+                  display="default"
+                  onChange={handleBirthdayPickerChange}
+                />
+              )
+            ) : null}
+            <ErrorText error={getFieldError('birthday')} />
+
+            <ThemedText style={styles.label}>Age</ThemedText>
+            <TextInput
+              value={age}
+              editable={false}
+              placeholder="Calculated automatically"
+              style={[styles.input, { backgroundColor: UiTheme.colors.surfaceMuted }]}
+            />
+
+            <ThemedText style={styles.label}>Gender</ThemedText>
+            <View style={styles.genderContainer}>
+              {['Male', 'Female'].map((gen) => (
+                <TouchableOpacity
+                  key={gen}
+                  onPress={() => setGender(gen as 'Male' | 'Female')}
+                  style={[
+                    styles.genderButton,
+                    gender === gen && styles.genderButtonSelected,
+                  ]}
+                >
+                  <ThemedText style={gender === gen ? styles.genderTextSelected : styles.genderText}>
+                    {gen}
+                  </ThemedText>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <ThemedText style={styles.label}>Height ({heightUnit})</ThemedText>
+            <View style={styles.rowSmall}>
+              <TextInput
+                value={height}
+                onChangeText={handleHeightChange}
+                onBlur={() => setFieldTouched('height')}
+                placeholder={`Number (${heightUnit})`}
+                keyboardType="decimal-pad"
+                style={[styles.input, { flex: 1 }, getFieldError('height') && styles.inputError]}
+              />
+              <TouchableOpacity
+                onPress={() => setHeightUnit((v) => (v === 'cm' ? 'ft' : 'cm'))}
+                style={[styles.unitButton, { borderColor: tint }]}
+              >
+                <ThemedText style={{ color: tint }}>{heightUnit}</ThemedText>
+              </TouchableOpacity>
+            </View>
+            <ErrorText error={getFieldError('height')} />
+
+            <ThemedText style={styles.label}>Weight (kg)</ThemedText>
+            <TextInput
+              value={weight}
+              onChangeText={handleWeightChange}
+              onBlur={() => setFieldTouched('weight')}
+              placeholder="e.g. 70"
+              keyboardType="decimal-pad"
+              style={[styles.input, getFieldError('weight') && styles.inputError]}
+            />
+            <ErrorText error={getFieldError('weight')} />
+
+            <ThemedText style={styles.label}>Weekly Goal (workouts/week)</ThemedText>
+            <TextInput
+              value={weeklyGoal}
+              onChangeText={handleWeeklyGoalChange}
+              onBlur={() => setFieldTouched('weeklyGoal')}
+              placeholder="e.g. 5"
+              keyboardType="number-pad"
+              style={[styles.input, getFieldError('weeklyGoal') && styles.inputError]}
+            />
+            <ErrorText error={getFieldError('weeklyGoal')} />
+
+            <TouchableOpacity onPress={handleDone} style={[styles.doneButton, styles.doneButtonColored, isSaving && styles.buttonDisabled]} activeOpacity={0.9} disabled={isSaving}>
+              {isSaving ? <ActivityIndicator color={UiTheme.colors.surface} /> : <ThemedText type="defaultSemiBold" style={styles.doneText}>Done</ThemedText>}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+
   );
 }
 
 const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: UiTheme.colors.page },
   container: { flex: 1, backgroundColor: UiTheme.colors.page },
   scrollContent: { flexGrow: 1, padding: UiTheme.spacing.lg },
   header: {
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: UiTheme.spacing.xl,
-    paddingTop: UiTheme.spacing.sm,
   },
   avatarWrap: {
     marginBottom: UiTheme.spacing.md,
@@ -379,6 +476,35 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: UiTheme.colors.danger,
     borderWidth: 1,
+  },
+  pressableInput: {
+    justifyContent: 'center',
+  },
+  datePickerWrap: {
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+    borderRadius: UiTheme.radius.sm,
+    backgroundColor: UiTheme.colors.surface,
+    overflow: 'hidden',
+  },
+  datePickerButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+    padding: UiTheme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: UiTheme.colors.border,
+  },
+  datePickerButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: UiTheme.radius.sm,
+    borderWidth: 1,
+    backgroundColor: UiTheme.colors.surface,
+  },
+  datePickerButtonFilled: {
+    backgroundColor: UiTheme.colors.accent,
+    borderColor: UiTheme.colors.accent,
   },
 
   photoButtonColored: { backgroundColor: UiTheme.colors.accent, borderColor: UiTheme.colors.accent },

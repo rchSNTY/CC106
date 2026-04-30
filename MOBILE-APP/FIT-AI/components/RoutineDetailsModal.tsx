@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     backgroundColor: UiTheme.colors.page,
     borderTopLeftRadius: UiTheme.radius.xl,
     borderTopRightRadius: UiTheme.radius.xl,
-    maxHeight: '90%',
+    height: '90%',
     paddingTop: UiTheme.spacing.lg,
     paddingBottom: UiTheme.spacing.lg,
   },

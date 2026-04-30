@@ -5,6 +5,20 @@ import { env } from '../config/env';
 import { getUserProfile, saveUserProfile } from '../services/auth-service';
 import type { UserProfile } from '../types/models';
 
+function getPublicBaseUrl(req: Request): string {
+  const forwardedProto = req.header('x-forwarded-proto');
+  const proto = (forwardedProto ? forwardedProto.split(',')[0] : req.protocol).trim();
+
+  const forwardedHost = req.header('x-forwarded-host');
+  const host = (forwardedHost ?? req.header('host'))?.trim();
+
+  if (host) {
+    return `${proto}://${host}`;
+  }
+
+  return env.baseUrl;
+}
+
 function normalizeWeeklyGoal(value: unknown): number {
   if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
     return Math.round(value);
@@ -81,7 +95,7 @@ export async function uploadProfileAvatar(req: Request, res: Response): Promise<
   }
 
   const avatarPath = path.relative(process.cwd(), req.file.path).replace(/\\/g, '/');
-  const avatarUrl = `${env.baseUrl}/${avatarPath}`;
+  const avatarUrl = `${getPublicBaseUrl(req)}/${avatarPath}`;
 
   const currentProfile = (await getUserProfile(userId)) ?? {
     avatarUrl: null,

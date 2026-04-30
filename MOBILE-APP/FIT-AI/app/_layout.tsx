@@ -1,11 +1,31 @@
-import { Slot } from 'expo-router';
-import React from 'react';
+import { Slot, useRootNavigationState, useRouter } from 'expo-router';
+import React, { useEffect, useRef } from 'react';
 
 import { SnackbarProvider } from '@/stores/snackbar';
 import { UserProfileProvider } from '@/stores/user-profile';
 
 export default function Layout() {
-  // Slot is a placeholder for child routes (like index.tsx, login.tsx, etc.)
+  const router = useRouter();
+  const rootNavigationState = useRootNavigationState();
+  const didForceLandingRef = useRef(false);
+
+  useEffect(() => {
+    if (!rootNavigationState?.key || didForceLandingRef.current) {
+      return;
+    }
+
+    didForceLandingRef.current = true;
+
+    const timerA = setTimeout(() => router.replace('/'), 0);
+    const timerB = setTimeout(() => router.replace('/'), 250);
+
+    return () => {
+      clearTimeout(timerA);
+      clearTimeout(timerB);
+    };
+  }, [rootNavigationState?.key, router]);
+
+
   return (
     <UserProfileProvider>
       <SnackbarProvider>

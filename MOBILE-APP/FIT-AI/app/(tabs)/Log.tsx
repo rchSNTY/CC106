@@ -172,7 +172,7 @@ export default function Log(): JSX.Element {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="dark-content" backgroundColor={UiTheme.colors.page} />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.topRow}>
@@ -276,7 +276,6 @@ const styles = StyleSheet.create({
     gap: UiTheme.spacing.md,
   },
   topRow: {
-    marginTop: UiTheme.spacing.xl,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

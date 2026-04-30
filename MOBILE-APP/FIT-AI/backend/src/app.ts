@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import morgan from 'morgan';
+import path from 'path';
 
 import { env } from './config/env';
 import { errorHandler, notFoundHandler } from './middleware/error-middleware';
@@ -13,10 +14,11 @@ import workoutRoutes from './routes/workout-routes';
 
 const app = express();
 
+app.set('trust proxy', true);
 app.use(cors({ origin: env.corsOrigin === '*' ? true : env.corsOrigin }));
 app.use(express.json());
 app.use(morgan('dev'));
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
 app.get('/api/health', (_req, res) => {
   res.status(200).json({

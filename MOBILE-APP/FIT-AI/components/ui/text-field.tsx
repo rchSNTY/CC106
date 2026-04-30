@@ -1,13 +1,13 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   Platform,
   StyleSheet,
   TextInput,
-  type TextInputProps,
-  type StyleProp,
-  type ViewStyle,
   View,
+  type StyleProp,
+  type TextInputProps,
+  type ViewStyle,
 } from 'react-native';
 
 import { ErrorText } from '@/components/ErrorText';
@@ -23,7 +23,7 @@ export type TextFieldProps = Omit<TextInputProps, 'style'> & {
   inputWrapStyle?: StyleProp<ViewStyle>;
 };
 
-export function TextField({
+export const TextField = React.memo(function TextField({
   label,
   helperText,
   error,
@@ -34,47 +34,60 @@ export function TextField({
   onBlur,
   ...rest
 }: TextFieldProps) {
-  const [focused, setFocused] = useState(false);
 
   const borderColor = useMemo(() => {
-    if (error) {
-      return UiTheme.colors.danger;
-    }
-    if (focused) {
-      return UiTheme.colors.focusRing;
-    }
-    return UiTheme.colors.border;
-  }, [error, focused]);
+    return error ? UiTheme.colors.danger : UiTheme.colors.border;
+  }, [error]);
+
+  const handleFocus = useCallback(
+    (event: any) => {
+      onFocus?.(event);
+    },
+    [onFocus]
+  );
+
+  const handleBlur = useCallback(
+    (event: any) => {
+      onBlur?.(event);
+    },
+    [onBlur]
+  );
 
   return (
     <View style={[styles.container, containerStyle]}>
       {label ? <ThemedText style={styles.label}>{label}</ThemedText> : null}
 
-      <View style={[styles.inputWrap, { borderColor }, focused ? styles.inputWrapFocused : null, inputWrapStyle]}>
+      <View style={[styles.inputWrap, { borderColor }, inputWrapStyle]}>
         {leftIconName ? (
-          <MaterialIcons name={leftIconName} size={18} color={UiTheme.colors.textSecondary} />
+          <MaterialIcons
+            name={leftIconName}
+            size={18}
+            color={UiTheme.colors.textSecondary}
+          />
         ) : null}
 
         <TextInput
           {...rest}
-          onFocus={(event) => {
-            setFocused(true);
-            onFocus?.(event);
-          }}
-          onBlur={(event) => {
-            setFocused(false);
-            onBlur?.(event);
-          }}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           placeholderTextColor={UiTheme.colors.textSecondary}
-          style={[styles.input, Platform.OS === 'web' ? ({ outlineStyle: 'none' } as any) : null]}
+          style={[
+            styles.input,
+            Platform.OS === 'web'
+              ? ({ outlineStyle: 'none' } as any)
+              : null,
+          ]}
         />
       </View>
 
-      {helperText && !error ? <ThemedText style={styles.helper}>{helperText}</ThemedText> : null}
+      {helperText && !error ? (
+        <ThemedText style={styles.helper}>{helperText}</ThemedText>
+      ) : null}
+
       <ErrorText error={error ?? undefined} />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: { gap: 6 },
@@ -95,7 +108,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 1,
   },
   input: {
     flex: 1,
@@ -105,4 +117,3 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
 });
-

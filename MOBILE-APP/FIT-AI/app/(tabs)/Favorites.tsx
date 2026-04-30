@@ -8,7 +8,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { Href, useRouter } from 'expo-router';
 import React, { JSX, useCallback, useMemo, useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function Favorites(): JSX.Element {
   const router = useRouter();
@@ -132,6 +132,7 @@ export default function Favorites(): JSX.Element {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={UiTheme.colors.page} />
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.headlineRow}>
           <Text style={styles.title}>Favorites</Text>
@@ -230,7 +231,6 @@ const styles = StyleSheet.create({
     gap: UiTheme.spacing.sm,
   },
   headlineRow: {
-    marginTop: UiTheme.spacing.xl,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

@@ -175,7 +175,7 @@ export default function Homepage(): JSX.Element {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="dark-content" backgroundColor={UiTheme.colors.page} />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.headerRow}>
@@ -269,7 +269,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: UiTheme.spacing.sm,
-    marginTop: UiTheme.spacing.xl,
   },
   logo: { width: 44, height: 44, borderRadius: UiTheme.radius.sm },
   kicker: {

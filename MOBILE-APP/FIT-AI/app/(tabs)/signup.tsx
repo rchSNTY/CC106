@@ -139,6 +139,8 @@ export default function SignupScreen() {
               placeholder="Choose a username"
               autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="off"
+              importantForAutofill="no"
               leftIconName="person"
               error={getFieldError('username') ?? null}
               returnKeyType="next"
@@ -153,6 +155,8 @@ export default function SignupScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="off"
+              importantForAutofill="no"
               leftIconName="mail"
               error={getFieldError('email') ?? null}
               returnKeyType="next"
@@ -165,6 +169,8 @@ export default function SignupScreen() {
               onBlur={() => setFieldTouched('password')}
               placeholder="Create a strong password"
               secureTextEntry
+              autoComplete="off"
+              importantForAutofill="no"
               leftIconName="lock"
               helperText={!hasMinPassword && password.length > 0 ? 'Use 8+ characters with uppercase, lowercase, and a number.' : undefined}
               error={getFieldError('password') ?? null}
@@ -178,6 +184,8 @@ export default function SignupScreen() {
               onBlur={() => setFieldTouched('confirmPassword')}
               placeholder="Re-enter your password"
               secureTextEntry
+              autoComplete="off"
+              importantForAutofill="no"
               leftIconName="lock"
               error={getFieldError('confirmPassword') ?? null}
               returnKeyType="done"

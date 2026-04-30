@@ -4,13 +4,13 @@ import React, { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { Button } from '@/components/ui/button';
+import { Screen } from '@/components/ui/screen';
+import { TextField } from '@/components/ui/text-field';
 import { UiTheme } from '@/constants/ui-theme';
 import { useFormValidation, ValidationRule } from '@/hooks/useFormValidation';
 import { getApiErrorMessage, getProfile, login } from '@/services/backend';
 import { useUserProfile } from '@/stores/user-profile';
-import { Button } from '@/components/ui/button';
-import { Screen } from '@/components/ui/screen';
-import { TextField } from '@/components/ui/text-field';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
@@ -57,7 +57,6 @@ export default function LoginScreen() {
         setProfile(profile);
       }
 
-      Alert.alert('Success', `Welcome back, ${username.trim()}!`);
       router.push('/Homepage' as Href);
     } catch (error) {
       Alert.alert('Login Failed', getApiErrorMessage(error));
@@ -89,6 +88,8 @@ export default function LoginScreen() {
               placeholder="Enter your username"
               autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="off"
+              importantForAutofill="no"
               leftIconName="person"
               error={getFieldError('username') ?? null}
               returnKeyType="next"
@@ -101,6 +102,8 @@ export default function LoginScreen() {
               onBlur={() => setFieldTouched('password')}
               placeholder="Enter your password"
               secureTextEntry
+              autoComplete="off"
+              importantForAutofill="no"
               leftIconName="lock"
               error={getFieldError('password') ?? null}
               returnKeyType="done"
