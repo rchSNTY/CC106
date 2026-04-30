@@ -10,6 +10,12 @@ import {
 import { HttpError } from '../utils/errors';
 
 export async function generateWorkout(req: Request, res: Response): Promise<void> {
+  const userId = req.user?.userId;
+  if (!userId) {
+    res.status(401).json({ message: 'Unauthorized.' });
+    return;
+  }
+
   const profile = req.body as AiWorkoutRequest;
 
   // Debug log
@@ -41,7 +47,7 @@ export async function generateWorkout(req: Request, res: Response): Promise<void
   }
 
   try {
-    const workouts = await generateAiWorkout(profile);
+    const workouts = await generateAiWorkout(profile, userId);
     res.status(200).json({ workouts });
   } catch (error) {
     if (error instanceof HttpError) {
@@ -73,11 +79,23 @@ export async function checkAiStatus(req: Request, res: Response): Promise<void> 
 }
 
 export async function clearGeneratedWorkouts(req: Request, res: Response): Promise<void> {
-  const deletedCount = await deleteGeneratedAiWorkouts();
+  const userId = req.user?.userId;
+  if (!userId) {
+    res.status(401).json({ message: 'Unauthorized.' });
+    return;
+  }
+
+  const deletedCount = await deleteGeneratedAiWorkouts(userId);
   res.status(200).json({ deletedCount });
 }
 
 export async function listGeneratedWorkouts(req: Request, res: Response): Promise<void> {
-  const workouts = await listGeneratedAiWorkouts();
+  const userId = req.user?.userId;
+  if (!userId) {
+    res.status(401).json({ message: 'Unauthorized.' });
+    return;
+  }
+
+  const workouts = await listGeneratedAiWorkouts(userId);
   res.status(200).json({ workouts });
 }

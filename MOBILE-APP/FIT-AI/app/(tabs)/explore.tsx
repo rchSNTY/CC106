@@ -65,10 +65,21 @@ export default function Explore(): JSX.Element {
     try {
       setIsLoading(true);
       setErrorMessage(null);
-      const [generatedWorkouts, presetWorkouts] = await Promise.all([
-        listGeneratedAiWorkouts(),
-        workoutView === 'presets' ? listWorkouts(activeFilter, query) : Promise.resolve([]),
-      ]);
+
+      const presetPromise = workoutView === 'presets' ? listWorkouts(activeFilter, query) : Promise.resolve([]);
+
+      let generatedWorkouts: Awaited<ReturnType<typeof listGeneratedAiWorkouts>> = [];
+      try {
+        generatedWorkouts = await listGeneratedAiWorkouts();
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          generatedWorkouts = [];
+        } else {
+          throw error;
+        }
+      }
+
+      const presetWorkouts = await presetPromise;
 
       const search = query.trim().toLowerCase();
       const matchesSearch = (item: { title: string; subtitle: string }) =>
@@ -191,6 +202,15 @@ export default function Explore(): JSX.Element {
         autoDismissMs: 4500,
       });
     } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        hideSnackbar();
+        Alert.alert('Login required', 'Please log in to generate AI workouts.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Login', onPress: () => router.push('/login') },
+        ]);
+        return;
+      }
+
       const err = getApiErrorMessage(error);
       setErrorMessage(err);
       showSnackbar({
@@ -203,7 +223,7 @@ export default function Explore(): JSX.Element {
     } finally {
       setIsGeneratingAi(false);
     }
-  }, [hideSnackbar, profile, showSnackbar]);
+  }, [hideSnackbar, profile, router, showSnackbar]);
 
   const handleShowPresetWorkouts = useCallback(() => {
     setWorkoutView('presets');
@@ -230,11 +250,18 @@ export default function Explore(): JSX.Element {
       setWorkoutView('presets');
       await refreshWorkouts();
     } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        Alert.alert('Login required', 'Please log in to manage AI workouts.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Login', onPress: () => router.push('/login') },
+        ]);
+        return;
+      }
       Alert.alert('Delete failed', getApiErrorMessage(error));
     } finally {
       setIsClearingAi(false);
     }
-  }, [refreshWorkouts]);
+  }, [refreshWorkouts, router]);
 
   const confirmDeleteSelected = useCallback(async () => {
     setShowDeleteSelectedPrompt(false);
@@ -261,11 +288,18 @@ export default function Explore(): JSX.Element {
       setSelectedIds(new Set());
       setIsSelecting(false);
     } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        Alert.alert('Login required', 'Please log in to manage AI workouts.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Login', onPress: () => router.push('/login') },
+        ]);
+        return;
+      }
       Alert.alert('Delete failed', getApiErrorMessage(error));
     } finally {
       setIsClearingAi(false);
     }
-  }, [selectedIds, refreshWorkouts]);
+  }, [router, selectedIds, refreshWorkouts]);
 
   useFocusEffect(
     useCallback(() => {

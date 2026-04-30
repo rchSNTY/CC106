@@ -17,6 +17,7 @@ export type Exercise = {
 export type Workout = {
   _id?: ObjectId;
   id: string;
+  userId?: string;
   title: string;
   subtitle: string;
   intensity: Intensity;

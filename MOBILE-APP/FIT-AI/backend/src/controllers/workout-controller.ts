@@ -12,11 +12,17 @@ export async function getWorkouts(req: Request, res: Response): Promise<void> {
 }
 
 export async function getWorkout(req: Request, res: Response): Promise<void> {
-  const workout = await getWorkoutById(req.params.id);
+  const workout = await getWorkoutById(req.params.id, req.user?.userId);
   res.status(200).json({ workout });
 }
 
 export async function deleteWorkout(req: Request, res: Response): Promise<void> {
-  const deletedCount = await deleteWorkoutById(req.params.id);
+  const userId = req.user?.userId;
+  if (!userId) {
+    res.status(401).json({ message: 'Unauthorized.' });
+    return;
+  }
+
+  const deletedCount = await deleteWorkoutById(req.params.id, userId);
   res.status(200).json({ deletedCount });
 }

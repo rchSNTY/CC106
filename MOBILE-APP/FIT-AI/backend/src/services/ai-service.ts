@@ -318,7 +318,7 @@ function convertToWorkout(generated: GeneratedWorkout): Workout {
   };
 }
 
-async function convertToWorkoutWithImage(generated: GeneratedWorkout): Promise<Workout> {
+async function convertToWorkoutWithImage(generated: GeneratedWorkout, userId: string): Promise<Workout> {
   const exercises: Exercise[] = generated.exercises.map((ex) => ({
     id: createId('e'),
     name: ex.name,
@@ -332,6 +332,7 @@ async function convertToWorkoutWithImage(generated: GeneratedWorkout): Promise<W
 
   return {
     id: createId('w'),
+    userId,
     title: generated.title,
     subtitle: generated.subtitle,
     intensity: generated.intensity as Intensity,
@@ -346,12 +347,13 @@ function isGeneratedWorkoutId(workoutId: string): boolean {
   return /^w-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(workoutId);
 }
 
-export async function deleteGeneratedAiWorkouts(): Promise<number> {
+export async function deleteGeneratedAiWorkouts(userId: string): Promise<number> {
   const workoutsCollection = getWorkoutsCollection();
   const favoritesCollection = getFavoritesCollection();
 
   const generatedWorkouts = await workoutsCollection.find({
-    $or: [{ source: 'ai' }, { id: { $regex: /^w-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i } }],
+    source: 'ai',
+    userId,
   }).toArray();
 
   const generatedIds = generatedWorkouts.map((workout) => workout.id).filter(isGeneratedWorkoutId);
@@ -361,25 +363,20 @@ export async function deleteGeneratedAiWorkouts(): Promise<number> {
   }
 
   await Promise.all([
-    workoutsCollection.deleteMany({ id: { $in: generatedIds } }),
+    workoutsCollection.deleteMany({ id: { $in: generatedIds }, userId }),
     favoritesCollection.deleteMany({ workoutId: { $in: generatedIds } }),
   ]);
 
   return generatedIds.length;
 }
 
-export async function listGeneratedAiWorkouts(): Promise<Workout[]> {
+export async function listGeneratedAiWorkouts(userId: string): Promise<Workout[]> {
   const workoutsCollection = getWorkoutsCollection();
-  const workouts = await workoutsCollection.find({
-    $or: [
-      { source: 'ai' },
-      { id: { $regex: /^w-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i } },
-    ],
-  }).toArray();
+  const workouts = await workoutsCollection.find({ source: 'ai', userId }).toArray();
   return workouts;
 }
 
-export async function generateAiWorkout(profile: AiWorkoutRequest, userId?: string): Promise<Workout[]> {
+export async function generateAiWorkout(profile: AiWorkoutRequest, userId: string): Promise<Workout[]> {
   // Build prompt from user profile
   const userPrompt = buildUserPrompt(profile);
   
@@ -391,7 +388,7 @@ export async function generateAiWorkout(profile: AiWorkoutRequest, userId?: stri
   
   // Convert to our Workout type with Pexels images
   const workouts = await Promise.all(
-    generatedWorkouts.map((generatedWorkout) => convertToWorkoutWithImage(generatedWorkout))
+    generatedWorkouts.map((generatedWorkout) => convertToWorkoutWithImage(generatedWorkout, userId))
   );
 
   // Persist the generated workout so it can be favorited later.

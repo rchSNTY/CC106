@@ -143,6 +143,15 @@ export default function Homepage(): JSX.Element {
       hideSnackbar();
       router.push('/explore');
     } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        hideSnackbar();
+        Alert.alert('Login required', 'Please log in to generate AI workouts.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Login', onPress: () => router.push('/login') },
+        ]);
+        return;
+      }
+
       const err = getApiErrorMessage(error);
       Alert.alert('Generation failed', err);
       showSnackbar({

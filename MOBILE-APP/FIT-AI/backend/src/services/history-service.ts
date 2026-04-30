@@ -18,6 +18,10 @@ export async function addHistory(userId: string, input: { workoutId: string; dat
     throw new HttpError(404, 'Workout not found.');
   }
 
+  if (workoutExists.source === 'ai' && workoutExists.userId !== userId) {
+    throw new HttpError(403, 'You do not have permission to log this workout.');
+  }
+
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) {
     throw new HttpError(400, 'Date must be in YYYY-MM-DD format.');
   }

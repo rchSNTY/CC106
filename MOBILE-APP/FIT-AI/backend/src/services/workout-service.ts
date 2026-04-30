@@ -8,7 +8,8 @@ export async function listWorkouts(params: { intensity?: string; search?: string
   const intensity = (params.intensity ?? 'All') as Intensity | 'All';
   const search = (params.search ?? '').trim().toLowerCase();
 
-  const workouts = await workoutsCollection.find().toArray();
+  // Preset workouts are public. AI workouts are user-scoped and must be fetched via /api/ai/generated.
+  const workouts = await workoutsCollection.find({ source: { $ne: 'ai' } }).toArray();
 
   return workouts.filter((workout) => {
     const intensityOk = intensity === 'All' || workout.intensity === intensity;
@@ -21,7 +22,7 @@ export async function listWorkouts(params: { intensity?: string; search?: string
   });
 }
 
-export async function getWorkoutById(workoutId: string): Promise<Workout> {
+export async function getWorkoutById(workoutId: string, userId?: string): Promise<Workout> {
   const workoutsCollection = getWorkoutsCollection();
   const workout = await workoutsCollection.findOne({ id: workoutId });
 
@@ -29,10 +30,21 @@ export async function getWorkoutById(workoutId: string): Promise<Workout> {
     throw new HttpError(404, 'Workout not found.');
   }
 
+  if (workout.source === 'ai') {
+    if (!userId) {
+      throw new HttpError(401, 'Authorization token is required.');
+    }
+
+    if (!workout.userId || workout.userId !== userId) {
+      // Hide existence of other users' AI workouts.
+      throw new HttpError(404, 'Workout not found.');
+    }
+  }
+
   return workout;
 }
 
-export async function deleteWorkoutById(workoutId: string): Promise<number> {
+export async function deleteWorkoutById(workoutId: string, userId: string): Promise<number> {
   const workoutsCollection = getWorkoutsCollection();
   const favoritesCollection = getFavoritesCollection();
 
@@ -46,8 +58,12 @@ export async function deleteWorkoutById(workoutId: string): Promise<number> {
     throw new HttpError(403, 'Only AI-generated workouts can be deleted.');
   }
 
+  if (!workout.userId || workout.userId !== userId) {
+    throw new HttpError(403, 'You do not have permission to delete this workout.');
+  }
+
   await Promise.all([
-    workoutsCollection.deleteOne({ id: workoutId }),
+    workoutsCollection.deleteOne({ id: workoutId, userId }),
     favoritesCollection.deleteMany({ workoutId }),
   ]);
 

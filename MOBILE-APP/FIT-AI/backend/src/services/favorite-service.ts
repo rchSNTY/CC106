@@ -12,7 +12,7 @@ export async function listFavorites(userId: string): Promise<Workout[]> {
 
   const workouts = await workoutsCollection.find({ id: { $in: favoriteIds } }).toArray();
 
-  return workouts;
+  return workouts.filter((workout) => workout.source !== 'ai' || workout.userId === userId);
 }
 
 export async function addFavorite(userId: string, workoutId: string): Promise<void> {
@@ -22,6 +22,10 @@ export async function addFavorite(userId: string, workoutId: string): Promise<vo
   const workout = await workoutsCollection.findOne({ id: workoutId });
   if (!workout) {
     throw new HttpError(404, 'Workout not found.');
+  }
+
+  if (workout.source === 'ai' && workout.userId !== userId) {
+    throw new HttpError(403, 'You can only favorite your own AI-generated workouts.');
   }
 
   const alreadyExists = await favoritesCollection.findOne({ userId, workoutId });

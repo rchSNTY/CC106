@@ -13,3 +13,19 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
   req.user = verifyToken(token);
   next();
 }
+
+export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
+  const authHeader = req.header('Authorization');
+  if (!authHeader) {
+    next();
+    return;
+  }
+
+  if (!authHeader.startsWith('Bearer ')) {
+    throw new HttpError(401, 'Invalid authorization header.');
+  }
+
+  const token = authHeader.replace('Bearer ', '').trim();
+  req.user = verifyToken(token);
+  next();
+}
