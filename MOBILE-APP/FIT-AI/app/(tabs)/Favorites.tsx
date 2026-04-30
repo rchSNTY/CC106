@@ -3,6 +3,7 @@ import RoutineDetailsModal, { type Routine } from '@/components/RoutineDetailsMo
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { UiTheme } from '@/constants/ui-theme';
 import { ApiError, addFavorite, getApiErrorMessage, listFavorites, removeFavorite } from '@/services/backend';
+import { resolveWorkoutImage } from '@/utils/imageResolution';
 import { useFocusEffect } from '@react-navigation/native';
 import { Href, useRouter } from 'expo-router';
 import React, { JSX, useCallback, useMemo, useState } from 'react';
@@ -136,6 +137,7 @@ export default function Favorites(): JSX.Element {
               subtitle={item.subtitle}
               duration={item.duration}
               badges={item.intensity ? [item.intensity] : []}
+              coverImage={resolveWorkoutImage(item)}
               onPress={() => {
                 setSelectedRoutine(item);
                 setModalVisible(true);
@@ -156,7 +158,10 @@ export default function Favorites(): JSX.Element {
 
       <RoutineDetailsModal
         visible={modalVisible}
-        routine={selectedRoutine}
+        routine={selectedRoutine ? {
+          ...selectedRoutine,
+          coverImage: resolveWorkoutImage(selectedRoutine),
+        } : null}
         isFavorite={selectedIsFavorite}
         isFavoriteLoading={isFavoriteLoading}
         onToggleFavorite={handleToggleFavorite}

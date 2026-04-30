@@ -1,4 +1,4 @@
-import { getWorkoutsCollection } from '../repositories/collections';
+import { getFavoritesCollection, getWorkoutsCollection } from '../repositories/collections';
 import type { Intensity, Workout } from '../types/models';
 import { HttpError } from '../utils/errors';
 
@@ -30,4 +30,26 @@ export async function getWorkoutById(workoutId: string): Promise<Workout> {
   }
 
   return workout;
+}
+
+export async function deleteWorkoutById(workoutId: string): Promise<number> {
+  const workoutsCollection = getWorkoutsCollection();
+  const favoritesCollection = getFavoritesCollection();
+
+  const workout = await workoutsCollection.findOne({ id: workoutId });
+  if (!workout) {
+    throw new HttpError(404, 'Workout not found.');
+  }
+
+  // Only allow deleting AI-generated workouts
+  if (workout.source !== 'ai') {
+    throw new HttpError(403, 'Only AI-generated workouts can be deleted.');
+  }
+
+  await Promise.all([
+    workoutsCollection.deleteOne({ id: workoutId }),
+    favoritesCollection.deleteMany({ workoutId }),
+  ]);
+
+  return 1;
 }

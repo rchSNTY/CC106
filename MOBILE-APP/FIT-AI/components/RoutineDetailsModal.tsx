@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ImageSourcePropType, Modal, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { ConfirmationModal } from '@/components/confirmation-modal';
 import { ThemedText } from '@/components/themed-text';
@@ -22,6 +22,7 @@ export type Routine = {
   duration: string;
   intensity?: string;
   exercises: RoutineExercise[];
+  coverImage?: ImageSourcePropType;
 };
 
 type RoutineDetailsModalProps = {
@@ -75,6 +76,13 @@ export default function RoutineDetailsModal({
         <View style={styles.overlay}>
           <SafeAreaView style={styles.sheet}>
             <View style={styles.inner}>
+              {routine.coverImage && (
+                <Image
+                  source={routine.coverImage}
+                  style={styles.heroImage}
+                  contentFit="cover"
+                />
+              )}
               <View style={styles.headerRow}>
                 <View style={styles.headerTextGroup}>
                   <ThemedText type="title" style={styles.title}>{routine.title}</ThemedText>
@@ -170,6 +178,12 @@ const styles = StyleSheet.create({
     maxHeight: '90%',
     paddingTop: UiTheme.spacing.lg,
     paddingBottom: UiTheme.spacing.lg,
+  },
+  heroImage: {
+    width: '90%',
+    height: 180,
+    borderRadius: UiTheme.radius.lg,
+    alignSelf: 'center',
   },
   inner: {
     flex: 1,

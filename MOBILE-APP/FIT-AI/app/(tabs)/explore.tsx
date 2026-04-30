@@ -3,9 +3,10 @@ import { ConfirmationModal } from '@/components/confirmation-modal';
 import RoutineDetailsModal, { type Routine } from '@/components/RoutineDetailsModal';
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { UiTheme } from '@/constants/ui-theme';
-import { ApiError, addFavorite, generateAiWorkout, getApiErrorMessage, listFavorites, listWorkouts, loadGeneratedAiWorkouts, removeFavorite, saveGeneratedAiWorkout } from '@/services/backend';
+import { ApiError, addFavorite, clearGeneratedAiWorkouts, deleteWorkout, generateAiWorkout, getApiErrorMessage, listFavorites, listGeneratedAiWorkouts, listWorkouts, removeFavorite } from '@/services/backend';
 import { useUserProfile } from '@/stores/user-profile';
 import { getAiWorkoutPreset } from '@/utils/ai-workout';
+import { resolveWorkoutImage } from '@/utils/imageResolution';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -22,6 +23,7 @@ export default function Explore(): JSX.Element {
   const { profile } = useUserProfile();
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<Intensity>('All');
+  const [workoutView, setWorkoutView] = useState<'presets' | 'generated'>('presets');
   const [workouts, setWorkouts] = useState<Routine[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -30,7 +32,13 @@ export default function Explore(): JSX.Element {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const [showAiPrompt, setShowAiPrompt] = useState(false);
+  const [showDeleteGeneratedPrompt, setShowDeleteGeneratedPrompt] = useState(false);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [isClearingAi, setIsClearingAi] = useState(false);
+  const [generatedWorkoutCount, setGeneratedWorkoutCount] = useState(0);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showDeleteSelectedPrompt, setShowDeleteSelectedPrompt] = useState(false);
 
   const aiPreset = useMemo(() => getAiWorkoutPreset(profile), [profile]);
 
@@ -47,57 +55,47 @@ export default function Explore(): JSX.Element {
     setQuery(typeof params.search === 'string' ? params.search : aiPreset.search);
   }, [aiPreset.intensity, aiPreset.search, params.ai, params.intensity, params.search]);
 
+  const refreshWorkouts = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage(null);
+      const [generatedWorkouts, presetWorkouts] = await Promise.all([
+        listGeneratedAiWorkouts(),
+        workoutView === 'presets' ? listWorkouts(activeFilter, query) : Promise.resolve([]),
+      ]);
+
+      const search = query.trim().toLowerCase();
+      const matchesSearch = (item: { title: string; subtitle: string }) =>
+        search.length === 0 || item.title.toLowerCase().includes(search) || item.subtitle.toLowerCase().includes(search);
+
+      const visiblePresets = workoutView === 'presets'
+        ? presetWorkouts.filter((item) => activeFilter === 'All' || item.intensity === activeFilter).filter(matchesSearch)
+        : [];
+
+      const visibleGenerated = workoutView === 'generated'
+        ? generatedWorkouts.filter((item) => activeFilter === 'All' || item.intensity === activeFilter).filter(matchesSearch)
+        : [];
+
+      setGeneratedWorkoutCount(generatedWorkouts.length);
+
+      const merged = [...visibleGenerated, ...visiblePresets]
+        .filter((item, index, self) => self.findIndex((candidate) => candidate.id === item.id) === index)
+        .map((item) => ({
+          ...item,
+          exercises: item.exercises.map((exercise) => ({ ...exercise, steps: (exercise as any).steps ?? [] })),
+      }));
+
+      setWorkouts(merged);
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeFilter, query, workoutView]);
+
   useEffect(() => {
-    let isMounted = true;
-
-    (async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage(null);
-        const [result, cachedGenerated] = await Promise.all([
-          listWorkouts(activeFilter, query),
-          loadGeneratedAiWorkouts(),
-        ]);
-
-        const visibleCached = cachedGenerated.filter((item) => {
-          const matchesIntensity = activeFilter === 'All' || item.intensity === activeFilter;
-          const search = query.trim().toLowerCase();
-          const matchesSearch =
-            search.length === 0 ||
-            item.title.toLowerCase().includes(search) ||
-            item.subtitle.toLowerCase().includes(search);
-
-          return matchesIntensity && matchesSearch;
-        });
-
-        if (!isMounted) {
-          return;
-        }
-
-        const merged = [...visibleCached, ...result]
-          .filter((item, index, self) => self.findIndex((candidate) => candidate.id === item.id) === index)
-          .map((item) => ({
-            ...item,
-            exercises: item.exercises.map((exercise) => ({ ...exercise, steps: (exercise as any).steps ?? [] })),
-          }));
-
-        setWorkouts(merged);
-      } catch (error) {
-        if (!isMounted) {
-          return;
-        }
-        setErrorMessage(getApiErrorMessage(error));
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    })();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [activeFilter, query]);
+    void refreshWorkouts();
+  }, [refreshWorkouts]);
 
   const handleAiLaunch = () => {
     if (!aiPreset.isReady) {
@@ -161,10 +159,8 @@ export default function Explore(): JSX.Element {
         })),
       }));
 
-      await Promise.all(aiWorkouts.map((workout) => saveGeneratedAiWorkout(workout)));
-
-      // Add generated workouts to the top of the list
-      setWorkouts((prev) => [...routines, ...prev]);
+      setWorkoutView('generated');
+      setWorkouts(routines);
       setActiveFilter('All');
       setQuery('');
       
@@ -177,6 +173,68 @@ export default function Explore(): JSX.Element {
       setIsGeneratingAi(false);
     }
   }, [profile]);
+
+  const handleShowPresetWorkouts = useCallback(() => {
+    setWorkoutView('presets');
+  }, []);
+
+  const handleShowGeneratedWorkouts = useCallback(() => {
+    setWorkoutView('generated');
+  }, []);
+
+  const handleClearGeneratedWorkouts = useCallback(() => {
+    if (generatedWorkoutCount === 0 || isClearingAi) {
+      return;
+    }
+
+    setShowDeleteGeneratedPrompt(true);
+  }, [generatedWorkoutCount, isClearingAi, refreshWorkouts]);
+
+  const confirmClearGeneratedWorkouts = useCallback(async () => {
+    setShowDeleteGeneratedPrompt(false);
+    setIsClearingAi(true);
+
+    try {
+      await clearGeneratedAiWorkouts();
+      setWorkoutView('presets');
+      await refreshWorkouts();
+    } catch (error) {
+      Alert.alert('Delete failed', getApiErrorMessage(error));
+    } finally {
+      setIsClearingAi(false);
+    }
+  }, [refreshWorkouts]);
+
+  const confirmDeleteSelected = useCallback(async () => {
+    setShowDeleteSelectedPrompt(false);
+    if (selectedIds.size === 0) return;
+    setIsClearingAi(true);
+
+    try {
+      // Delete on server
+      await Promise.all(
+        Array.from(selectedIds).map(async (id) => {
+          try {
+            await deleteWorkout(id);
+          } catch (error) {
+            if (error instanceof ApiError && error.status === 404) {
+              return;
+            }
+            throw error;
+          }
+        }),
+      );
+
+      // Refresh UI
+      await refreshWorkouts();
+      setSelectedIds(new Set());
+      setIsSelecting(false);
+    } catch (error) {
+      Alert.alert('Delete failed', getApiErrorMessage(error));
+    } finally {
+      setIsClearingAi(false);
+    }
+  }, [selectedIds, refreshWorkouts]);
 
   useFocusEffect(
     useCallback(() => {
@@ -291,6 +349,26 @@ export default function Explore(): JSX.Element {
           <Text style={styles.aiBannerAction}>{isGeneratingAi ? 'Generating...' : 'Generate'}</Text>
         </TouchableOpacity>
 
+        <View style={styles.viewSwitcherRow}>
+          <TouchableOpacity
+            style={[styles.viewSwitchChip, workoutView === 'presets' && styles.viewSwitchChipActive]}
+            onPress={handleShowPresetWorkouts}
+          >
+            <Text style={[styles.viewSwitchText, workoutView === 'presets' && styles.viewSwitchTextActive]}>Preset workouts</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.viewSwitchChip, workoutView === 'generated' && styles.viewSwitchChipActive]}
+            onPress={handleShowGeneratedWorkouts}
+            disabled={generatedWorkoutCount === 0}
+          >
+            <Text style={[styles.viewSwitchText, workoutView === 'generated' && styles.viewSwitchTextActive, generatedWorkoutCount === 0 && styles.viewSwitchTextDisabled]}>
+              AI workouts{generatedWorkoutCount > 0 ? ` (${generatedWorkoutCount})` : ''}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* moved delete/select controls into the section header */}
+
         <View style={styles.searchWrap}>
           <Image source={require('@/assets/images/search.png')} style={styles.searchIcon} contentFit="contain" />
           <TextInput
@@ -320,27 +398,105 @@ export default function Explore(): JSX.Element {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Results</Text>
-          <Text style={styles.sectionMeta}>{workouts.length} items</Text>
+          <View style={styles.sectionActions}>
+            {workoutView === 'generated' && generatedWorkoutCount > 0 && !isSelecting && (
+              <TouchableOpacity
+                onPress={() => setIsSelecting(true)}
+                style={styles.binButton}
+                accessibilityLabel="Delete AI workouts"
+              >
+                <Image source={require('@/assets/images/bin.png')} style={styles.binIcon} contentFit="contain" />
+              </TouchableOpacity>
+            )}
+            {workoutView === 'generated' && isSelecting && (
+              <>
+                <TouchableOpacity
+                  onPress={() => {
+                    const genIds = workouts.slice(0, generatedWorkoutCount).map((w) => String(w.id));
+                    if (selectedIds.size === genIds.length) {
+                      setSelectedIds(new Set());
+                    } else {
+                      setSelectedIds(new Set(genIds));
+                    }
+                  }}
+                  style={styles.selectAllButton}
+                >
+                  <Text style={styles.selectAllText}>
+                    {selectedIds.size === Math.min(generatedWorkoutCount, workouts.length) ? 'None' : 'All'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setShowDeleteSelectedPrompt(true)}
+                  disabled={selectedIds.size === 0 || isClearingAi}
+                  style={[styles.deleteSelectedButton, selectedIds.size === 0 && styles.deleteSelectedDisabled]}
+                >
+                  <Text style={styles.deleteSelectedText}>
+                    {isClearingAi ? '...' : selectedIds.size > 0 ? `Delete (${selectedIds.size})` : 'Delete'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { setIsSelecting(false); setSelectedIds(new Set()); }} style={styles.cancelButton}>
+                  <Text style={styles.cancelText}>✕</Text>
+                </TouchableOpacity>
+              </>
+            )}
+            <Text style={styles.sectionMeta}>{workouts.length} items</Text>
+          </View>
         </View>
 
         {isLoading ? <Text style={styles.statusText}>Loading workouts...</Text> : null}
         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
         <View style={styles.cardList}>
-          {workouts.map((item) => (
-            <Card
-              key={item.id}
-              title={item.title}
-              subtitle={item.subtitle}
-              duration={item.duration}
-              badges={item.intensity ? [item.intensity] : []}
-              onPress={() => {
-                setSelectedRoutine(item);
-                setModalVisible(true);
-              }}
-              accessibilityLabel={`Open ${item.title} routine details`}
-            />
-          ))}
+          {workouts.map((item, idx) => {
+            const isGeneratedItem = idx < generatedWorkoutCount && workoutView === 'generated';
+            return (
+              <View key={item.id} style={isGeneratedItem && isSelecting ? styles.cardRow : undefined}>
+                {isGeneratedItem && isSelecting ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedIds((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(String(item.id))) {
+                          next.delete(String(item.id));
+                        } else {
+                          next.add(String(item.id));
+                        }
+                        return next;
+                      });
+                    }}
+                    style={[styles.checkbox, selectedIds.has(String(item.id)) && styles.checkboxChecked]}
+                    accessibilityLabel={`Select ${item.title}`}
+                  />
+                ) : null}
+
+                <Card
+                  title={item.title}
+                  subtitle={item.subtitle}
+                  duration={item.duration}
+                  badges={item.intensity ? [item.intensity] : []}
+                  coverImage={resolveWorkoutImage(item)}
+                  onPress={() => {
+                    if (isGeneratedItem && isSelecting) {
+                      setSelectedIds((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(String(item.id))) {
+                          next.delete(String(item.id));
+                        } else {
+                          next.add(String(item.id));
+                        }
+                        return next;
+                      });
+                      return;
+                    }
+
+                    setSelectedRoutine(item);
+                    setModalVisible(true);
+                  }}
+                  accessibilityLabel={`Open ${item.title} routine details`}
+                />
+              </View>
+            );
+          })}
 
           {!isLoading && !errorMessage && workouts.length === 0 ? (
             <View style={styles.emptyState}>
@@ -353,7 +509,10 @@ export default function Explore(): JSX.Element {
 
       <RoutineDetailsModal
         visible={modalVisible}
-        routine={selectedRoutine}
+        routine={selectedRoutine ? {
+          ...selectedRoutine,
+          coverImage: resolveWorkoutImage(selectedRoutine),
+        } : null}
         isFavorite={selectedIsFavorite}
         isFavoriteLoading={isFavoriteLoading}
         onToggleFavorite={handleToggleFavorite}
@@ -381,6 +540,28 @@ export default function Explore(): JSX.Element {
         cancelText="Cancel"
         onConfirm={handleAiConfirm}
         onCancel={() => setShowAiPrompt(false)}
+      />
+
+      <ConfirmationModal
+        visible={showDeleteGeneratedPrompt}
+        title="Delete AI workouts?"
+        message="This removes the previously generated routines from the server."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmClearGeneratedWorkouts}
+        onCancel={() => setShowDeleteGeneratedPrompt(false)}
+        isDangerous
+      />
+
+      <ConfirmationModal
+        visible={showDeleteSelectedPrompt}
+        title="Delete selected AI workouts?"
+        message="This will remove the selected AI-generated routines from the server."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteSelected}
+        onCancel={() => setShowDeleteSelectedPrompt(false)}
+        isDangerous
       />
 
       <BottomTabNav activeTab="explore" />
@@ -434,6 +615,49 @@ const styles = StyleSheet.create({
     color: UiTheme.colors.accent,
     fontWeight: '900',
   },
+  viewSwitcherRow: {
+    flexDirection: 'row',
+    gap: UiTheme.spacing.xs,
+  },
+  viewSwitchChip: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 40,
+    borderRadius: UiTheme.radius.xl,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+    backgroundColor: UiTheme.colors.surface,
+    paddingHorizontal: UiTheme.spacing.md,
+  },
+  viewSwitchChipActive: {
+    borderColor: UiTheme.colors.accent,
+    backgroundColor: UiTheme.colors.accentSoft,
+  },
+  viewSwitchText: {
+    color: UiTheme.colors.textSecondary,
+    fontWeight: '800',
+    fontSize: UiTheme.font.caption,
+  },
+  viewSwitchTextActive: {
+    color: UiTheme.colors.accent,
+  },
+  viewSwitchTextDisabled: {
+    opacity: 0.45,
+  },
+  deleteAiButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  deleteAiButtonDisabled: {
+    opacity: 0.45,
+  },
+  deleteAiButtonText: {
+    color: UiTheme.colors.danger,
+    fontWeight: '800',
+    fontSize: UiTheme.font.caption,
+  },
   aiBannerDisabled: {
     opacity: 0.6,
   },
@@ -471,6 +695,19 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionTitle: { fontSize: UiTheme.font.subtitle, fontWeight: '800', color: UiTheme.colors.textPrimary },
   sectionMeta: { fontSize: UiTheme.font.caption, fontWeight: '700', color: UiTheme.colors.textSecondary },
+  sectionActions: { flexDirection: 'row', alignItems: 'center', gap: UiTheme.spacing.sm },
+  binButton: { padding: UiTheme.spacing.xs },
+  binIcon: { width: 20, height: 20 },
+  selectAllButton: { paddingVertical: UiTheme.spacing.xs, paddingHorizontal: UiTheme.spacing.sm, borderRadius: UiTheme.radius.md, backgroundColor: UiTheme.colors.surfaceMuted },
+  selectAllText: { color: UiTheme.colors.textPrimary, fontWeight: '700', fontSize: 12 },
+  deleteSelectedButton: { paddingVertical: UiTheme.spacing.xs, paddingHorizontal: UiTheme.spacing.sm, borderRadius: UiTheme.radius.md, backgroundColor: UiTheme.colors.danger },
+  deleteSelectedDisabled: { backgroundColor: UiTheme.colors.surfaceMuted },
+  deleteSelectedText: { color: '#fff', fontWeight: '700', fontSize: 12 },
+  cancelButton: { padding: UiTheme.spacing.xs },
+  cancelText: { color: UiTheme.colors.textSecondary, fontSize: 18, fontWeight: '700' },
+  cardRow: { flexDirection: 'row', alignItems: 'flex-start', gap: UiTheme.spacing.sm },
+  checkbox: { width: 24, height: 24, borderRadius: 4, borderWidth: 2, borderColor: UiTheme.colors.border, backgroundColor: UiTheme.colors.surface, marginTop: 8 },
+  checkboxChecked: { backgroundColor: UiTheme.colors.accent, borderColor: UiTheme.colors.accent },
   cardList: { gap: UiTheme.spacing.sm },
   emptyState: {
     alignItems: 'center',

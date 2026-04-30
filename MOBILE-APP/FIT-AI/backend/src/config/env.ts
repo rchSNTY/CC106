@@ -25,4 +25,6 @@ export const env = {
   // AI Service configuration (OpenRouter)
   openrouterApiKey: process.env.OPENROUTER_API_KEY,
   openrouterModel: process.env.OPENROUTER_MODEL ?? 'google/gemma-4-31b-it:free',
+  // Image fetching (Pexels)
+  pexelsApiKey: process.env.PEXELS_API_KEY,
 };

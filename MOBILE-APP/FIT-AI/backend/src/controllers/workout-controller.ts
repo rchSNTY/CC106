@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 
 import { getWorkoutById, listWorkouts } from '../services/workout-service';
+import { deleteWorkoutById } from '../services/workout-service';
 
 export async function getWorkouts(req: Request, res: Response): Promise<void> {
   const intensity = typeof req.query.intensity === 'string' ? req.query.intensity : undefined;
@@ -13,4 +14,9 @@ export async function getWorkouts(req: Request, res: Response): Promise<void> {
 export async function getWorkout(req: Request, res: Response): Promise<void> {
   const workout = await getWorkoutById(req.params.id);
   res.status(200).json({ workout });
+}
+
+export async function deleteWorkout(req: Request, res: Response): Promise<void> {
+  const deletedCount = await deleteWorkoutById(req.params.id);
+  res.status(200).json({ deletedCount });
 }

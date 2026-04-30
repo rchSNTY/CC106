@@ -1,8 +1,8 @@
-import { getWorkoutsCollection } from '../repositories/collections';
+import { env } from '../config/env';
+import { getFavoritesCollection, getWorkoutsCollection } from '../repositories/collections';
 import type { Exercise, Intensity, Workout } from '../types/models';
 import { HttpError } from '../utils/errors';
 import { createId } from '../utils/id';
-import { env } from '../config/env';
 
 // OpenRouter API types
 interface OpenRouterMessage {
@@ -18,6 +18,27 @@ interface OpenRouterChoice {
 
 interface OpenRouterResponse {
   choices: OpenRouterChoice[];
+}
+
+// Pexels API types
+interface PexelsPhoto {
+  id: number;
+  photographer: string;
+  src: {
+    original: string;
+    large: string;
+    medium: string;
+    small: string;
+    portrait: string;
+    landscape: string;
+    tiny: string;
+  };
+  alt: string;
+}
+
+interface PexelsSearchResponse {
+  photos: PexelsPhoto[];
+  next_page?: string;
 }
 
 // User profile for AI generation
@@ -196,6 +217,47 @@ Generate a workout that matches their activity level and workout preferences.
 `;
 }
 
+async function fetchWorkoutImage(query: string): Promise<string | undefined> {
+  const apiKey = env.pexelsApiKey;
+  
+  if (!apiKey) {
+    console.log('⚠️ Pexels API key not configured, skipping image fetch');
+    return undefined;
+  }
+
+  try {
+    const searchUrl = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape`;
+    
+    console.log(`📷 Fetching Pexels image for: ${query}`);
+    
+    const response = await fetch(searchUrl, {
+      headers: {
+        'Authorization': apiKey,
+      },
+    });
+
+    if (!response.ok) {
+      console.log(`⚠️ Pexels API error (${response.status}): Failed to fetch image for "${query}"`);
+      return undefined;
+    }
+
+    const data: PexelsSearchResponse = await response.json();
+    
+    if (data.photos && data.photos.length > 0) {
+      const imageUrl = data.photos[0].src.landscape || data.photos[0].src.large;
+      console.log(`✅ Found Pexels image: ${imageUrl}`);
+      return imageUrl;
+    }
+
+    console.log(`⚠️ No Pexels images found for "${query}"`);
+    return undefined;
+  } catch (error) {
+    const err = error as Error;
+    console.log(`⚠️ Error fetching Pexels image: ${err.message}`);
+    return undefined;
+  }
+}
+
 function parseAIResponse(response: string): GeneratedWorkout[] {
   // Extract JSON from response (in case there's any extra text)
   const jsonMatch = response.match(/\{[\s\S]*\}/);
@@ -252,7 +314,69 @@ function convertToWorkout(generated: GeneratedWorkout): Workout {
     intensity: generated.intensity as Intensity,
     duration: generated.duration,
     exercises,
+    source: 'ai',
   };
+}
+
+async function convertToWorkoutWithImage(generated: GeneratedWorkout): Promise<Workout> {
+  const exercises: Exercise[] = generated.exercises.map((ex) => ({
+    id: createId('e'),
+    name: ex.name,
+    detail: ex.detail,
+    reps: ex.reps,
+    steps: ex.steps,
+  }));
+
+  // Fetch cover image from Pexels
+  const coverImageUrl = await fetchWorkoutImage(generated.title);
+
+  return {
+    id: createId('w'),
+    title: generated.title,
+    subtitle: generated.subtitle,
+    intensity: generated.intensity as Intensity,
+    duration: generated.duration,
+    exercises,
+    coverImageUrl,
+    source: 'ai',
+  };
+}
+
+function isGeneratedWorkoutId(workoutId: string): boolean {
+  return /^w-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(workoutId);
+}
+
+export async function deleteGeneratedAiWorkouts(): Promise<number> {
+  const workoutsCollection = getWorkoutsCollection();
+  const favoritesCollection = getFavoritesCollection();
+
+  const generatedWorkouts = await workoutsCollection.find({
+    $or: [{ source: 'ai' }, { id: { $regex: /^w-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i } }],
+  }).toArray();
+
+  const generatedIds = generatedWorkouts.map((workout) => workout.id).filter(isGeneratedWorkoutId);
+
+  if (generatedIds.length === 0) {
+    return 0;
+  }
+
+  await Promise.all([
+    workoutsCollection.deleteMany({ id: { $in: generatedIds } }),
+    favoritesCollection.deleteMany({ workoutId: { $in: generatedIds } }),
+  ]);
+
+  return generatedIds.length;
+}
+
+export async function listGeneratedAiWorkouts(): Promise<Workout[]> {
+  const workoutsCollection = getWorkoutsCollection();
+  const workouts = await workoutsCollection.find({
+    $or: [
+      { source: 'ai' },
+      { id: { $regex: /^w-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i } },
+    ],
+  }).toArray();
+  return workouts;
 }
 
 export async function generateAiWorkout(profile: AiWorkoutRequest, userId?: string): Promise<Workout[]> {
@@ -265,8 +389,10 @@ export async function generateAiWorkout(profile: AiWorkoutRequest, userId?: stri
   // Parse and validate response
   const generatedWorkouts = parseAIResponse(aiResponse);
   
-  // Convert to our Workout type
-  const workouts = generatedWorkouts.map((generatedWorkout) => convertToWorkout(generatedWorkout));
+  // Convert to our Workout type with Pexels images
+  const workouts = await Promise.all(
+    generatedWorkouts.map((generatedWorkout) => convertToWorkoutWithImage(generatedWorkout))
+  );
 
   // Persist the generated workout so it can be favorited later.
   const workoutsCollection = getWorkoutsCollection();

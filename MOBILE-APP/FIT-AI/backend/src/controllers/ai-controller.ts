@@ -1,7 +1,12 @@
 import type { Request, Response } from 'express';
 
-import { generateAiWorkout, getAiServiceStatus } from '../services/ai-service';
 import type { AiWorkoutRequest } from '../services/ai-service';
+import {
+  deleteGeneratedAiWorkouts,
+  generateAiWorkout,
+  getAiServiceStatus,
+  listGeneratedAiWorkouts,
+} from '../services/ai-service';
 import { HttpError } from '../utils/errors';
 
 export async function generateWorkout(req: Request, res: Response): Promise<void> {
@@ -65,4 +70,14 @@ export async function generateWorkout(req: Request, res: Response): Promise<void
 export async function checkAiStatus(req: Request, res: Response): Promise<void> {
   const status = await getAiServiceStatus();
   res.status(200).json(status);
+}
+
+export async function clearGeneratedWorkouts(req: Request, res: Response): Promise<void> {
+  const deletedCount = await deleteGeneratedAiWorkouts();
+  res.status(200).json({ deletedCount });
+}
+
+export async function listGeneratedWorkouts(req: Request, res: Response): Promise<void> {
+  const workouts = await listGeneratedAiWorkouts();
+  res.status(200).json({ workouts });
 }

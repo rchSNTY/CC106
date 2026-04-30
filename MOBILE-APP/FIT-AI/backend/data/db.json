@@ -57,10 +57,47 @@
       "intensity": "Light",
       "duration": "15 min",
       "exercises": [
-        { "id": "e-1", "name": "Cat-Cow Stretch", "detail": "Slow movement to warm up the spine.", "reps": "10 reps", "steps": ["Start on hands and knees with wrists under shoulders", "Inhale, arch your back and lift your head and tailbone (Cow pose)", "Exhale, round your spine and tuck your chin to your chest (Cat pose)", "Flow smoothly between these two positions", "Keep movements slow and controlled"] },
-        { "id": "e-2", "name": "Hip Circles", "detail": "Mobilize the hips in both directions.", "reps": "8 each side", "steps": ["Stand with feet hip-width apart and hands on hips", "Make large circles with your hips clockwise", "Complete 8 circles going clockwise", "Reverse direction and make 8 circles counterclockwise", "Keep your core engaged and upper body stable"] },
-        { "id": "e-3", "name": "Shoulder Rolls", "detail": "Improve upper body mobility and posture.", "reps": "10 reps", "steps": ["Stand or sit with arms relaxed at your sides", "Roll shoulders forward in a circular motion", "Complete 10 forward rolls", "Reverse direction and roll shoulders backward", "Keep movements slow and deliberate"] }
-      ]
+        {
+          "id": "e-1",
+          "name": "Cat-Cow Stretch",
+          "detail": "Slow movement to warm up the spine.",
+          "reps": "10 reps",
+          "steps": [
+            "Start on hands and knees with wrists under shoulders",
+            "Inhale, arch your back and lift your head and tailbone (Cow pose)",
+            "Exhale, round your spine and tuck your chin to your chest (Cat pose)",
+            "Flow smoothly between these two positions",
+            "Keep movements slow and controlled"
+          ]
+        },
+        {
+          "id": "e-2",
+          "name": "Hip Circles",
+          "detail": "Mobilize the hips in both directions.",
+          "reps": "8 each side",
+          "steps": [
+            "Stand with feet hip-width apart and hands on hips",
+            "Make large circles with your hips clockwise",
+            "Complete 8 circles going clockwise",
+            "Reverse direction and make 8 circles counterclockwise",
+            "Keep your core engaged and upper body stable"
+          ]
+        },
+        {
+          "id": "e-3",
+          "name": "Shoulder Rolls",
+          "detail": "Improve upper body mobility and posture.",
+          "reps": "10 reps",
+          "steps": [
+            "Stand or sit with arms relaxed at your sides",
+            "Roll shoulders forward in a circular motion",
+            "Complete 10 forward rolls",
+            "Reverse direction and roll shoulders backward",
+            "Keep movements slow and deliberate"
+          ]
+        }
+      ],
+      "coverImageUrl": "MorningMobilityFlow.jpg"
     },
     {
       "id": "w-2",
@@ -69,10 +106,47 @@
       "intensity": "Moderate",
       "duration": "30 min",
       "exercises": [
-        { "id": "e-4", "name": "Jumping Jacks", "detail": "Raise heart rate steadily.", "reps": "2 min", "steps": ["Stand with feet together and arms at your sides", "Jump while spreading legs wide and raising arms overhead", "Jump back to starting position", "Repeat continuously at a steady pace", "Land softly on the balls of your feet"] },
-        { "id": "e-5", "name": "Mountain Climbers", "detail": "Drive knees toward chest at a steady pace.", "reps": "45 sec", "steps": ["Start in a high plank position with hands under shoulders", "Drive one knee toward your chest", "Quickly switch legs, extending the other leg back", "Continue alternating legs at a fast pace", "Keep your core tight and hips level"] },
-        { "id": "e-6", "name": "High Knees", "detail": "Maintain a quick rhythm with tall posture.", "reps": "60 sec", "steps": ["Stand tall with feet hip-width apart", "Run in place, lifting knees as high as possible", "Pump your arms in running motion", "Land on the balls of your feet", "Maintain a quick, steady rhythm throughout"] }
-      ]
+        {
+          "id": "e-4",
+          "name": "Jumping Jacks",
+          "detail": "Raise heart rate steadily.",
+          "reps": "2 min",
+          "steps": [
+            "Stand with feet together and arms at your sides",
+            "Jump while spreading legs wide and raising arms overhead",
+            "Jump back to starting position",
+            "Repeat continuously at a steady pace",
+            "Land softly on the balls of your feet"
+          ]
+        },
+        {
+          "id": "e-5",
+          "name": "Mountain Climbers",
+          "detail": "Drive knees toward chest at a steady pace.",
+          "reps": "45 sec",
+          "steps": [
+            "Start in a high plank position with hands under shoulders",
+            "Drive one knee toward your chest",
+            "Quickly switch legs, extending the other leg back",
+            "Continue alternating legs at a fast pace",
+            "Keep your core tight and hips level"
+          ]
+        },
+        {
+          "id": "e-6",
+          "name": "High Knees",
+          "detail": "Maintain a quick rhythm with tall posture.",
+          "reps": "60 sec",
+          "steps": [
+            "Stand tall with feet hip-width apart",
+            "Run in place, lifting knees as high as possible",
+            "Pump your arms in running motion",
+            "Land on the balls of your feet",
+            "Maintain a quick, steady rhythm throughout"
+          ]
+        }
+      ],
+      "coverImageUrl": "EnduranceBurn.jpg"
     },
     {
       "id": "w-3",
@@ -81,10 +155,47 @@
       "intensity": "Intense",
       "duration": "45 min",
       "exercises": [
-        { "id": "e-7", "name": "Goblet Squat", "detail": "Hold weight at chest and squat deeply.", "reps": "12 reps", "steps": ["Hold a dumbbell or kettlebell at chest level", "Stand with feet shoulder-width apart", "Push your hips back and bend knees to lower into squat", "Keep chest up and core engaged", "Push through heels to return to standing"] },
-        { "id": "e-8", "name": "Dumbbell Row", "detail": "Pull weight toward hip with control.", "reps": "10 reps each side", "steps": ["Place one knee and hand on a bench for support", "Hold dumbbell in opposite hand with arm extended", "Pull dumbbell up to your hip, squeezing shoulder blade", "Lower with control back to starting position", "Complete all reps on one side, then switch"] },
-        { "id": "e-9", "name": "Plank Hold", "detail": "Maintain a solid core line.", "reps": "60 sec", "steps": ["Start in forearm plank position", "Keep elbows directly under shoulders", "Engage your core and keep body in straight line", "Don't let hips sag or pike up", "Hold position while breathing steadily"] }
-      ]
+        {
+          "id": "e-7",
+          "name": "Goblet Squat",
+          "detail": "Hold weight at chest and squat deeply.",
+          "reps": "12 reps",
+          "steps": [
+            "Hold a dumbbell or kettlebell at chest level",
+            "Stand with feet shoulder-width apart",
+            "Push your hips back and bend knees to lower into squat",
+            "Keep chest up and core engaged",
+            "Push through heels to return to standing"
+          ]
+        },
+        {
+          "id": "e-8",
+          "name": "Dumbbell Row",
+          "detail": "Pull weight toward hip with control.",
+          "reps": "10 reps each side",
+          "steps": [
+            "Place one knee and hand on a bench for support",
+            "Hold dumbbell in opposite hand with arm extended",
+            "Pull dumbbell up to your hip, squeezing shoulder blade",
+            "Lower with control back to starting position",
+            "Complete all reps on one side, then switch"
+          ]
+        },
+        {
+          "id": "e-9",
+          "name": "Plank Hold",
+          "detail": "Maintain a solid core line.",
+          "reps": "60 sec",
+          "steps": [
+            "Start in forearm plank position",
+            "Keep elbows directly under shoulders",
+            "Engage your core and keep body in straight line",
+            "Don't let hips sag or pike up",
+            "Hold position while breathing steadily"
+          ]
+        }
+      ],
+      "coverImageUrl": "StrenghtCircuit.jpg"
     },
     {
       "id": "w-4",
@@ -93,10 +204,47 @@
       "intensity": "Moderate",
       "duration": "20 min",
       "exercises": [
-        { "id": "e-10", "name": "Dead Bug", "detail": "Slow, controlled core stability work.", "reps": "12 reps each side", "steps": ["Lie on your back with arms extended toward ceiling", "Lift legs with knees bent at 90 degrees", "Lower opposite arm and leg toward floor slowly", "Return to starting position with control", "Alternate sides keeping core engaged throughout"] },
-        { "id": "e-11", "name": "Side Plank", "detail": "Hold posture with hips lifted.", "reps": "30 sec each side", "steps": ["Lie on your side with legs extended", "Place forearm on ground under shoulder", "Lift hips off the ground, forming straight line", "Engage core and hold position", "Complete hold time, then switch to other side"] },
-        { "id": "e-12", "name": "Glute Bridge", "detail": "Activate posterior chain and core.", "reps": "15 reps", "steps": ["Lie on your back with knees bent and feet flat", "Push through heels to lift hips toward ceiling", "Squeeze glutes at the top of the movement", "Lower hips back down with control", "Keep core engaged throughout the movement"] }
-      ]
+        {
+          "id": "e-10",
+          "name": "Dead Bug",
+          "detail": "Slow, controlled core stability work.",
+          "reps": "12 reps each side",
+          "steps": [
+            "Lie on your back with arms extended toward ceiling",
+            "Lift legs with knees bent at 90 degrees",
+            "Lower opposite arm and leg toward floor slowly",
+            "Return to starting position with control",
+            "Alternate sides keeping core engaged throughout"
+          ]
+        },
+        {
+          "id": "e-11",
+          "name": "Side Plank",
+          "detail": "Hold posture with hips lifted.",
+          "reps": "30 sec each side",
+          "steps": [
+            "Lie on your side with legs extended",
+            "Place forearm on ground under shoulder",
+            "Lift hips off the ground, forming straight line",
+            "Engage core and hold position",
+            "Complete hold time, then switch to other side"
+          ]
+        },
+        {
+          "id": "e-12",
+          "name": "Glute Bridge",
+          "detail": "Activate posterior chain and core.",
+          "reps": "15 reps",
+          "steps": [
+            "Lie on your back with knees bent and feet flat",
+            "Push through heels to lift hips toward ceiling",
+            "Squeeze glutes at the top of the movement",
+            "Lower hips back down with control",
+            "Keep core engaged throughout the movement"
+          ]
+        }
+      ],
+      "coverImageUrl": "CoreStarter.jpg"
     },
     {
       "id": "w-5",
@@ -105,10 +253,47 @@
       "intensity": "Intense",
       "duration": "10 min",
       "exercises": [
-        { "id": "e-13", "name": "Burpees", "detail": "Full body explosive movement.", "reps": "45 sec", "steps": ["Stand with feet shoulder-width apart", "Drop into a squat and place hands on floor", "Jump feet back to plank position", "Perform a push-up (optional)", "Jump feet forward and explode up with arms overhead"] },
-        { "id": "e-14", "name": "Jump Squats", "detail": "Explosive lower body power.", "reps": "30 sec", "steps": ["Stand with feet shoulder-width apart", "Lower into a squat position", "Explode upward, jumping off the ground", "Land softly and immediately go into next squat", "Keep core tight throughout"] },
-        { "id": "e-15", "name": "Sprint in Place", "detail": "Maximum effort running.", "reps": "30 sec", "steps": ["Stand tall with feet hip-width apart", "Begin running in place, lifting knees high", "Pump arms as if sprinting", "Maintain quick, powerful steps", "Keep torso upright"] }
-      ]
+        {
+          "id": "e-13",
+          "name": "Burpees",
+          "detail": "Full body explosive movement.",
+          "reps": "45 sec",
+          "steps": [
+            "Stand with feet shoulder-width apart",
+            "Drop into a squat and place hands on floor",
+            "Jump feet back to plank position",
+            "Perform a push-up (optional)",
+            "Jump feet forward and explode up with arms overhead"
+          ]
+        },
+        {
+          "id": "e-14",
+          "name": "Jump Squats",
+          "detail": "Explosive lower body power.",
+          "reps": "30 sec",
+          "steps": [
+            "Stand with feet shoulder-width apart",
+            "Lower into a squat position",
+            "Explode upward, jumping off the ground",
+            "Land softly and immediately go into next squat",
+            "Keep core tight throughout"
+          ]
+        },
+        {
+          "id": "e-15",
+          "name": "Sprint in Place",
+          "detail": "Maximum effort running.",
+          "reps": "30 sec",
+          "steps": [
+            "Stand tall with feet hip-width apart",
+            "Begin running in place, lifting knees high",
+            "Pump arms as if sprinting",
+            "Maintain quick, powerful steps",
+            "Keep torso upright"
+          ]
+        }
+      ],
+      "coverImageUrl": "QuickCardioBlast.jpg"
     },
     {
       "id": "w-6",
@@ -117,10 +302,47 @@
       "intensity": "Light",
       "duration": "20 min",
       "exercises": [
-        { "id": "e-16", "name": "Child's Pose", "detail": "Restful stretch for back and hips.", "reps": "60 sec", "steps": ["Kneel on the floor with big toes touching", "Sit back on heels and separate knees hip-width", "Fold forward, extending arms in front", "Rest forehead on the ground", "Breathe deeply and relax"] },
-        { "id": "e-17", "name": "Downward Dog", "detail": "Full body stretch with inversion.", "reps": "45 sec", "steps": ["Start on hands and knees", "Lift hips up and back, forming an inverted V", "Press hands firmly into the floor", "Keep knees slightly bent if needed", "Hold and breathe deeply"] },
-        { "id": "e-18", "name": "Seated Forward Fold", "detail": "Stretch hamstrings and spine.", "reps": "45 sec", "steps": ["Sit with legs extended straight", "Inhale and lengthen your spine", "Exhale and fold forward from hips", "Reach for your feet or shins", "Keep back as flat as possible"] }
-      ]
+        {
+          "id": "e-16",
+          "name": "Child's Pose",
+          "detail": "Restful stretch for back and hips.",
+          "reps": "60 sec",
+          "steps": [
+            "Kneel on the floor with big toes touching",
+            "Sit back on heels and separate knees hip-width",
+            "Fold forward, extending arms in front",
+            "Rest forehead on the ground",
+            "Breathe deeply and relax"
+          ]
+        },
+        {
+          "id": "e-17",
+          "name": "Downward Dog",
+          "detail": "Full body stretch with inversion.",
+          "reps": "45 sec",
+          "steps": [
+            "Start on hands and knees",
+            "Lift hips up and back, forming an inverted V",
+            "Press hands firmly into the floor",
+            "Keep knees slightly bent if needed",
+            "Hold and breathe deeply"
+          ]
+        },
+        {
+          "id": "e-18",
+          "name": "Seated Forward Fold",
+          "detail": "Stretch hamstrings and spine.",
+          "reps": "45 sec",
+          "steps": [
+            "Sit with legs extended straight",
+            "Inhale and lengthen your spine",
+            "Exhale and fold forward from hips",
+            "Reach for your feet or shins",
+            "Keep back as flat as possible"
+          ]
+        }
+      ],
+      "coverImageUrl": "GentleYogaFlow.jpg"
     },
     {
       "id": "w-7",
@@ -129,10 +351,47 @@
       "intensity": "Moderate",
       "duration": "30 min",
       "exercises": [
-        { "id": "e-19", "name": "Dumbbell Press", "detail": "Build chest and triceps.", "reps": "12 reps", "steps": ["Lie on bench or floor with dumbbells at chest", "Press weights up toward ceiling", "Lower with control back to starting position", "Keep elbows at 45-degree angle", "Maintain stable core throughout"] },
-        { "id": "e-20", "name": "Bicep Curls", "detail": "Isolate and strengthen biceps.", "reps": "12 reps", "steps": ["Stand with dumbbells at sides, palms forward", "Curl weights toward shoulders", "Squeeze biceps at the top", "Lower with control", "Avoid swinging"] },
-        { "id": "e-21", "name": "Tricep Extensions", "detail": "Strengthen the back of arms.", "reps": "12 reps", "steps": ["Hold dumbbell with both hands overhead", "Lower weight behind your head", "Keep elbows close to head", "Extend back to starting position", "Control the movement throughout"] }
-      ]
+        {
+          "id": "e-19",
+          "name": "Dumbbell Press",
+          "detail": "Build chest and triceps.",
+          "reps": "12 reps",
+          "steps": [
+            "Lie on bench or floor with dumbbells at chest",
+            "Press weights up toward ceiling",
+            "Lower with control back to starting position",
+            "Keep elbows at 45-degree angle",
+            "Maintain stable core throughout"
+          ]
+        },
+        {
+          "id": "e-20",
+          "name": "Bicep Curls",
+          "detail": "Isolate and strengthen biceps.",
+          "reps": "12 reps",
+          "steps": [
+            "Stand with dumbbells at sides, palms forward",
+            "Curl weights toward shoulders",
+            "Squeeze biceps at the top",
+            "Lower with control",
+            "Avoid swinging"
+          ]
+        },
+        {
+          "id": "e-21",
+          "name": "Tricep Extensions",
+          "detail": "Strengthen the back of arms.",
+          "reps": "12 reps",
+          "steps": [
+            "Hold dumbbell with both hands overhead",
+            "Lower weight behind your head",
+            "Keep elbows close to head",
+            "Extend back to starting position",
+            "Control the movement throughout"
+          ]
+        }
+      ],
+      "coverImageUrl": "UpperBodySculpt.jpg"
     },
     {
       "id": "w-8",
@@ -141,10 +400,47 @@
       "intensity": "Intense",
       "duration": "15 min",
       "exercises": [
-        { "id": "e-22", "name": "Box Jumps", "detail": "Explosive plyometric power.", "reps": "30 sec", "steps": ["Stand facing a sturdy box or step", "Bend knees and swing arms back", "Explode upward onto the box", "Land softly with bent knees", "Step down and repeat"] },
-        { "id": "e-23", "name": "Tuck Jumps", "detail": "High-intensity plyometric.", "reps": "20 sec", "steps": ["Stand with feet shoulder-width apart", "Jump up and tuck knees toward chest", "Reach for knees with hands", "Land softly and immediately jump again", "Maintain quick pace"] },
-        { "id": "e-24", "name": "Plank Jacks", "detail": "Core and cardio combined.", "reps": "45 sec", "steps": ["Start in high plank position", "Jump feet apart wide", "Jump feet back together", "Keep hips stable", "Maintain plank form throughout"] }
-      ]
+        {
+          "id": "e-22",
+          "name": "Box Jumps",
+          "detail": "Explosive plyometric power.",
+          "reps": "30 sec",
+          "steps": [
+            "Stand facing a sturdy box or step",
+            "Bend knees and swing arms back",
+            "Explode upward onto the box",
+            "Land softly with bent knees",
+            "Step down and repeat"
+          ]
+        },
+        {
+          "id": "e-23",
+          "name": "Tuck Jumps",
+          "detail": "High-intensity plyometric.",
+          "reps": "20 sec",
+          "steps": [
+            "Stand with feet shoulder-width apart",
+            "Jump up and tuck knees toward chest",
+            "Reach for knees with hands",
+            "Land softly and immediately jump again",
+            "Maintain quick pace"
+          ]
+        },
+        {
+          "id": "e-24",
+          "name": "Plank Jacks",
+          "detail": "Core and cardio combined.",
+          "reps": "45 sec",
+          "steps": [
+            "Start in high plank position",
+            "Jump feet apart wide",
+            "Jump feet back together",
+            "Keep hips stable",
+            "Maintain plank form throughout"
+          ]
+        }
+      ],
+      "coverImageUrl": "HIITExpress.jpg"
     },
     {
       "id": "w-9",
@@ -153,10 +449,47 @@
       "intensity": "Moderate",
       "duration": "30 min",
       "exercises": [
-        { "id": "e-25", "name": "Romanian Deadlift", "detail": "Hamstring and glute focused.", "reps": "12 reps", "steps": ["Hold dumbbells in front of thighs", "Stand with feet hip-width apart", "Push hips back and lower weights along legs", "Keep back flat, slight knee bend", "Return to standing by driving hips forward"] },
-        { "id": "e-26", "name": "Walking Lunges", "detail": "Dynamic leg strength.", "reps": "10 each side", "steps": ["Stand tall with feet together", "Step forward into a lunge", "Lower back knee toward ground", "Push off front foot and step forward", "Continue alternating legs"] },
-        { "id": "e-27", "name": "Calf Raises", "detail": "Build calf muscles.", "reps": "15 reps", "steps": ["Stand on edge of step or flat ground", "Rise up onto balls of feet", "Hold at the top briefly", "Lower heels below step level", "Control the movement"] }
-      ]
+        {
+          "id": "e-25",
+          "name": "Romanian Deadlift",
+          "detail": "Hamstring and glute focused.",
+          "reps": "12 reps",
+          "steps": [
+            "Hold dumbbells in front of thighs",
+            "Stand with feet hip-width apart",
+            "Push hips back and lower weights along legs",
+            "Keep back flat, slight knee bend",
+            "Return to standing by driving hips forward"
+          ]
+        },
+        {
+          "id": "e-26",
+          "name": "Walking Lunges",
+          "detail": "Dynamic leg strength.",
+          "reps": "10 each side",
+          "steps": [
+            "Stand tall with feet together",
+            "Step forward into a lunge",
+            "Lower back knee toward ground",
+            "Push off front foot and step forward",
+            "Continue alternating legs"
+          ]
+        },
+        {
+          "id": "e-27",
+          "name": "Calf Raises",
+          "detail": "Build calf muscles.",
+          "reps": "15 reps",
+          "steps": [
+            "Stand on edge of step or flat ground",
+            "Rise up onto balls of feet",
+            "Hold at the top briefly",
+            "Lower heels below step level",
+            "Control the movement"
+          ]
+        }
+      ],
+      "coverImageUrl": "LowerBodyFocus.jpg"
     },
     {
       "id": "w-10",
@@ -165,10 +498,47 @@
       "intensity": "Light",
       "duration": "15 min",
       "exercises": [
-        { "id": "e-28", "name": "Leg Swings", "detail": "Dynamic hip mobility.", "reps": "10 each leg", "steps": ["Hold onto a wall or chair for balance", "Swing one leg forward and back", "Keep standing leg slightly bent", "Control the swing momentum", "Switch legs and repeat"] },
-        { "id": "e-29", "name": "Arm Circles", "detail": "Shoulder mobility warm-up.", "reps": "15 each direction", "steps": ["Extend arms out to sides", "Make small circles forward", "Gradually increase circle size", "Reverse direction", "Keep core engaged"] },
-        { "id": "e-30", "name": "Torso Twists", "detail": "Spinal rotation mobility.", "reps": "10 each side", "steps": ["Stand with feet shoulder-width apart", "Place hands on shoulders", "Rotate torso to the right", "Return to center", "Rotate to the left"] }
-      ]
+        {
+          "id": "e-28",
+          "name": "Leg Swings",
+          "detail": "Dynamic hip mobility.",
+          "reps": "10 each leg",
+          "steps": [
+            "Hold onto a wall or chair for balance",
+            "Swing one leg forward and back",
+            "Keep standing leg slightly bent",
+            "Control the swing momentum",
+            "Switch legs and repeat"
+          ]
+        },
+        {
+          "id": "e-29",
+          "name": "Arm Circles",
+          "detail": "Shoulder mobility warm-up.",
+          "reps": "15 each direction",
+          "steps": [
+            "Extend arms out to sides",
+            "Make small circles forward",
+            "Gradually increase circle size",
+            "Reverse direction",
+            "Keep core engaged"
+          ]
+        },
+        {
+          "id": "e-30",
+          "name": "Torso Twists",
+          "detail": "Spinal rotation mobility.",
+          "reps": "10 each side",
+          "steps": [
+            "Stand with feet shoulder-width apart",
+            "Place hands on shoulders",
+            "Rotate torso to the right",
+            "Return to center",
+            "Rotate to the left"
+          ]
+        }
+      ],
+      "coverImageUrl": "ActiveRecovery.jpg"
     },
     {
       "id": "w-11",
@@ -177,10 +547,47 @@
       "intensity": "Intense",
       "duration": "45 min",
       "exercises": [
-        { "id": "e-31", "name": "Deadlift", "detail": "Compound posterior chain lift.", "reps": "10 reps", "steps": ["Stand with feet hip-width apart, bar over mid-foot", "Bend at hips and knees to grip bar", "Keep back flat, chest up", "Drive through heels to stand", "Lower with control, hips back first"] },
-        { "id": "e-32", "name": "Overhead Press", "detail": "Shoulder and tricep strength.", "reps": "10 reps", "steps": ["Hold barbell at shoulder height", "Stand with feet shoulder-width apart", "Press bar overhead to full extension", "Lower with control back to shoulders", "Keep core tight throughout"] },
-        { "id": "e-33", "name": "Barbell Row", "detail": "Back and bicep compound.", "reps": "10 reps", "steps": ["Hinge at hips holding barbell", "Keep back flat at 45-degree angle", "Pull barbell to lower chest", "Squeeze shoulder blades", "Lower with control"] }
-      ]
+        {
+          "id": "e-31",
+          "name": "Deadlift",
+          "detail": "Compound posterior chain lift.",
+          "reps": "10 reps",
+          "steps": [
+            "Stand with feet hip-width apart, bar over mid-foot",
+            "Bend at hips and knees to grip bar",
+            "Keep back flat, chest up",
+            "Drive through heels to stand",
+            "Lower with control, hips back first"
+          ]
+        },
+        {
+          "id": "e-32",
+          "name": "Overhead Press",
+          "detail": "Shoulder and tricep strength.",
+          "reps": "10 reps",
+          "steps": [
+            "Hold barbell at shoulder height",
+            "Stand with feet shoulder-width apart",
+            "Press bar overhead to full extension",
+            "Lower with control back to shoulders",
+            "Keep core tight throughout"
+          ]
+        },
+        {
+          "id": "e-33",
+          "name": "Barbell Row",
+          "detail": "Back and bicep compound.",
+          "reps": "10 reps",
+          "steps": [
+            "Hinge at hips holding barbell",
+            "Keep back flat at 45-degree angle",
+            "Pull barbell to lower chest",
+            "Squeeze shoulder blades",
+            "Lower with control"
+          ]
+        }
+      ],
+      "coverImageUrl": "FullBodyWeights.jpg"
     },
     {
       "id": "w-12",
@@ -189,10 +596,47 @@
       "intensity": "Moderate",
       "duration": "30 min",
       "exercises": [
-        { "id": "e-34", "name": "Jump Rope", "detail": "Classic cardio conditioning.", "reps": "3 min", "steps": ["Hold rope handles at hip level", "Jump with both feet together", "Land softly on balls of feet", "Keep jumps small and quick", "Maintain steady rhythm"] },
-        { "id": "e-35", "name": "Butt Kicks", "detail": "Hamstring activation cardio.", "reps": "60 sec", "steps": ["Stand tall with feet hip-width apart", "Jog in place, kicking heels to glutes", "Keep arms pumping", "Maintain quick pace", "Keep torso upright"] },
-        { "id": "e-36", "name": "Skater Jumps", "detail": "Lateral plyometric cardio.", "reps": "45 sec", "steps": ["Stand on one leg", "Jump laterally to other leg", "Land softly and absorb impact", "Swing arms for momentum", "Alternate sides"] }
-      ]
+        {
+          "id": "e-34",
+          "name": "Jump Rope",
+          "detail": "Classic cardio conditioning.",
+          "reps": "3 min",
+          "steps": [
+            "Hold rope handles at hip level",
+            "Jump with both feet together",
+            "Land softly on balls of feet",
+            "Keep jumps small and quick",
+            "Maintain steady rhythm"
+          ]
+        },
+        {
+          "id": "e-35",
+          "name": "Butt Kicks",
+          "detail": "Hamstring activation cardio.",
+          "reps": "60 sec",
+          "steps": [
+            "Stand tall with feet hip-width apart",
+            "Jog in place, kicking heels to glutes",
+            "Keep arms pumping",
+            "Maintain quick pace",
+            "Keep torso upright"
+          ]
+        },
+        {
+          "id": "e-36",
+          "name": "Skater Jumps",
+          "detail": "Lateral plyometric cardio.",
+          "reps": "45 sec",
+          "steps": [
+            "Stand on one leg",
+            "Jump laterally to other leg",
+            "Land softly and absorb impact",
+            "Swing arms for momentum",
+            "Alternate sides"
+          ]
+        }
+      ],
+      "coverImageUrl": "CardioEndurance.jpg"
     },
     {
       "id": "w-13",
@@ -201,10 +645,47 @@
       "intensity": "Intense",
       "duration": "20 min",
       "exercises": [
-        { "id": "e-37", "name": "Bicycle Crunches", "detail": "Rotational core work.", "reps": "20 reps", "steps": ["Lie on back with hands behind head", "Lift shoulders off ground", "Bring right elbow to left knee", "Extend right leg straight", "Alternate sides in pedaling motion"] },
-        { "id": "e-38", "name": "V-Ups", "detail": "Advanced core contraction.", "reps": "15 reps", "steps": ["Lie flat on back with arms overhead", "Simultaneously lift legs and torso", "Reach hands toward toes", "Lower with control", "Keep legs straight"] },
-        { "id": "e-39", "name": "Russian Twists", "detail": "Oblique strength.", "reps": "20 reps", "steps": ["Sit with knees bent, feet off ground", "Lean back slightly, keeping back straight", "Rotate torso side to side", "Touch hands to ground each side", "Keep core engaged throughout"] }
-      ]
+        {
+          "id": "e-37",
+          "name": "Bicycle Crunches",
+          "detail": "Rotational core work.",
+          "reps": "20 reps",
+          "steps": [
+            "Lie on back with hands behind head",
+            "Lift shoulders off ground",
+            "Bring right elbow to left knee",
+            "Extend right leg straight",
+            "Alternate sides in pedaling motion"
+          ]
+        },
+        {
+          "id": "e-38",
+          "name": "V-Ups",
+          "detail": "Advanced core contraction.",
+          "reps": "15 reps",
+          "steps": [
+            "Lie flat on back with arms overhead",
+            "Simultaneously lift legs and torso",
+            "Reach hands toward toes",
+            "Lower with control",
+            "Keep legs straight"
+          ]
+        },
+        {
+          "id": "e-39",
+          "name": "Russian Twists",
+          "detail": "Oblique strength.",
+          "reps": "20 reps",
+          "steps": [
+            "Sit with knees bent, feet off ground",
+            "Lean back slightly, keeping back straight",
+            "Rotate torso side to side",
+            "Touch hands to ground each side",
+            "Keep core engaged throughout"
+          ]
+        }
+      ],
+      "coverImageUrl": "CoreCrusher.jpg"
     },
     {
       "id": "w-14",
@@ -213,10 +694,47 @@
       "intensity": "Light",
       "duration": "20 min",
       "exercises": [
-        { "id": "e-40", "name": "Dumbbell Shoulder Press", "detail": "Intro to overhead pressing.", "reps": "10 reps", "steps": ["Hold dumbbells at shoulder height", "Press weights up overhead", "Fully extend arms at top", "Lower with control", "Keep core stable"] },
-        { "id": "e-41", "name": "Lat Pulldown (or Band)", "detail": "Back pulling movement.", "reps": "10 reps", "steps": ["Hold resistance band or dumbbell", "Raise arms overhead", "Pull down to chest level", "Squeeze back muscles", "Return with control"] },
-        { "id": "e-42", "name": "Goblet Squat (Light)", "detail": "Introduction to squatting.", "reps": "10 reps", "steps": ["Hold light dumbbell at chest", "Stand with feet shoulder-width apart", "Lower into squat", "Keep chest up", "Return to standing"] }
-      ]
+        {
+          "id": "e-40",
+          "name": "Dumbbell Shoulder Press",
+          "detail": "Intro to overhead pressing.",
+          "reps": "10 reps",
+          "steps": [
+            "Hold dumbbells at shoulder height",
+            "Press weights up overhead",
+            "Fully extend arms at top",
+            "Lower with control",
+            "Keep core stable"
+          ]
+        },
+        {
+          "id": "e-41",
+          "name": "Lat Pulldown (or Band)",
+          "detail": "Back pulling movement.",
+          "reps": "10 reps",
+          "steps": [
+            "Hold resistance band or dumbbell",
+            "Raise arms overhead",
+            "Pull down to chest level",
+            "Squeeze back muscles",
+            "Return with control"
+          ]
+        },
+        {
+          "id": "e-42",
+          "name": "Goblet Squat (Light)",
+          "detail": "Introduction to squatting.",
+          "reps": "10 reps",
+          "steps": [
+            "Hold light dumbbell at chest",
+            "Stand with feet shoulder-width apart",
+            "Lower into squat",
+            "Keep chest up",
+            "Return to standing"
+          ]
+        }
+      ],
+      "coverImageUrl": "BeginnerWeights.jpg"
     },
     {
       "id": "w-15",
@@ -225,10 +743,47 @@
       "intensity": "Light",
       "duration": "30 min",
       "exercises": [
-        { "id": "e-43", "name": "Warrior I", "detail": "Standing strength and stretch.", "reps": "30 sec each side", "steps": ["Step one foot back, bend front knee", "Raise arms overhead, palms facing", "Square hips forward", "Hold and breathe", "Switch sides"] },
-        { "id": "e-44", "name": "Tree Pose", "detail": "Balance and focus.", "reps": "30 sec each side", "steps": ["Stand on one leg", "Place other foot on inner thigh or calf", "Bring hands to prayer position", "Focus on a fixed point", "Switch sides"] },
-        { "id": "e-45", "name": "Cobra Pose", "detail": "Back and chest opener.", "reps": "45 sec", "steps": ["Lie face down with hands under shoulders", "Press into hands, lifting chest", "Keep hips on the ground", "Draw shoulders back", "Hold and breathe"] }
-      ]
+        {
+          "id": "e-43",
+          "name": "Warrior I",
+          "detail": "Standing strength and stretch.",
+          "reps": "30 sec each side",
+          "steps": [
+            "Step one foot back, bend front knee",
+            "Raise arms overhead, palms facing",
+            "Square hips forward",
+            "Hold and breathe",
+            "Switch sides"
+          ]
+        },
+        {
+          "id": "e-44",
+          "name": "Tree Pose",
+          "detail": "Balance and focus.",
+          "reps": "30 sec each side",
+          "steps": [
+            "Stand on one leg",
+            "Place other foot on inner thigh or calf",
+            "Bring hands to prayer position",
+            "Focus on a fixed point",
+            "Switch sides"
+          ]
+        },
+        {
+          "id": "e-45",
+          "name": "Cobra Pose",
+          "detail": "Back and chest opener.",
+          "reps": "45 sec",
+          "steps": [
+            "Lie face down with hands under shoulders",
+            "Press into hands, lifting chest",
+            "Keep hips on the ground",
+            "Draw shoulders back",
+            "Hold and breathe"
+          ]
+        }
+      ],
+      "coverImageUrl": "YogaStretch.jpg"
     },
     {
       "id": "w-16",
@@ -237,10 +792,47 @@
       "intensity": "Moderate",
       "duration": "25 min",
       "exercises": [
-        { "id": "e-46", "name": "Jump Squats", "detail": "Lower body explosive cardio.", "reps": "45 sec", "steps": ["Stand with feet shoulder-width apart", "Lower into squat position", "Jump explosively upward", "Land softly and immediately repeat", "Keep core tight"] },
-        { "id": "e-47", "name": "Push-Up to Plank", "detail": "Upper body cardio.", "reps": "30 sec", "steps": ["Start in high plank position", "Perform a push-up", "Quickly switch to forearm plank", "Switch back to high plank", "Repeat continuously"] },
-        { "id": "e-48", "name": "Speed Skaters", "detail": "Lateral cardio movement.", "reps": "60 sec", "steps": ["Jump laterally to the right", "Land on right foot, left foot behind", "Swing arms for momentum", "Jump to the left", "Continue alternating"] }
-      ]
+        {
+          "id": "e-46",
+          "name": "Jump Squats",
+          "detail": "Lower body explosive cardio.",
+          "reps": "45 sec",
+          "steps": [
+            "Stand with feet shoulder-width apart",
+            "Lower into squat position",
+            "Jump explosively upward",
+            "Land softly and immediately repeat",
+            "Keep core tight"
+          ]
+        },
+        {
+          "id": "e-47",
+          "name": "Push-Up to Plank",
+          "detail": "Upper body cardio.",
+          "reps": "30 sec",
+          "steps": [
+            "Start in high plank position",
+            "Perform a push-up",
+            "Quickly switch to forearm plank",
+            "Switch back to high plank",
+            "Repeat continuously"
+          ]
+        },
+        {
+          "id": "e-48",
+          "name": "Speed Skaters",
+          "detail": "Lateral cardio movement.",
+          "reps": "60 sec",
+          "steps": [
+            "Jump laterally to the right",
+            "Land on right foot, left foot behind",
+            "Swing arms for momentum",
+            "Jump to the left",
+            "Continue alternating"
+          ]
+        }
+      ],
+      "coverImageUrl": "FatBurningCardio.jpg"
     },
     {
       "id": "w-17",
@@ -249,10 +841,47 @@
       "intensity": "Intense",
       "duration": "60 min",
       "exercises": [
-        { "id": "e-49", "name": "Bench Press", "detail": "Primary chest compound lift.", "reps": "8 reps", "steps": ["Lie on bench with bar at chest level", "Grip bar slightly wider than shoulders", "Press bar up to full extension", "Lower with control to chest", "Keep feet flat on floor"] },
-        { "id": "e-50", "name": "Barbell Squat", "detail": "King of leg exercises.", "reps": "8 reps", "steps": ["Place bar on upper back", "Stand with feet shoulder-width apart", "Squat down until thighs parallel", "Drive through heels to stand", "Keep chest up throughout"] },
-        { "id": "e-51", "name": "Pull-Ups", "detail": "Upper back and bicep bodyweight.", "reps": "8 reps", "steps": ["Hang from bar with overhand grip", "Pull body up until chin over bar", "Lower with control", "Avoid swinging", "Use assistance if needed"] }
-      ]
+        {
+          "id": "e-49",
+          "name": "Bench Press",
+          "detail": "Primary chest compound lift.",
+          "reps": "8 reps",
+          "steps": [
+            "Lie on bench with bar at chest level",
+            "Grip bar slightly wider than shoulders",
+            "Press bar up to full extension",
+            "Lower with control to chest",
+            "Keep feet flat on floor"
+          ]
+        },
+        {
+          "id": "e-50",
+          "name": "Barbell Squat",
+          "detail": "King of leg exercises.",
+          "reps": "8 reps",
+          "steps": [
+            "Place bar on upper back",
+            "Stand with feet shoulder-width apart",
+            "Squat down until thighs parallel",
+            "Drive through heels to stand",
+            "Keep chest up throughout"
+          ]
+        },
+        {
+          "id": "e-51",
+          "name": "Pull-Ups",
+          "detail": "Upper back and bicep bodyweight.",
+          "reps": "8 reps",
+          "steps": [
+            "Hang from bar with overhand grip",
+            "Pull body up until chin over bar",
+            "Lower with control",
+            "Avoid swinging",
+            "Use assistance if needed"
+          ]
+        }
+      ],
+      "coverImageUrl": "MuscleBuilding.jpg"
     },
     {
       "id": "w-18",
@@ -261,10 +890,47 @@
       "intensity": "Moderate",
       "duration": "10 min",
       "exercises": [
-        { "id": "e-52", "name": "Plank", "detail": "Core stability foundation.", "reps": "45 sec", "steps": ["Start in forearm plank position", "Keep body in straight line", "Engage core and glutes", "Don't let hips sag", "Breathe steadily"] },
-        { "id": "e-53", "name": "Crunches", "detail": "Basic ab contraction.", "reps": "20 reps", "steps": ["Lie on back with knees bent", "Place hands behind head", "Lift shoulders off ground", "Contract abs at top", "Lower with control"] },
-        { "id": "e-54", "name": "Leg Raises", "detail": "Lower ab focus.", "reps": "15 reps", "steps": ["Lie on back with legs straight", "Place hands under glutes for support", "Lift legs to 90 degrees", "Lower slowly without touching floor", "Keep lower back pressed down"] }
-      ]
+        {
+          "id": "e-52",
+          "name": "Plank",
+          "detail": "Core stability foundation.",
+          "reps": "45 sec",
+          "steps": [
+            "Start in forearm plank position",
+            "Keep body in straight line",
+            "Engage core and glutes",
+            "Don't let hips sag",
+            "Breathe steadily"
+          ]
+        },
+        {
+          "id": "e-53",
+          "name": "Crunches",
+          "detail": "Basic ab contraction.",
+          "reps": "20 reps",
+          "steps": [
+            "Lie on back with knees bent",
+            "Place hands behind head",
+            "Lift shoulders off ground",
+            "Contract abs at top",
+            "Lower with control"
+          ]
+        },
+        {
+          "id": "e-54",
+          "name": "Leg Raises",
+          "detail": "Lower ab focus.",
+          "reps": "15 reps",
+          "steps": [
+            "Lie on back with legs straight",
+            "Place hands under glutes for support",
+            "Lift legs to 90 degrees",
+            "Lower slowly without touching floor",
+            "Keep lower back pressed down"
+          ]
+        }
+      ],
+      "coverImageUrl": "QuickCore.jpg"
     },
     {
       "id": "w-19",
@@ -273,10 +939,47 @@
       "intensity": "Moderate",
       "duration": "30 min",
       "exercises": [
-        { "id": "e-55", "name": "Jab-Cross Combo", "detail": "Basic boxing technique.", "reps": "60 sec", "steps": ["Stand in fighting stance", "Extend lead hand (jab)", "Quickly follow with rear hand (cross)", "Return to stance", "Repeat combination"] },
-        { "id": "e-56", "name": "Front Kick", "detail": "Leg power development.", "reps": "10 each leg", "steps": ["Stand in fighting stance", "Lift knee to hip height", "Extend foot forward", "Snap kick and retract", "Return to stance"] },
-        { "id": "e-57", "name": "Uppercut", "detail": "Vertical punching power.", "reps": "30 sec", "steps": ["Stand in fighting stance", "Dip slightly at knees", "Drive upward with rear hand", "Rotate fist palm down at impact", "Return to stance"] }
-      ]
+        {
+          "id": "e-55",
+          "name": "Jab-Cross Combo",
+          "detail": "Basic boxing technique.",
+          "reps": "60 sec",
+          "steps": [
+            "Stand in fighting stance",
+            "Extend lead hand (jab)",
+            "Quickly follow with rear hand (cross)",
+            "Return to stance",
+            "Repeat combination"
+          ]
+        },
+        {
+          "id": "e-56",
+          "name": "Front Kick",
+          "detail": "Leg power development.",
+          "reps": "10 each leg",
+          "steps": [
+            "Stand in fighting stance",
+            "Lift knee to hip height",
+            "Extend foot forward",
+            "Snap kick and retract",
+            "Return to stance"
+          ]
+        },
+        {
+          "id": "e-57",
+          "name": "Uppercut",
+          "detail": "Vertical punching power.",
+          "reps": "30 sec",
+          "steps": [
+            "Stand in fighting stance",
+            "Dip slightly at knees",
+            "Drive upward with rear hand",
+            "Rotate fist palm down at impact",
+            "Return to stance"
+          ]
+        }
+      ],
+      "coverImageUrl": "CardioKickBoxing.jpg"
     },
     {
       "id": "w-20",
@@ -285,10 +988,47 @@
       "intensity": "Light",
       "duration": "20 min",
       "exercises": [
-        { "id": "e-58", "name": "Wall Push-Ups", "detail": "Modified push-up for beginners.", "reps": "10 reps", "steps": ["Stand facing wall, arms extended", "Place hands on wall at shoulder height", "Bend elbows, leaning toward wall", "Push back to starting position", "Keep core engaged"] },
-        { "id": "e-59", "name": "Chair Squats", "detail": "Squat with seat assistance.", "reps": "10 reps", "steps": ["Stand in front of a chair", "Lower toward chair seat", "Lightly touch seat", "Stand back up", "Use arms for balance if needed"] },
-        { "id": "e-60", "name": "Marching in Place", "detail": "Low-impact cardio.", "reps": "2 min", "steps": ["Stand tall with feet hip-width apart", "Lift knees alternately", "Swing arms naturally", "Maintain steady pace", "Keep torso upright"] }
-      ]
+        {
+          "id": "e-58",
+          "name": "Wall Push-Ups",
+          "detail": "Modified push-up for beginners.",
+          "reps": "10 reps",
+          "steps": [
+            "Stand facing wall, arms extended",
+            "Place hands on wall at shoulder height",
+            "Bend elbows, leaning toward wall",
+            "Push back to starting position",
+            "Keep core engaged"
+          ]
+        },
+        {
+          "id": "e-59",
+          "name": "Chair Squats",
+          "detail": "Squat with seat assistance.",
+          "reps": "10 reps",
+          "steps": [
+            "Stand in front of a chair",
+            "Lower toward chair seat",
+            "Lightly touch seat",
+            "Stand back up",
+            "Use arms for balance if needed"
+          ]
+        },
+        {
+          "id": "e-60",
+          "name": "Marching in Place",
+          "detail": "Low-impact cardio.",
+          "reps": "2 min",
+          "steps": [
+            "Stand tall with feet hip-width apart",
+            "Lift knees alternately",
+            "Swing arms naturally",
+            "Maintain steady pace",
+            "Keep torso upright"
+          ]
+        }
+      ],
+      "coverImageUrl": "FullBodyLight.jpg"
     },
     {
       "id": "w-21",
@@ -297,10 +1037,47 @@
       "intensity": "Intense",
       "duration": "20 min",
       "exercises": [
-        { "id": "e-61", "name": "Burpee Pull-Ups", "detail": "Advanced combined movement.", "reps": "30 sec", "steps": ["Start standing under pull-up bar", "Perform a burpee", "Jump up and do a pull-up", "Land and immediately repeat", "Maintain high intensity"] },
-        { "id": "e-62", "name": "Plyo Push-Ups", "detail": "Explosive upper body.", "reps": "20 sec", "steps": ["Start in high plank position", "Perform a push-up with explosive push", "Hands leave the ground", "Land softly and repeat", "Keep core stable"] },
-        { "id": "e-63", "name": "Double Unders", "detail": "Advanced jump rope.", "reps": "45 sec", "steps": ["Swing rope under feet twice per jump", "Jump higher to allow clearance", "Land softly", "Maintain quick rhythm", "Keep jumps minimal"] }
-      ]
+        {
+          "id": "e-61",
+          "name": "Burpee Pull-Ups",
+          "detail": "Advanced combined movement.",
+          "reps": "30 sec",
+          "steps": [
+            "Start standing under pull-up bar",
+            "Perform a burpee",
+            "Jump up and do a pull-up",
+            "Land and immediately repeat",
+            "Maintain high intensity"
+          ]
+        },
+        {
+          "id": "e-62",
+          "name": "Plyo Push-Ups",
+          "detail": "Explosive upper body.",
+          "reps": "20 sec",
+          "steps": [
+            "Start in high plank position",
+            "Perform a push-up with explosive push",
+            "Hands leave the ground",
+            "Land softly and repeat",
+            "Keep core stable"
+          ]
+        },
+        {
+          "id": "e-63",
+          "name": "Double Unders",
+          "detail": "Advanced jump rope.",
+          "reps": "45 sec",
+          "steps": [
+            "Swing rope under feet twice per jump",
+            "Jump higher to allow clearance",
+            "Land softly",
+            "Maintain quick rhythm",
+            "Keep jumps minimal"
+          ]
+        }
+      ],
+      "coverImageUrl": "AdvanceHIIT.jpg"
     },
     {
       "id": "w-22",
@@ -309,10 +1086,47 @@
       "intensity": "Light",
       "duration": "25 min",
       "exercises": [
-        { "id": "e-64", "name": "Pigeon Pose", "detail": "Deep hip opener.", "reps": "45 sec each side", "steps": ["From all fours, bring one knee forward", "Extend other leg straight back", "Lower hips toward floor", "Fold forward if comfortable", "Hold and breathe"] },
-        { "id": "e-65", "name": "Seated Twist", "detail": "Spinal mobility.", "reps": "30 sec each side", "steps": ["Sit with legs extended", "Bend one knee, foot outside opposite thigh", "Twist toward bent knee", "Use elbow against knee for depth", "Hold and breathe"] },
-        { "id": "e-66", "name": "Butterfly Stretch", "detail": "Inner thigh and hip.", "reps": "45 sec", "steps": ["Sit with soles of feet together", "Let knees fall toward floor", "Hold feet with hands", "Sit up tall and breathe", "Gently press knees down"] }
-      ]
+        {
+          "id": "e-64",
+          "name": "Pigeon Pose",
+          "detail": "Deep hip opener.",
+          "reps": "45 sec each side",
+          "steps": [
+            "From all fours, bring one knee forward",
+            "Extend other leg straight back",
+            "Lower hips toward floor",
+            "Fold forward if comfortable",
+            "Hold and breathe"
+          ]
+        },
+        {
+          "id": "e-65",
+          "name": "Seated Twist",
+          "detail": "Spinal mobility.",
+          "reps": "30 sec each side",
+          "steps": [
+            "Sit with legs extended",
+            "Bend one knee, foot outside opposite thigh",
+            "Twist toward bent knee",
+            "Use elbow against knee for depth",
+            "Hold and breathe"
+          ]
+        },
+        {
+          "id": "e-66",
+          "name": "Butterfly Stretch",
+          "detail": "Inner thigh and hip.",
+          "reps": "45 sec",
+          "steps": [
+            "Sit with soles of feet together",
+            "Let knees fall toward floor",
+            "Hold feet with hands",
+            "Sit up tall and breathe",
+            "Gently press knees down"
+          ]
+        }
+      ],
+      "coverImageUrl": "FlexibilityFlow.jpg"
     },
     {
       "id": "w-23",
@@ -321,10 +1135,47 @@
       "intensity": "Moderate",
       "duration": "35 min",
       "exercises": [
-        { "id": "e-67", "name": "Running in Place", "detail": "Steady state cardio.", "reps": "5 min", "steps": ["Jog in place at moderate pace", "Land softly on midfoot", "Keep arms at 90 degrees", "Maintain steady breathing", "Keep torso upright"] },
-        { "id": "e-68", "name": "Jump Rope", "detail": "High calorie burn.", "reps": "3 min", "steps": ["Hold rope handles at hip level", "Jump with both feet together", "Land softly on balls of feet", "Keep jumps small", "Maintain rhythm"] },
-        { "id": "e-69", "name": "Mountain Climbers", "detail": "Core-engaging cardio.", "reps": "3 min", "steps": ["Start in high plank position", "Drive knees to chest alternately", "Keep hips level", "Maintain quick pace", "Engage core throughout"] }
-      ]
+        {
+          "id": "e-67",
+          "name": "Running in Place",
+          "detail": "Steady state cardio.",
+          "reps": "5 min",
+          "steps": [
+            "Jog in place at moderate pace",
+            "Land softly on midfoot",
+            "Keep arms at 90 degrees",
+            "Maintain steady breathing",
+            "Keep torso upright"
+          ]
+        },
+        {
+          "id": "e-68",
+          "name": "Jump Rope",
+          "detail": "High calorie burn.",
+          "reps": "3 min",
+          "steps": [
+            "Hold rope handles at hip level",
+            "Jump with both feet together",
+            "Land softly on balls of feet",
+            "Keep jumps small",
+            "Maintain rhythm"
+          ]
+        },
+        {
+          "id": "e-69",
+          "name": "Mountain Climbers",
+          "detail": "Core-engaging cardio.",
+          "reps": "3 min",
+          "steps": [
+            "Start in high plank position",
+            "Drive knees to chest alternately",
+            "Keep hips level",
+            "Maintain quick pace",
+            "Engage core throughout"
+          ]
+        }
+      ],
+      "coverImageUrl": "WeightLossFocus.jpg"
     },
     {
       "id": "w-24",
@@ -333,10 +1184,47 @@
       "intensity": "Moderate",
       "duration": "25 min",
       "exercises": [
-        { "id": "e-70", "name": "Lateral Raises", "detail": "Shoulder width development.", "reps": "12 reps", "steps": ["Stand with dumbbells at sides", "Raise arms out to sides", "Stop at shoulder height", "Lower with control", "Avoid swinging"] },
-        { "id": "e-71", "name": "Front Raises", "detail": "Anterior deltoid work.", "reps": "12 reps", "steps": ["Stand with dumbbells in front of thighs", "Raise one arm forward to shoulder height", "Lower with control", "Alternate arms", "Keep core stable"] },
-        { "id": "e-72", "name": "Rear Delt Fly", "detail": "Posterior shoulder.", "reps": "12 reps", "steps": ["Bend forward at hips", "Hold dumbbells hanging down", "Raise arms out to sides", "Squeeze shoulder blades", "Lower with control"] }
-      ]
+        {
+          "id": "e-70",
+          "name": "Lateral Raises",
+          "detail": "Shoulder width development.",
+          "reps": "12 reps",
+          "steps": [
+            "Stand with dumbbells at sides",
+            "Raise arms out to sides",
+            "Stop at shoulder height",
+            "Lower with control",
+            "Avoid swinging"
+          ]
+        },
+        {
+          "id": "e-71",
+          "name": "Front Raises",
+          "detail": "Anterior deltoid work.",
+          "reps": "12 reps",
+          "steps": [
+            "Stand with dumbbells in front of thighs",
+            "Raise one arm forward to shoulder height",
+            "Lower with control",
+            "Alternate arms",
+            "Keep core stable"
+          ]
+        },
+        {
+          "id": "e-72",
+          "name": "Rear Delt Fly",
+          "detail": "Posterior shoulder.",
+          "reps": "12 reps",
+          "steps": [
+            "Bend forward at hips",
+            "Hold dumbbells hanging down",
+            "Raise arms out to sides",
+            "Squeeze shoulder blades",
+            "Lower with control"
+          ]
+        }
+      ],
+      "coverImageUrl": "ArmsAndShoulders.jpg"
     },
     {
       "id": "w-25",
@@ -345,10 +1233,47 @@
       "intensity": "Moderate",
       "duration": "40 min",
       "exercises": [
-        { "id": "e-73", "name": "Inchworms", "detail": "Full body mobility and strength.", "reps": "8 reps", "steps": ["Stand tall, bend and touch floor", "Walk hands out to plank", "Hold briefly", "Walk hands back to feet", "Stand up and repeat"] },
-        { "id": "e-74", "name": "Bear Crawls", "detail": "Core and shoulder stability.", "reps": "45 sec", "steps": ["Start on hands and knees", "Lift knees slightly off ground", "Move opposite hand and foot forward", "Keep hips low", "Crawl forward and back"] },
-        { "id": "e-75", "name": "Slow Burpees", "detail": "Controlled full body.", "reps": "10 reps", "steps": ["Stand, then squat and place hands", "Jump feet back to plank", "Do a slow push-up", "Jump feet forward", "Stand up slowly"] }
-      ]
+        {
+          "id": "e-73",
+          "name": "Inchworms",
+          "detail": "Full body mobility and strength.",
+          "reps": "8 reps",
+          "steps": [
+            "Stand tall, bend and touch floor",
+            "Walk hands out to plank",
+            "Hold briefly",
+            "Walk hands back to feet",
+            "Stand up and repeat"
+          ]
+        },
+        {
+          "id": "e-74",
+          "name": "Bear Crawls",
+          "detail": "Core and shoulder stability.",
+          "reps": "45 sec",
+          "steps": [
+            "Start on hands and knees",
+            "Lift knees slightly off ground",
+            "Move opposite hand and foot forward",
+            "Keep hips low",
+            "Crawl forward and back"
+          ]
+        },
+        {
+          "id": "e-75",
+          "name": "Slow Burpees",
+          "detail": "Controlled full body.",
+          "reps": "10 reps",
+          "steps": [
+            "Stand, then squat and place hands",
+            "Jump feet back to plank",
+            "Do a slow push-up",
+            "Jump feet forward",
+            "Stand up slowly"
+          ]
+        }
+      ],
+      "coverImageUrl": "EnduranceBuilder.jpg"
     }
   ],
   "favorites": [

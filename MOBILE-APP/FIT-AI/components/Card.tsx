@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, ImageSourcePropType, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { UiTheme } from '@/constants/ui-theme';
@@ -16,6 +16,7 @@ export type CardProps = {
   accessibilityHint?: string;
   footer?: React.ReactNode;
   children?: React.ReactNode;
+  coverImage?: ImageSourcePropType;
 };
 
 export function Card({
@@ -30,6 +31,7 @@ export function Card({
   accessibilityHint,
   footer,
   children,
+  coverImage,
 }: CardProps) {
   const borderColor = UiTheme.colors.border;
   const surfaceColor = UiTheme.colors.surface;
@@ -43,6 +45,13 @@ export function Card({
 
   const content = (
     <View style={cardStyle}>
+      {coverImage && (
+        <Image
+          source={coverImage}
+          style={styles.coverImage}
+          resizeMode="cover"
+        />
+      )}
       {(title || duration) && (
         <View style={styles.header}>
           {title && <ThemedText type="defaultSemiBold" style={styles.title}>{title}</ThemedText>}
@@ -87,6 +96,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: UiTheme.spacing.md,
     gap: UiTheme.spacing.xs,
+    overflow: 'hidden',
+  },
+  coverImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: UiTheme.radius.md,
+    marginBottom: UiTheme.spacing.sm,
   },
   elevated: {
     shadowColor: UiTheme.colors.textPrimary,

@@ -24,6 +24,7 @@ export type ApiWorkout = {
   intensity: Intensity;
   duration: string;
   exercises: ApiExercise[];
+  coverImageUrl?: string;
 };
 
 export type ApiUserProfile = {
@@ -249,6 +250,11 @@ export async function generateAiWorkout(profile: {
   return result.workouts;
 }
 
+export async function listGeneratedAiWorkouts(): Promise<ApiWorkout[]> {
+  const result = await apiRequest<{ workouts: ApiWorkout[] }>('/ai/generated');
+  return result.workouts;
+}
+
 export async function loadGeneratedAiWorkouts(): Promise<ApiWorkout[]> {
   const raw = await AsyncStorage.getItem(GENERATED_AI_WORKOUTS_KEY);
 
@@ -275,6 +281,23 @@ export async function saveGeneratedAiWorkout(workout: ApiWorkout): Promise<void>
   await AsyncStorage.setItem(GENERATED_AI_WORKOUTS_KEY, JSON.stringify(next));
 }
 
+  export async function saveGeneratedAiWorkouts(workouts: ApiWorkout[]): Promise<void> {
+    const existing = await loadGeneratedAiWorkouts();
+    // Add new workouts to the beginning, remove duplicates, keep max 10
+    const workoutIds = new Set(workouts.map((w) => w.id));
+    const filteredExisting = existing.filter((item) => !workoutIds.has(item.id));
+    const next = [...workouts, ...filteredExisting].slice(0, 10);
+
+    await AsyncStorage.setItem(GENERATED_AI_WORKOUTS_KEY, JSON.stringify(next));
+  }
+export async function clearGeneratedAiWorkouts(): Promise<void> {
+  await apiRequest<{ deletedCount: number }>('/ai/generated', {
+    method: 'DELETE',
+  });
+
+  await AsyncStorage.removeItem(GENERATED_AI_WORKOUTS_KEY);
+}
+
 export async function checkAiStatus(): Promise<{ available: boolean; message: string }> {
   const result = await apiRequest<{ available: boolean; message: string }>('/ai/status', {
     token: null,
@@ -285,6 +308,10 @@ export async function checkAiStatus(): Promise<{ available: boolean; message: st
 export async function listFavorites(): Promise<ApiWorkout[]> {
   const result = await apiRequest<{ favorites: ApiWorkout[] }>('/favorites');
   return result.favorites;
+}
+
+export async function deleteWorkout(workoutId: string): Promise<void> {
+  await apiRequest(`/workouts/${workoutId}`, { method: 'DELETE' });
 }
 
 export async function addFavorite(workoutId: string): Promise<void> {

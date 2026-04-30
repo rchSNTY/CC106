@@ -22,6 +22,8 @@ export type Workout = {
   intensity: Intensity;
   duration: string;
   exercises: Exercise[];
+  coverImageUrl?: string;
+  source?: 'preset' | 'ai';
 };
 
 export type UserProfile = {
