@@ -5,13 +5,15 @@ import { UiTheme } from '@/constants/ui-theme';
 import { ApiError, addFavorite, getApiErrorMessage, listFavorites, removeFavorite } from '@/services/backend';
 import { resolveWorkoutImage } from '@/utils/imageResolution';
 import { useFocusEffect } from '@react-navigation/native';
+import { Image } from 'expo-image';
 import { Href, useRouter } from 'expo-router';
 import React, { JSX, useCallback, useMemo, useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function Favorites(): JSX.Element {
   const router = useRouter();
   const [favorites, setFavorites] = useState<Routine[]>([]);
+  const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
@@ -63,6 +65,20 @@ export default function Favorites(): JSX.Element {
 
     return favorites.some((fav) => String(fav.id) === selectedWorkoutId);
   }, [favorites, selectedWorkoutId]);
+
+  const visibleFavorites = useMemo(() => {
+    const search = query.trim().toLowerCase();
+    if (search.length === 0) {
+      return favorites;
+    }
+
+    return favorites.filter((item) => {
+      const title = item.title?.toLowerCase?.() ?? '';
+      const subtitle = item.subtitle?.toLowerCase?.() ?? '';
+      const intensity = item.intensity?.toLowerCase?.() ?? '';
+      return title.includes(search) || subtitle.includes(search) || intensity.includes(search);
+    });
+  }, [favorites, query]);
 
   const handleToggleFavorite = useCallback(async () => {
     if (!selectedWorkoutId || isFavoriteLoading) {
@@ -126,11 +142,22 @@ export default function Favorites(): JSX.Element {
 
         <Text style={styles.subtitle}>Your saved routines for faster workout starts.</Text>
 
+        <View style={styles.searchWrap}>
+          <Image source={require('@/assets/images/search.png')} style={styles.searchIcon} contentFit="contain" />
+          <TextInput
+            placeholder="Search favorites"
+            placeholderTextColor={UiTheme.colors.textSecondary}
+            style={styles.searchInput}
+            value={query}
+            onChangeText={setQuery}
+          />
+        </View>
+
         {isLoading ? <Text style={styles.statusText}>Loading favorites...</Text> : null}
         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
         <View style={styles.list}>
-          {favorites.map((item) => (
+          {visibleFavorites.map((item) => (
             <Card
               key={item.id}
               title={item.title}
@@ -147,13 +174,22 @@ export default function Favorites(): JSX.Element {
           ))}
         </View>
 
-        {!isLoading && !errorMessage && favorites.length === 0 ? <View style={styles.emptyHintCard}>
-          <Text style={styles.emptyHintTitle}>Want more personalization?</Text>
-          <Text style={styles.emptyHintSubtitle}>Open Explore and save workouts based on your activity level.</Text>
-          <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/explore' as Href)}>
-            <Text style={styles.ctaText}>Go to Explore</Text>
-          </TouchableOpacity>
-        </View> : null}
+        {!isLoading && !errorMessage && favorites.length === 0 ? (
+          <View style={styles.emptyHintCard}>
+            <Text style={styles.emptyHintTitle}>Want more personalization?</Text>
+            <Text style={styles.emptyHintSubtitle}>Open Explore and save workouts based on your activity level.</Text>
+            <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/explore' as Href)}>
+              <Text style={styles.ctaText}>Go to Explore</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {!isLoading && !errorMessage && favorites.length > 0 && visibleFavorites.length === 0 ? (
+          <View style={styles.emptyHintCard}>
+            <Text style={styles.emptyHintTitle}>No favorites found</Text>
+            <Text style={styles.emptyHintSubtitle}>Try another search keyword.</Text>
+          </View>
+        ) : null}
       </ScrollView>
 
       <RoutineDetailsModal
@@ -202,6 +238,26 @@ const styles = StyleSheet.create({
   title: { fontSize: UiTheme.font.title, fontWeight: '800', color: UiTheme.colors.textPrimary },
   headlineAction: { fontSize: UiTheme.font.body, fontWeight: '800', color: UiTheme.colors.accent },
   subtitle: { fontSize: UiTheme.font.body, color: UiTheme.colors.textSecondary, marginBottom: UiTheme.spacing.xs },
+  searchWrap: {
+    width: '100%',
+    height: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: UiTheme.colors.surface,
+    borderRadius: UiTheme.radius.xl,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+    marginBottom: UiTheme.spacing.xs,
+  },
+  searchIcon: { width: 18, height: 18, marginRight: 8 },
+  searchInput: {
+    flex: 1,
+    height: 44,
+    fontSize: 14,
+    color: UiTheme.colors.textPrimary,
+    fontWeight: '600',
+  },
   list: { gap: UiTheme.spacing.sm },
 
   emptyHintCard: {

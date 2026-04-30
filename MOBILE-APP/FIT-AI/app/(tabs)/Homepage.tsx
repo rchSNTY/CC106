@@ -1,7 +1,10 @@
 import { ConfirmationModal } from '@/components/confirmation-modal';
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
+import { Button } from '@/components/ui/button';
 import { UiTheme } from '@/constants/ui-theme';
-import { ApiError, getApiErrorMessage, listHistory } from '@/services/backend';
+import { ApiError, generateAiWorkout, getApiErrorMessage, listHistory } from '@/services/backend';
+import { useExploreStore } from '@/stores/explore';
+import { useSnackbar } from '@/stores/snackbar';
 import { useUserProfile } from '@/stores/user-profile';
 import { getAiWorkoutPreset } from '@/utils/ai-workout';
 import { getTotalWorkoutMinutes, getWeeklyCompletedWorkouts, getWorkoutStreakDays } from '@/utils/history-stats';
@@ -9,15 +12,18 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { Href, useRouter } from 'expo-router';
 import React, { JSX, useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function Homepage(): JSX.Element {
   const router = useRouter();
   const { profile } = useUserProfile();
+  const setWorkoutView = useExploreStore((state) => state.setWorkoutView);
+  const { showSnackbar, hideSnackbar } = useSnackbar();
   const [history, setHistory] = useState<Array<{ date: string; duration: string }>>([]);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [showAiPrompt, setShowAiPrompt] = useState(false);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
 
   const aiPreset = useMemo(() => getAiWorkoutPreset(profile), [profile]);
 
@@ -91,16 +97,62 @@ export default function Homepage(): JSX.Element {
     setShowAiPrompt(true);
   };
 
-  const handleAiConfirm = () => {
+  const handleAiConfirm = async () => {
     setShowAiPrompt(false);
-    router.push({
-      pathname: '/explore',
-      params: {
-        ai: '1',
-        intensity: aiPreset.intensity,
-        search: aiPreset.search,
-      },
-    });
+    setIsGeneratingAi(true);
+
+    if (!aiPreset.isReady) {
+      Alert.alert('Profile incomplete', 'Complete your profile first so AI suggestions can match your goal.');
+      setIsGeneratingAi(false);
+      return;
+    }
+
+    if (!profile.name || !profile.name.trim()) {
+      Alert.alert('Incomplete Profile', 'Please enter your name in your profile.');
+      setIsGeneratingAi(false);
+      return;
+    }
+
+    if (!profile.activityLevel || !profile.activityLevel.trim()) {
+      Alert.alert('Incomplete Profile', 'Please select an activity level in your profile.');
+      setIsGeneratingAi(false);
+      return;
+    }
+
+    if (!profile.workout || !profile.workout.trim()) {
+      Alert.alert('Incomplete Profile', 'Please select a workout type in your profile.');
+      setIsGeneratingAi(false);
+      return;
+    }
+
+    showSnackbar({ message: 'Generating your workouts...', variant: 'info' });
+
+    try {
+      await generateAiWorkout({
+        name: profile.name,
+        age: profile.age,
+        gender: profile.gender,
+        height: profile.height,
+        weight: profile.weight,
+        activityLevel: profile.activityLevel,
+        workout: profile.workout,
+        weeklyGoal: profile.weeklyGoal,
+      });
+
+      setWorkoutView('generated');
+      hideSnackbar();
+      router.push('/explore');
+    } catch (error) {
+      const err = getApiErrorMessage(error);
+      Alert.alert('Generation failed', err);
+      showSnackbar({
+        message: `Generation failed. ${err}`,
+        variant: 'error',
+        autoDismissMs: 7000,
+      });
+    } finally {
+      setIsGeneratingAi(false);
+    }
   };
 
   const stats = useMemo(
@@ -125,30 +177,6 @@ export default function Homepage(): JSX.Element {
           </View>
         </View>
 
-        <View style={styles.heroCard}>
-          <Text style={styles.heroTitle}>Workout Focus</Text>
-          <Text style={styles.heroSubtitle}>{workoutFocus}</Text>
-          <View style={styles.heroActions}>
-            <TouchableOpacity style={styles.primaryAction} onPress={() => router.push('/choices' as Href)}>
-              <Text style={styles.primaryActionText}>Change Plan</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryAction} onPress={() => router.push('/Log' as Href)}>
-              <Text style={styles.secondaryActionText}>View Log</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <TouchableOpacity style={styles.aiCard} onPress={handleAiLaunch} activeOpacity={0.9}>
-          <View style={styles.aiBadge}>
-            <Text style={styles.aiBadgeText}>AI</Text>
-          </View>
-          <View style={styles.aiContent}>
-            <Text style={styles.aiTitle}>{aiPreset.title}</Text>
-            <Text style={styles.aiSubtitle}>{aiPreset.subtitle}</Text>
-          </View>
-          <Text style={styles.aiActionText}>Generate</Text>
-        </TouchableOpacity>
-
         <View style={styles.statsRow}>
           {stats.map((item) => (
             <View key={item.label} style={styles.statCard}>
@@ -158,6 +186,35 @@ export default function Homepage(): JSX.Element {
           ))}
         </View>
         {statsError ? <Text style={styles.statsErrorText}>{statsError}</Text> : null}
+
+
+        <View style={styles.heroCard}>
+          <Text style={styles.heroTitle}>Workout Focus</Text>
+          <Text style={styles.heroSubtitle}>{workoutFocus}</Text>
+          <View style={styles.heroActions}>
+            <View style={styles.heroActionItem}>
+              <Button title="Change plan" onPress={() => router.push('/choices' as Href)} />
+            </View>
+            <View style={styles.heroActionItem}>
+              <Button title="View log" variant="secondary" onPress={() => router.push('/Log' as Href)} />
+            </View>
+          </View>
+        </View>
+
+        <TouchableOpacity style={[styles.aiCard, isGeneratingAi && styles.aiCardDisabled]} onPress={handleAiLaunch} activeOpacity={0.9} disabled={isGeneratingAi}>
+          <View style={styles.aiBadge}>
+            <Text style={styles.aiBadgeText}>AI</Text>
+          </View>
+          <View style={styles.aiContent}>
+            <Text style={styles.aiTitle}>{aiPreset.title}</Text>
+            <Text style={styles.aiSubtitle}>{isGeneratingAi ? 'Creating workouts based on your profile...' : aiPreset.subtitle}</Text>
+          </View>
+          <View style={styles.aiActionWrap}>
+            {isGeneratingAi ? <ActivityIndicator size="small" color={UiTheme.colors.accent} /> : null}
+            <Text style={styles.aiActionText}>{isGeneratingAi ? 'Generating...' : 'Generate'}</Text>
+          </View>
+        </TouchableOpacity>
+
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Quick Launch</Text>
@@ -178,8 +235,8 @@ export default function Homepage(): JSX.Element {
 
       <ConfirmationModal
         visible={showAiPrompt}
-        title="Preview AI Suggestions?"
-        message={`We’ll use ${profile.activityLevel.trim() || 'your'} ${profile.workout.trim() || 'workout'} preference to prefill matching workouts on Explore.`}
+        title="Generate AI Workout?"
+        message={`Generate a new AI workout based on your ${profile.activityLevel.trim() || 'activity level'} and ${profile.workout.trim() || 'workout'} preferences.`}
         confirmText="Continue"
         cancelText="Not now"
         onConfirm={handleAiConfirm}
@@ -224,24 +281,7 @@ const styles = StyleSheet.create({
   heroTitle: { color: UiTheme.colors.textSecondary, fontWeight: '700', fontSize: UiTheme.font.body },
   heroSubtitle: { color: UiTheme.colors.textPrimary, fontWeight: '800', fontSize: UiTheme.font.subtitle },
   heroActions: { flexDirection: 'row', gap: UiTheme.spacing.sm, marginTop: UiTheme.spacing.xs },
-  primaryAction: {
-    flex: 1,
-    backgroundColor: UiTheme.colors.accent,
-    borderRadius: UiTheme.radius.sm,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  primaryActionText: { color: UiTheme.colors.surface, fontWeight: '800' },
-  secondaryAction: {
-    flex: 1,
-    backgroundColor: UiTheme.colors.surfaceMuted,
-    borderRadius: UiTheme.radius.sm,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: UiTheme.colors.border,
-  },
-  secondaryActionText: { color: UiTheme.colors.textPrimary, fontWeight: '700' },
+  heroActionItem: { flex: 1 },
   aiCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -251,6 +291,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: UiTheme.colors.accent,
     padding: UiTheme.spacing.md,
+  },
+  aiCardDisabled: {
+    opacity: 0.75,
   },
   aiBadge: {
     width: 40,
@@ -264,6 +307,7 @@ const styles = StyleSheet.create({
   aiContent: { flex: 1, gap: 2 },
   aiTitle: { color: UiTheme.colors.textPrimary, fontWeight: '900', fontSize: 16 },
   aiSubtitle: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.body },
+  aiActionWrap: { alignItems: 'center', justifyContent: 'center', gap: 4 },
   aiActionText: { color: UiTheme.colors.accent, fontWeight: '900' },
   statsRow: { flexDirection: 'row', gap: UiTheme.spacing.sm },
   statCard: {

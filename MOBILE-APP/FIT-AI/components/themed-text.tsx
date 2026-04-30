@@ -42,20 +42,18 @@ const styles = StyleSheet.create({
   defaultSemiBold: {
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    lineHeight: 32,
+    ...UiTheme.typography.display,
   },
   subtitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    ...UiTheme.typography.subtitle,
   },
   link: {
     lineHeight: 30,
     fontSize: 16,
     color: UiTheme.colors.accent,
+    fontWeight: '800',
   },
 });

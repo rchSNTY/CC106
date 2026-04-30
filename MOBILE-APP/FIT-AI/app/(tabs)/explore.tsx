@@ -2,8 +2,12 @@ import { Card } from '@/components/Card';
 import { ConfirmationModal } from '@/components/confirmation-modal';
 import RoutineDetailsModal, { type Routine } from '@/components/RoutineDetailsModal';
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
+import { Chip } from '@/components/ui/chip';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { UiTheme } from '@/constants/ui-theme';
 import { ApiError, addFavorite, clearGeneratedAiWorkouts, deleteWorkout, generateAiWorkout, getApiErrorMessage, listFavorites, listGeneratedAiWorkouts, listWorkouts, removeFavorite } from '@/services/backend';
+import { useExploreStore } from '@/stores/explore';
+import { useSnackbar } from '@/stores/snackbar';
 import { useUserProfile } from '@/stores/user-profile';
 import { getAiWorkoutPreset } from '@/utils/ai-workout';
 import { resolveWorkoutImage } from '@/utils/imageResolution';
@@ -11,7 +15,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { JSX, useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 type Intensity = 'All' | 'Light' | 'Moderate' | 'Intense';
 
@@ -21,9 +25,11 @@ export default function Explore(): JSX.Element {
   const router = useRouter();
   const params = useLocalSearchParams<{ ai?: string; intensity?: string; search?: string }>();
   const { profile } = useUserProfile();
+  const { showSnackbar, hideSnackbar } = useSnackbar();
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<Intensity>('All');
-  const [workoutView, setWorkoutView] = useState<'presets' | 'generated'>('presets');
+  const workoutView = useExploreStore((state) => state.workoutView);
+  const setWorkoutView = useExploreStore((state) => state.setWorkoutView);
   const [workouts, setWorkouts] = useState<Routine[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -93,9 +99,11 @@ export default function Explore(): JSX.Element {
     }
   }, [activeFilter, query, workoutView]);
 
-  useEffect(() => {
-    void refreshWorkouts();
-  }, [refreshWorkouts]);
+  useFocusEffect(
+    useCallback(() => {
+      void refreshWorkouts();
+    }, [refreshWorkouts]),
+  );
 
   const handleAiLaunch = () => {
     if (!aiPreset.isReady) {
@@ -110,26 +118,30 @@ export default function Explore(): JSX.Element {
     setShowAiPrompt(false);
     setIsGeneratingAi(true);
     setErrorMessage(null);
+    showSnackbar({ message: 'Generating your workouts...', variant: 'info' });
 
     // Validate profile before sending
     if (!profile.name || !profile.name.trim()) {
       Alert.alert('Incomplete Profile', 'Please enter your name in your profile.');
       setIsGeneratingAi(false);
+      hideSnackbar();
       return;
     }
     if (!profile.activityLevel || !profile.activityLevel.trim()) {
       Alert.alert('Incomplete Profile', 'Please select an activity level in your profile.');
       setIsGeneratingAi(false);
+      hideSnackbar();
       return;
     }
     if (!profile.workout || !profile.workout.trim()) {
       Alert.alert('Incomplete Profile', 'Please select a workout type in your profile.');
       setIsGeneratingAi(false);
+      hideSnackbar();
       return;
     }
 
     try {
-      console.log('Sending AI generation request with profile:', {
+      /*console.log('Sending AI generation request with profile:', {
         name: profile.name,
         age: profile.age,
         gender: profile.gender,
@@ -138,7 +150,8 @@ export default function Explore(): JSX.Element {
         activityLevel: profile.activityLevel,
         workout: profile.workout,
         weeklyGoal: profile.weeklyGoal,
-      });
+      });            
+      keep this, in case of debugging*/ 
 
       const aiWorkouts = await generateAiWorkout({
         name: profile.name,
@@ -159,20 +172,38 @@ export default function Explore(): JSX.Element {
         })),
       }));
 
+      setGeneratedWorkoutCount(routines.length);
       setWorkoutView('generated');
       setWorkouts(routines);
       setActiveFilter('All');
       setQuery('');
-      
-      Alert.alert('Success', '3 AI workouts generated successfully!');
+      setIsSelecting(false);
+      setSelectedIds(new Set());
+
+      showSnackbar({
+        message: 'AI workouts ready.',
+        variant: 'success',
+        actionLabel: routines.length > 0 ? 'View' : undefined,
+        onAction: routines.length > 0 ? () => {
+          setSelectedRoutine(routines[0]);
+          setModalVisible(true);
+        } : undefined,
+        autoDismissMs: 4500,
+      });
     } catch (error) {
       const err = getApiErrorMessage(error);
-      Alert.alert('Generation Failed', err);
       setErrorMessage(err);
+      showSnackbar({
+        message: `Generation failed. ${err}`,
+        variant: 'error',
+        actionLabel: 'Retry',
+        onAction: () => setShowAiPrompt(true),
+        autoDismissMs: 7000,
+      });
     } finally {
       setIsGeneratingAi(false);
     }
-  }, [profile]);
+  }, [hideSnackbar, profile, showSnackbar]);
 
   const handleShowPresetWorkouts = useCallback(() => {
     setWorkoutView('presets');
@@ -334,39 +365,47 @@ export default function Explore(): JSX.Element {
 
       {/* Fixed Header Section - Not Scrollable */}
       <View style={styles.headerContainer}>
-        <Text style={styles.browseTitle}>Discover Workouts</Text>
-        <Text style={styles.browseSubtitle}>Search routines and narrow by intensity.</Text>
-
-        <TouchableOpacity 
-          style={[styles.aiBanner, isGeneratingAi && styles.aiBannerDisabled]} 
-          onPress={handleAiLaunch} 
-          activeOpacity={0.9}
-          disabled={isGeneratingAi}
-        >
-          <View style={styles.aiBannerTextWrap}>
-            <Text style={styles.aiBannerTitle}>{aiPreset.title}</Text>
-            <Text style={styles.aiBannerSubtitle}>{aiPreset.subtitle}</Text>
+        <View style={styles.headerTopRow}>
+          <View style={styles.headerTitleWrap}>
+            <Text style={styles.browseTitle}>Discover Workouts</Text>
+            <Text style={styles.browseSubtitle}>Search routines and narrow by intensity.</Text>
           </View>
-          <Text style={styles.aiBannerAction}>{isGeneratingAi ? 'Generating...' : 'Generate'}</Text>
-        </TouchableOpacity>
 
-        <View style={styles.viewSwitcherRow}>
-          <TouchableOpacity
-            style={[styles.viewSwitchChip, workoutView === 'presets' && styles.viewSwitchChipActive]}
-            onPress={handleShowPresetWorkouts}
-          >
-            <Text style={[styles.viewSwitchText, workoutView === 'presets' && styles.viewSwitchTextActive]}>Preset workouts</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.viewSwitchChip, workoutView === 'generated' && styles.viewSwitchChipActive]}
-            onPress={handleShowGeneratedWorkouts}
-            disabled={generatedWorkoutCount === 0}
-          >
-            <Text style={[styles.viewSwitchText, workoutView === 'generated' && styles.viewSwitchTextActive, generatedWorkoutCount === 0 && styles.viewSwitchTextDisabled]}>
-              AI workouts{generatedWorkoutCount > 0 ? ` (${generatedWorkoutCount})` : ''}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.viewSwitcherTopRight}>
+            <SegmentedControl
+              value={workoutView}
+              options={[
+                { key: 'presets', label: 'Presets' },
+                { key: 'generated', label: generatedWorkoutCount > 0 ? `AI (${generatedWorkoutCount})` : 'AI' },
+              ]}
+              onChange={(next) => {
+                if (next === 'presets') {
+                  handleShowPresetWorkouts();
+                } else {
+                  handleShowGeneratedWorkouts();
+                }
+              }}
+            />
+          </View>
         </View>
+
+        {workoutView === 'generated' ? (
+          <TouchableOpacity 
+            style={[styles.aiBanner, isGeneratingAi && styles.aiBannerDisabled]} 
+            onPress={handleAiLaunch} 
+            activeOpacity={0.9}
+            disabled={isGeneratingAi}
+          >
+            <View style={styles.aiBannerTextWrap}>
+              <Text style={styles.aiBannerTitle}>{aiPreset.title}</Text>
+              <Text style={styles.aiBannerSubtitle}>{isGeneratingAi ? 'Creating workouts based on your profile...' : aiPreset.subtitle}</Text>
+            </View>
+            <View style={styles.aiBannerActionWrap}>
+              {isGeneratingAi ? <ActivityIndicator size="small" color={UiTheme.colors.accent} /> : null}
+              <Text style={styles.aiBannerAction}>{isGeneratingAi ? 'Generating...' : 'Generate'}</Text>
+            </View>
+          </TouchableOpacity>
+        ) : null}
 
         <View style={styles.searchWrap}>
           <Image source={require('@/assets/images/search.png')} style={styles.searchIcon} contentFit="contain" />
@@ -380,24 +419,14 @@ export default function Explore(): JSX.Element {
         </View>
 
         <View style={styles.filterRow}>
-          {FILTERS.map((filter) => {
-            const selected = filter === activeFilter;
-
-            return (
-              <TouchableOpacity
-                key={filter}
-                style={[styles.filterChip, selected && styles.filterChipActive]}
-                onPress={() => setActiveFilter(filter)}
-              >
-                <Text style={[styles.filterText, selected && styles.filterTextActive]}>{filter}</Text>
-              </TouchableOpacity>
-            );
-          })}
+          {FILTERS.map((filter) => (
+            <Chip key={filter} label={filter} selected={filter === activeFilter} onPress={() => setActiveFilter(filter)} />
+          ))}
         </View>
       </View>
 
-      {/* Scrollable Results Section */}
-      <ScrollView contentContainerStyle={styles.resultsContainer} showsVerticalScrollIndicator={false}>
+      {/* Results header should stay fixed while list scrolls */}
+      <View style={styles.resultsHeaderContainer}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Results</Text>
           <View style={styles.sectionActions}>
@@ -437,13 +466,16 @@ export default function Explore(): JSX.Element {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => { setIsSelecting(false); setSelectedIds(new Set()); }} style={styles.cancelButton}>
-                  <Text style={styles.cancelText}>✕</Text>
+                  <Text style={styles.cancelText}>{'\u2715'}</Text>
                 </TouchableOpacity>
               </>
             )}
             <Text style={styles.sectionMeta}>{workouts.length} items</Text>
           </View>
         </View>
+      </View>
+
+      <ScrollView style={styles.resultsScroll} contentContainerStyle={styles.resultsContainer} showsVerticalScrollIndicator={false}>
 
         {isLoading ? <Text style={styles.statusText}>Loading workouts...</Text> : null}
         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
@@ -471,39 +503,43 @@ export default function Explore(): JSX.Element {
                   />
                 ) : null}
 
-                <Card
-                  title={item.title}
-                  subtitle={item.subtitle}
-                  duration={item.duration}
-                  badges={item.intensity ? [item.intensity] : []}
-                  coverImage={resolveWorkoutImage(item)}
-                  onPress={() => {
-                    if (isGeneratedItem && isSelecting) {
-                      setSelectedIds((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(String(item.id))) {
-                          next.delete(String(item.id));
-                        } else {
-                          next.add(String(item.id));
-                        }
-                        return next;
-                      });
-                      return;
-                    }
+                <View style={isGeneratedItem && isSelecting ? styles.cardWrapper : undefined}>
+                  <Card
+                    title={item.title}
+                    subtitle={item.subtitle}
+                    duration={item.duration}
+                    badges={item.intensity ? [item.intensity] : []}
+                    coverImage={resolveWorkoutImage(item)}
+                    onPress={() => {
+                      if (isGeneratedItem && isSelecting) {
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(String(item.id))) {
+                            next.delete(String(item.id));
+                          } else {
+                            next.add(String(item.id));
+                          }
+                          return next;
+                        });
+                        return;
+                      }
 
-                    setSelectedRoutine(item);
-                    setModalVisible(true);
-                  }}
-                  accessibilityLabel={`Open ${item.title} routine details`}
-                />
+                      setSelectedRoutine(item);
+                      setModalVisible(true);
+                    }}
+                    accessibilityLabel={`Open ${item.title} routine details`}
+                  />
+                </View>
               </View>
             );
           })}
 
           {!isLoading && !errorMessage && workouts.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>No workouts found</Text>
-              <Text style={styles.emptySubtitle}>Try another search keyword or switch filter.</Text>
+              <Text style={styles.emptyTitle}>{workoutView === 'generated' ? 'No AI workouts yet' : 'No workouts found'}</Text>
+              <Text style={styles.emptySubtitle}>
+                {workoutView === 'generated' ? 'Tap Generate above to create one.' : 'Try another search keyword or switch filter.'}
+              </Text>
             </View>
           ) : null}
         </View>
@@ -575,16 +611,38 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: UiTheme.colors.page },
   headerContainer: {
     paddingHorizontal: UiTheme.spacing.lg,
-    paddingTop: UiTheme.spacing.md,
+    paddingTop: UiTheme.spacing.lg,
     gap: UiTheme.spacing.md,
   },
+  headerTopRow: {
+    paddingTop: UiTheme.spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: UiTheme.spacing.md,
+  },
+  headerTitleWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  viewSwitcherTopRight: {
+    alignSelf: 'flex-start',
+  },
+  resultsHeaderContainer: {
+    paddingHorizontal: UiTheme.spacing.lg,
+    paddingTop: UiTheme.spacing.lg,
+    paddingBottom: UiTheme.spacing.md,
+  },
+  resultsScroll: {
+    flex: 1,
+  },
   resultsContainer: {
-    padding: UiTheme.spacing.lg,
+    paddingHorizontal: UiTheme.spacing.lg,
+    paddingTop: UiTheme.spacing.md,
     paddingBottom: UiTheme.nav.height + UiTheme.spacing.xl,
     gap: UiTheme.spacing.md,
   },
   browseTitle: {
-    marginTop: UiTheme.spacing.xl,
     fontSize: UiTheme.font.title,
     fontWeight: '800',
     color: UiTheme.colors.textPrimary,
@@ -622,35 +680,10 @@ const styles = StyleSheet.create({
     color: UiTheme.colors.accent,
     fontWeight: '900',
   },
-  viewSwitcherRow: {
+  aiBannerActionWrap: {
     flexDirection: 'row',
-    gap: UiTheme.spacing.xs,
-  },
-  viewSwitchChip: {
-    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 40,
-    borderRadius: UiTheme.radius.xl,
-    borderWidth: 1,
-    borderColor: UiTheme.colors.border,
-    backgroundColor: UiTheme.colors.surface,
-    paddingHorizontal: UiTheme.spacing.md,
-  },
-  viewSwitchChipActive: {
-    borderColor: UiTheme.colors.accent,
-    backgroundColor: UiTheme.colors.accentSoft,
-  },
-  viewSwitchText: {
-    color: UiTheme.colors.textSecondary,
-    fontWeight: '800',
-    fontSize: UiTheme.font.caption,
-  },
-  viewSwitchTextActive: {
-    color: UiTheme.colors.accent,
-  },
-  viewSwitchTextDisabled: {
-    opacity: 0.45,
+    gap: UiTheme.spacing.xs,
   },
   deleteAiButton: {
     alignSelf: 'flex-start',
@@ -688,17 +721,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   filterRow: { flexDirection: 'row', gap: UiTheme.spacing.xs },
-  filterChip: {
-    paddingVertical: UiTheme.spacing.xs,
-    paddingHorizontal: UiTheme.spacing.md,
-    borderRadius: UiTheme.radius.xl,
-    borderColor: UiTheme.colors.border,
-    borderWidth: 1,
-    backgroundColor: UiTheme.colors.surface,
-  },
-  filterChipActive: { backgroundColor: UiTheme.colors.accentSoft, borderColor: UiTheme.colors.accent },
-  filterText: { color: UiTheme.colors.textSecondary, fontWeight: '700', fontSize: UiTheme.font.caption },
-  filterTextActive: { color: UiTheme.colors.accent },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionTitle: { fontSize: UiTheme.font.subtitle, fontWeight: '800', color: UiTheme.colors.textPrimary },
   sectionMeta: { fontSize: UiTheme.font.caption, fontWeight: '700', color: UiTheme.colors.textSecondary },
@@ -715,6 +737,7 @@ const styles = StyleSheet.create({
   cardRow: { flexDirection: 'row', alignItems: 'flex-start', gap: UiTheme.spacing.sm },
   checkbox: { width: 24, height: 24, borderRadius: 4, borderWidth: 2, borderColor: UiTheme.colors.border, backgroundColor: UiTheme.colors.surface, marginTop: 8 },
   checkboxChecked: { backgroundColor: UiTheme.colors.accent, borderColor: UiTheme.colors.accent },
+  cardWrapper: { flex: 1 },
   cardList: { gap: UiTheme.spacing.sm },
   emptyState: {
     alignItems: 'center',

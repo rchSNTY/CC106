@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { Button } from '@/components/ui/button';
 import { UiTheme } from '@/constants/ui-theme';
 
 const CAPABILITY_SLIDES = [
@@ -138,9 +139,7 @@ export default function LandingScreen() {
         </View>
 
         <View style={styles.bottomActionWrap}>
-          <TouchableOpacity style={styles.primaryButton} onPress={() => setModalVisible(true)}>
-            <ThemedText type="defaultSemiBold" style={styles.primaryButtonText}>Start my journey</ThemedText>
-          </TouchableOpacity>
+          <Button title="Start my journey" onPress={() => setModalVisible(true)} />
         </View>
       </ScrollView>
 
@@ -153,24 +152,21 @@ export default function LandingScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <ThemedText type="title" style={styles.modalTitle}>Get Started</ThemedText>
-            <TouchableOpacity
-              style={styles.modalButton}
+            <Button
+              title="Create account"
               onPress={() => {
                 setModalVisible(false);
                 router.push('/signup' as Href);
               }}
-            >
-              <ThemedText type="defaultSemiBold" style={styles.modalButtonText}>Create Account</ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalButtonSecondary}
+            />
+            <Button
+              title="I already have an account"
+              variant="secondary"
               onPress={() => {
                 setModalVisible(false);
                 router.push('/login' as Href);
               }}
-            >
-              <ThemedText type="defaultSemiBold" style={styles.modalButtonTextSecondary}>I already have an account</ThemedText>
-            </TouchableOpacity>
+            />
           </View>
         </View>
       </Modal>
@@ -291,19 +287,10 @@ const styles = StyleSheet.create({
   navChipTextDisabled: {
     color: UiTheme.colors.textSecondary,
   },
-  primaryButton: {
-    backgroundColor: UiTheme.colors.accent,
-    borderRadius: UiTheme.radius.sm,
-    alignItems: 'center',
-    paddingVertical: 13,
-  },
   bottomActionWrap: {
     marginTop: 'auto',
     paddingTop: UiTheme.spacing.md,
-  },
-  primaryButtonText: {
-    color: UiTheme.colors.surface,
-    fontWeight: '800',
+    gap: UiTheme.spacing.sm,
   },
   secondaryButton: {
     marginTop: UiTheme.spacing.sm,
@@ -337,29 +324,5 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '900',
     textAlign: 'center',
-  },
-  modalButton: {
-    backgroundColor: UiTheme.colors.accent,
-    borderRadius: UiTheme.radius.sm,
-    paddingVertical: 13,
-    width: '100%',
-    alignItems: 'center',
-  },
-  modalButtonText: {
-    color: UiTheme.colors.surface,
-    fontWeight: '800',
-  },
-  modalButtonSecondary: {
-    borderWidth: 1,
-    borderColor: UiTheme.colors.border,
-    borderRadius: UiTheme.radius.sm,
-    paddingVertical: 13,
-    width: '100%',
-    alignItems: 'center',
-    backgroundColor: UiTheme.colors.surface,
-  },
-  modalButtonTextSecondary: {
-    color: UiTheme.colors.textPrimary,
-    fontWeight: '700',
   },
 });

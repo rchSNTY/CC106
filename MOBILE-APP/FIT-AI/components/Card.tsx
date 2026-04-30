@@ -17,6 +17,7 @@ export type CardProps = {
   footer?: React.ReactNode;
   children?: React.ReactNode;
   coverImage?: ImageSourcePropType;
+  reserveCoverSpace?: boolean;
 };
 
 export function Card({
@@ -32,6 +33,7 @@ export function Card({
   footer,
   children,
   coverImage,
+  reserveCoverSpace = false,
 }: CardProps) {
   const borderColor = UiTheme.colors.border;
   const surfaceColor = UiTheme.colors.surface;
@@ -45,13 +47,11 @@ export function Card({
 
   const content = (
     <View style={cardStyle}>
-      {coverImage && (
-        <Image
-          source={coverImage}
-          style={styles.coverImage}
-          resizeMode="cover"
-        />
-      )}
+      {coverImage ? (
+        <Image source={coverImage} style={styles.coverImage} resizeMode="cover" />
+      ) : reserveCoverSpace ? (
+        <View style={[styles.coverImage, styles.coverPlaceholder]} />
+      ) : null}
       {(title || duration) && (
         <View style={styles.header}>
           {title && <ThemedText type="defaultSemiBold" style={styles.title}>{title}</ThemedText>}
@@ -104,12 +104,11 @@ const styles = StyleSheet.create({
     borderRadius: UiTheme.radius.md,
     marginBottom: UiTheme.spacing.sm,
   },
+  coverPlaceholder: {
+    backgroundColor: UiTheme.colors.surfaceMuted,
+  },
   elevated: {
-    shadowColor: UiTheme.colors.textPrimary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    ...UiTheme.shadow.card,
   },
   outlined: {
     borderWidth: 2,

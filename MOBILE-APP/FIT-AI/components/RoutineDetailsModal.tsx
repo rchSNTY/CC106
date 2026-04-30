@@ -132,7 +132,7 @@ export default function RoutineDetailsModal({
                       {exercise.steps && exercise.steps.length > 0 && (
                         <View style={styles.stepsPreview}>
                           <ThemedText style={styles.stepsPreviewText}>
-                            {exercise.steps.length} steps • Tap "Start Routine" to view
+                            {exercise.steps.length} steps • Tap &quot;Start Routine&quot; to view
                           </ThemedText>
                         </View>
                       )}

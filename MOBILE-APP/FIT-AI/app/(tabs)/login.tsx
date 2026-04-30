@@ -1,15 +1,16 @@
 import { Image } from 'expo-image';
 import { Href, Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
-import { ErrorText } from '@/components/ErrorText';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { UiTheme } from '@/constants/ui-theme';
 import { useFormValidation, ValidationRule } from '@/hooks/useFormValidation';
 import { getApiErrorMessage, getProfile, login } from '@/services/backend';
 import { useUserProfile } from '@/stores/user-profile';
+import { Button } from '@/components/ui/button';
+import { Screen } from '@/components/ui/screen';
+import { TextField } from '@/components/ui/text-field';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
@@ -66,87 +67,66 @@ export default function LoginScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
-      <ThemedText type="title" style={styles.title}>Login Your Account</ThemedText>
+    <Screen scroll={false} withBottomNavPadding={false} contentContainerStyle={styles.screen}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.container}
+        >
+          <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
+          <View style={styles.header}>
+            <ThemedText type="title" style={styles.title}>Welcome back</ThemedText>
+            <ThemedText style={styles.subtitle}>Log in to pick up where you left off.</ThemedText>
+          </View>
 
-      <View style={styles.form}>
-        <ThemedText style={styles.label}>Username</ThemedText>
-        <TextInput
-          value={username}
-          onChangeText={handleUsernameChange}
-          onBlur={() => setFieldTouched('username')}
-          placeholder="Enter username"
-          style={[styles.input, getFieldError('username') && styles.inputError]}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <ErrorText error={getFieldError('username')} />
+          <View style={styles.form}>
+            <TextField
+              label="Username"
+              value={username}
+              onChangeText={handleUsernameChange}
+              onBlur={() => setFieldTouched('username')}
+              placeholder="Enter your username"
+              autoCapitalize="none"
+              autoCorrect={false}
+              leftIconName="person"
+              error={getFieldError('username') ?? null}
+              returnKeyType="next"
+            />
 
-        <ThemedText style={styles.label}>Password</ThemedText>
-        <TextInput
-          value={password}
-          onChangeText={handlePasswordChange}
-          onBlur={() => setFieldTouched('password')}
-          placeholder="Password"
-          secureTextEntry
-          style={[styles.input, getFieldError('password') && styles.inputError]}
-        />
-        <ErrorText error={getFieldError('password')} />
+            <TextField
+              label="Password"
+              value={password}
+              onChangeText={handlePasswordChange}
+              onBlur={() => setFieldTouched('password')}
+              placeholder="Enter your password"
+              secureTextEntry
+              leftIconName="lock"
+              error={getFieldError('password') ?? null}
+              returnKeyType="done"
+            />
 
-        <View style={{ marginTop: 8 }}>
-          
-          <TouchableOpacity onPress={handleLogin} style={[styles.button, !canSubmit && styles.buttonDisabled]} activeOpacity={0.9} disabled={!canSubmit}>
-            {isLoading ? <ActivityIndicator color={UiTheme.colors.surface} /> : <ThemedText type="defaultSemiBold" style={styles.buttonText}>Login</ThemedText>}
-          </TouchableOpacity>
-        </View>
+            <Button title="Log in" onPress={handleLogin} loading={isLoading} disabled={!canSubmit} />
 
-        <ThemedText style={styles.signupText}>
-          Dont Have an account Yet?{' '}
-          <Link href={'/signup' as Href} style={styles.linkText}>
-            <ThemedText type="link">Signup Here</ThemedText>
-          </Link>
-        </ThemedText>
-      </View>
-    </ThemedView>
+            <ThemedText style={styles.signupText}>
+              Don’t have an account?{' '}
+              <Link href={'/signup' as Href} style={styles.linkText}>
+                <ThemedText type="link">Sign up</ThemedText>
+              </Link>
+            </ThemedText>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: UiTheme.spacing.lg,
-    justifyContent: 'center',
-    gap: UiTheme.spacing.md,
-    backgroundColor: UiTheme.colors.page,
-  },
-  form: {
-    gap: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: UiTheme.colors.border,
-    padding: 12,
-    borderRadius: UiTheme.radius.sm,
-    backgroundColor: UiTheme.colors.surface,
-    fontSize: 16,
-  },
-  inputError: {
-    borderColor: UiTheme.colors.danger,
-  },
-  button: {
-    marginTop: 8,
-    backgroundColor: UiTheme.colors.accent,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: UiTheme.radius.sm,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: UiTheme.colors.surface,
-    fontSize: 16,
-    fontWeight: '700',
-  },
+  flex: { flex: 1 },
+  screen: { paddingTop: UiTheme.spacing.lg, paddingHorizontal: UiTheme.spacing.lg },
+  container: { flexGrow: 1, justifyContent: 'center', paddingBottom: UiTheme.spacing.xl },
+  header: { alignItems: 'center', gap: 6, marginBottom: UiTheme.spacing.lg },
+  form: { gap: UiTheme.spacing.sm },
   signupText: {
     textAlign: 'center',
     color: UiTheme.colors.textSecondary,
@@ -157,22 +137,15 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: 'center',
-    fontWeight: '800',
     color: UiTheme.colors.textPrimary,
     fontSize: 28,
-    marginBottom: 8,
+    fontWeight: '900',
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 6,
-    color: UiTheme.colors.textPrimary,
-  },
+  subtitle: { color: UiTheme.colors.textSecondary, textAlign: 'center', fontSize: 14, fontWeight: '600' },
   logo: {
     width: 120,
     height: 120,
     alignSelf: 'center',
     marginBottom: 12,
   },
-  buttonDisabled: { opacity: 0.6 },
 });

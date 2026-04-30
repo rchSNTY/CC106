@@ -1,13 +1,13 @@
 import { Image } from 'expo-image';
 import { Href, Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { ErrorText } from '@/components/ErrorText';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { Button } from '@/components/ui/button';
+import { Screen } from '@/components/ui/screen';
+import { TextField } from '@/components/ui/text-field';
 import { UiTheme } from '@/constants/ui-theme';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { useFormValidation, ValidationRule } from '@/hooks/useFormValidation';
 import { getApiErrorMessage, register } from '@/services/backend';
 import { useUserProfile } from '@/stores/user-profile';
@@ -20,7 +20,6 @@ export default function SignupScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { updateProfile } = useUserProfile();
-  const textColor = useThemeColor({}, 'text');
   const [accepted, setAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
 
@@ -28,7 +27,10 @@ export default function SignupScreen() {
     username: [
       { validate: (val) => val.trim().length > 0, message: 'Username is required' },
       { validate: (val) => val.trim().length >= 3, message: 'Username must be at least 3 characters' },
-      { validate: (val) => /^[a-zA-Z0-9_]+$/.test(val.trim()), message: 'Username can only contain letters, numbers, and underscores' },
+      {
+        validate: (val) => /^[a-zA-Z0-9_]+$/.test(val.trim()),
+        message: 'Username can only contain letters, numbers, and underscores',
+      },
     ],
     email: [
       { validate: (val) => val.trim().length > 0, message: 'Email is required' },
@@ -37,11 +39,12 @@ export default function SignupScreen() {
     password: [
       { validate: (val) => val.length > 0, message: 'Password is required' },
       { validate: (val) => val.length >= 8, message: 'Password must be at least 8 characters' },
-      { validate: (val) => /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(val), message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' },
+      {
+        validate: (val) => /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(val),
+        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+      },
     ],
-    confirmPassword: [
-      { validate: (val) => val === password, message: 'Passwords do not match' },
-    ],
+    confirmPassword: [{ validate: (val) => val === password, message: 'Passwords do not match' }],
   };
 
   const { validateField, validateAll, setFieldTouched, getFieldError } = useFormValidation();
@@ -115,150 +118,145 @@ export default function SignupScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
-      <ThemedText type="title" style={styles.title}>Create an Account</ThemedText>
+    <Screen scroll={false} withBottomNavPadding={false} contentContainerStyle={styles.screen}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
+        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
+          <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
 
-      <View style={styles.form}>
-        <ThemedText style={styles.label}>Username</ThemedText>
-        <TextInput
-          value={username}
-          onChangeText={handleUsernameChange}
-          onBlur={() => setFieldTouched('username')}
-          placeholder="Enter username"
-          style={[styles.input, getFieldError('username') && styles.inputError]}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <ErrorText error={getFieldError('username')} />
-
-        <ThemedText style={styles.label}>Email</ThemedText>
-        <TextInput
-          value={email}
-          onChangeText={handleEmailChange}
-          onBlur={() => setFieldTouched('email')}
-          placeholder="juandelacruz@gmail.com"
-          keyboardType="email-address"
-          style={[styles.input, getFieldError('email') && styles.inputError]}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <ErrorText error={getFieldError('email')} />
-
-        <ThemedText style={styles.label}>Password</ThemedText>
-        <TextInput
-          value={password}
-          onChangeText={handlePasswordChange}
-          onBlur={() => setFieldTouched('password')}
-          placeholder="Password"
-          secureTextEntry
-          style={[styles.input, getFieldError('password') && styles.inputError]}
-        />
-        {!hasMinPassword && password.length > 0 ? (
-          <ThemedText style={styles.inlineHint}>Use at least 8 characters with uppercase, lowercase, and number.</ThemedText>
-        ) : null}
-        <ErrorText error={getFieldError('password')} />
-
-        <ThemedText style={styles.label}>Confirm Password</ThemedText>
-        <TextInput
-          value={confirmPassword}
-          onChangeText={handleConfirmPasswordChange}
-          onBlur={() => setFieldTouched('confirmPassword')}
-          placeholder="Confirm Password"
-          secureTextEntry
-          style={[styles.input, getFieldError('confirmPassword') && styles.inputError]}
-        />
-        <ErrorText error={getFieldError('confirmPassword')} />
-
-        <View style={{ marginTop: 8 }}>
-          <Pressable onPress={() => setAccepted((s) => !s)} style={styles.checkboxRow}>
-            <View style={[styles.checkbox, accepted ? styles.checkboxChecked : {}]} />
-            <ThemedText style={[styles.checkboxLabel, { color: textColor, fontSize: 15 }]}> 
-              <ThemedText type="link" onPress={() => setShowTerms(true)}> I have read the terms and privacy policy</ThemedText>
+          <View style={styles.header}>
+            <ThemedText type="title" style={styles.title}>
+              Create your account
             </ThemedText>
-          </Pressable>
+            <ThemedText style={styles.subtitle}>Start building workouts tailored to you.</ThemedText>
+          </View>
 
-          <TouchableOpacity onPress={handleSignup} style={[styles.button, !canSubmit && styles.buttonDisabled]} activeOpacity={0.9} disabled={!canSubmit || isLoading}>
-            {isLoading ? (
-              <ActivityIndicator color={UiTheme.colors.surface} />
-            ) : (
-              <ThemedText type="defaultSemiBold" style={styles.buttonText}>Signup</ThemedText>
-            )}
-          </TouchableOpacity>
-        </View>
+          <View style={styles.form}>
+            <TextField
+              label="Username"
+              value={username}
+              onChangeText={handleUsernameChange}
+              onBlur={() => setFieldTouched('username')}
+              placeholder="Choose a username"
+              autoCapitalize="none"
+              autoCorrect={false}
+              leftIconName="person"
+              error={getFieldError('username') ?? null}
+              returnKeyType="next"
+            />
 
-        <ThemedText style={styles.orText}>OR</ThemedText>
+            <TextField
+              label="Email"
+              value={email}
+              onChangeText={handleEmailChange}
+              onBlur={() => setFieldTouched('email')}
+              placeholder="you@example.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              leftIconName="mail"
+              error={getFieldError('email') ?? null}
+              returnKeyType="next"
+            />
 
-        <ThemedText style={styles.orText}>
-          Have an Account?{' '}
-          <Link href={'/login' as Href} style={styles.linkText}>
-            <ThemedText type="link">Login here</ThemedText>
-          </Link>
-        </ThemedText>
-      </View>
+            <TextField
+              label="Password"
+              value={password}
+              onChangeText={handlePasswordChange}
+              onBlur={() => setFieldTouched('password')}
+              placeholder="Create a strong password"
+              secureTextEntry
+              leftIconName="lock"
+              helperText={!hasMinPassword && password.length > 0 ? 'Use 8+ characters with uppercase, lowercase, and a number.' : undefined}
+              error={getFieldError('password') ?? null}
+              returnKeyType="next"
+            />
+
+            <TextField
+              label="Confirm password"
+              value={confirmPassword}
+              onChangeText={handleConfirmPasswordChange}
+              onBlur={() => setFieldTouched('confirmPassword')}
+              placeholder="Re-enter your password"
+              secureTextEntry
+              leftIconName="lock"
+              error={getFieldError('confirmPassword') ?? null}
+              returnKeyType="done"
+            />
+
+            <Pressable
+              onPress={() => setAccepted((s) => !s)}
+              accessibilityRole="checkbox"
+              accessibilityLabel="Agree to Terms and Privacy"
+              accessibilityState={{ checked: accepted }}
+              style={styles.checkboxRow}
+              hitSlop={10}
+            >
+              <View style={[styles.checkbox, accepted ? styles.checkboxChecked : null]} />
+              <ThemedText style={styles.checkboxLabel}>
+                <ThemedText type="link" onPress={() => setShowTerms(true)}>
+                  I have read the terms and privacy policy
+                </ThemedText>
+              </ThemedText>
+            </Pressable>
+
+            <Button title="Create account" onPress={handleSignup} loading={isLoading} disabled={!canSubmit || isLoading} />
+
+            <ThemedText style={styles.orText}>OR</ThemedText>
+
+            <ThemedText style={styles.orText}>
+              Already have an account?{' '}
+              <Link href={'/login' as Href} style={styles.linkText}>
+                <ThemedText type="link">Log in</ThemedText>
+              </Link>
+            </ThemedText>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
       <Modal visible={showTerms} animationType="slide" onRequestClose={() => setShowTerms(false)}>
         <View style={styles.modalContainer}>
           <ScrollView contentContainerStyle={styles.modalContent} showsVerticalScrollIndicator={false}>
-            <ThemedText type="title" style={styles.modalTitle}>Terms & Privacy</ThemedText>
+            <ThemedText type="title" style={styles.modalTitle}>
+              Terms & Privacy
+            </ThemedText>
 
-            <ThemedText style={[styles.modalText, { marginBottom: 12 }]}>It’s Required by Law: Apps are legally obligated (by laws like GDPR) to get your permission before collecting personal data (like your name, email, or location). Checking this box fulfills that requirement.</ThemedText>
+            <ThemedText style={styles.modalText}>
+              It’s required by law: apps are legally obligated (by laws like GDPR) to get your permission before collecting personal data (like your name, email, or location). Checking this box fulfills that requirement.
+            </ThemedText>
 
-            <ThemedText style={[styles.modalText, { marginBottom: 12 }]}>It’s a Binding Contract: By clicking Agree, the user enters a legally binding agreement. They cannot later claim they were unaware of the apps rules.</ThemedText>
+            <ThemedText style={styles.modalText}>
+              It’s a binding contract: by clicking Agree, the user enters a legally binding agreement. They cannot later claim they were unaware of the app’s rules.
+            </ThemedText>
 
-            <ThemedText style={[styles.modalText, { marginBottom: 12 }]}>The Terms of Service (ToS) covers the Rules: This document outlines the dos and donts of the app, rules for user conduct, payment terms, and the apps right to terminate accounts.</ThemedText>
+            <ThemedText style={styles.modalText}>
+              The Terms of Service cover the rules: this document outlines do’s and don’ts, user conduct, and the app’s right to terminate accounts.
+            </ThemedText>
 
-            <ThemedText style={styles.modalText}>The Privacy Policy covers your Data: This document explains exactly what data the app collects, how it will be used (e.g., for improvements or advertising), and if it will be shared with third parties.</ThemedText>
+            <ThemedText style={styles.modalText}>
+              The Privacy Policy covers your data: this document explains what data the app collects, how it will be used, and whether it will be shared with third parties.
+            </ThemedText>
 
-            <TouchableOpacity onPress={() => setShowTerms(false)} style={styles.doneButton}>
-              <ThemedText type="defaultSemiBold" style={styles.doneButtonText}>Close</ThemedText>
-            </TouchableOpacity>
+            <Button title="Close" onPress={() => setShowTerms(false)} />
           </ScrollView>
         </View>
       </Modal>
-    </ThemedView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: UiTheme.spacing.lg,
-    justifyContent: 'center',
-    gap: UiTheme.spacing.md,
-    backgroundColor: UiTheme.colors.page,
+  flex: { flex: 1 },
+  screen: { paddingTop: UiTheme.spacing.lg, paddingHorizontal: UiTheme.spacing.lg },
+  container: { flexGrow: 1, justifyContent: 'center', paddingBottom: UiTheme.spacing.xl },
+  header: { alignItems: 'center', gap: 6, marginBottom: UiTheme.spacing.lg },
+  form: { gap: UiTheme.spacing.sm },
+  title: {
+    textAlign: 'center',
+    color: UiTheme.colors.textPrimary,
+    fontSize: 28,
+    fontWeight: '900',
   },
-  form: {
-    gap: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: UiTheme.colors.border,
-    padding: 12,
-    borderRadius: UiTheme.radius.sm,
-    backgroundColor: UiTheme.colors.surface,
-    fontSize: 16,
-  },
-  inputError: {
-    borderColor: UiTheme.colors.danger,
-  },
-  inlineHint: {
-    marginTop: -6,
-    color: UiTheme.colors.textSecondary,
-    fontSize: UiTheme.font.caption,
-  },
-  button: {
-    marginTop: 8,
-    backgroundColor: UiTheme.colors.accent,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: UiTheme.radius.sm,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: UiTheme.colors.surface,
-    fontSize: 16,
-    fontWeight: '700',
-  },
+  subtitle: { color: UiTheme.colors.textSecondary, textAlign: 'center', fontSize: 14, fontWeight: '600' },
   orText: {
     textAlign: 'center',
     color: UiTheme.colors.textSecondary,
@@ -266,19 +264,6 @@ const styles = StyleSheet.create({
   },
   linkText: {
     textDecorationLine: 'none',
-  },
-  title: {
-    textAlign: 'center',
-    fontWeight: '800',
-    color: UiTheme.colors.textPrimary,
-    fontSize: 28,
-    marginBottom: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 6,
-    color: UiTheme.colors.textPrimary,
   },
   logo: {
     width: 120,
@@ -288,32 +273,19 @@ const styles = StyleSheet.create({
   },
 
   checkboxRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 1, borderColor: UiTheme.colors.border },
+  checkbox: { width: 20, height: 20, borderRadius: 6, borderWidth: 1, borderColor: UiTheme.colors.border, backgroundColor: UiTheme.colors.surface },
   checkboxChecked: { backgroundColor: UiTheme.colors.accent, borderColor: UiTheme.colors.accent },
-  checkboxLabel: { flex: 1, color: UiTheme.colors.textPrimary },
+  checkboxLabel: { flex: 1, color: UiTheme.colors.textPrimary, fontSize: 15 },
 
-  modalContainer: { flex: 1, padding: 20 },
-  modalTitle: { textAlign: 'center', marginBottom: 12, color: UiTheme.colors.textPrimary, fontWeight: '700', fontSize: 18 },
+  modalContainer: { flex: 1, padding: 20, backgroundColor: UiTheme.colors.page },
+  modalTitle: { textAlign: 'center', marginBottom: 12, color: UiTheme.colors.textPrimary, fontWeight: '900', fontSize: 20 },
   modalContent: {
     backgroundColor: UiTheme.colors.surface,
     padding: 20,
     borderRadius: 12,
     marginHorizontal: 16,
-    shadowColor: UiTheme.colors.textPrimary,
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
+    gap: 12,
+    ...UiTheme.shadow.card,
   },
   modalText: { color: UiTheme.colors.textSecondary, fontSize: 15, lineHeight: 22 },
-  doneButtonText: { color: UiTheme.colors.surface, fontSize: 16, fontWeight: '700' },
-  doneButton: {
-    marginTop: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: UiTheme.radius.sm,
-    alignItems: 'center',
-    backgroundColor: UiTheme.colors.accent,
-  },
-  buttonDisabled: { opacity: 0.6 },
 });

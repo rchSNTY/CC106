@@ -8,7 +8,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React, { JSX, useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 
 type HistoryRoutine = Routine & {
   date: string;
@@ -183,10 +183,6 @@ export default function Log(): JSX.Element {
               <Text style={styles.brandSub}>Activity Journal</Text>
             </View>
           </View>
-
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backText}>Back</Text>
-          </TouchableOpacity>
         </View>
 
         <Text style={styles.pageTitle}>Activity Log</Text>
@@ -289,7 +285,6 @@ const styles = StyleSheet.create({
   logo: { width: 44, height: 44 },
   brandName: { fontSize: 18, fontWeight: '900', color: UiTheme.colors.textPrimary, letterSpacing: 0.5 },
   brandSub: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.caption, fontWeight: '700' },
-  backText: { color: UiTheme.colors.accent, fontSize: UiTheme.font.body, fontWeight: '800' },
   pageTitle: { color: UiTheme.colors.textPrimary, fontSize: 28, fontWeight: '900' },
   statsGrid: { flexDirection: 'row', gap: UiTheme.spacing.sm },
   statCard: {
