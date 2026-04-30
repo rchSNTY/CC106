@@ -332,7 +332,8 @@ export default function Explore(): JSX.Element {
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" />
 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Fixed Header Section - Not Scrollable */}
+      <View style={styles.headerContainer}>
         <Text style={styles.browseTitle}>Discover Workouts</Text>
         <Text style={styles.browseSubtitle}>Search routines and narrow by intensity.</Text>
 
@@ -367,8 +368,6 @@ export default function Explore(): JSX.Element {
           </TouchableOpacity>
         </View>
 
-        {/* moved delete/select controls into the section header */}
-
         <View style={styles.searchWrap}>
           <Image source={require('@/assets/images/search.png')} style={styles.searchIcon} contentFit="contain" />
           <TextInput
@@ -395,7 +394,10 @@ export default function Explore(): JSX.Element {
             );
           })}
         </View>
+      </View>
 
+      {/* Scrollable Results Section */}
+      <ScrollView contentContainerStyle={styles.resultsContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Results</Text>
           <View style={styles.sectionActions}>
@@ -571,7 +573,12 @@ export default function Explore(): JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: UiTheme.colors.page },
-  container: {
+  headerContainer: {
+    paddingHorizontal: UiTheme.spacing.lg,
+    paddingTop: UiTheme.spacing.md,
+    gap: UiTheme.spacing.md,
+  },
+  resultsContainer: {
     padding: UiTheme.spacing.lg,
     paddingBottom: UiTheme.nav.height + UiTheme.spacing.xl,
     gap: UiTheme.spacing.md,
