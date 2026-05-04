@@ -1,6 +1,6 @@
 import { Href, useRouter } from 'expo-router'
 import React, { JSX, useState } from 'react'
-import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Alert, SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native'
 
 import { ConfirmationModal } from '@/components/confirmation-modal'
 import { ThemedText } from '@/components/themed-text'
@@ -88,81 +88,85 @@ export default function ChoicesScreen(): JSX.Element {
 
   return (
     <>
-      <ThemedView style={styles.container}>
-      <View style={styles.card}>
-        <View style={styles.progressWrap}>
-          <View style={[styles.progressDot, step >= 1 ? { backgroundColor: tint, borderColor: tint } : {}]}>
-            <ThemedText style={[styles.progressLabel, step >= 1 ? styles.progressLabelActive : {}]}>1</ThemedText>
+      <SafeAreaView style={styles.safe}>
+        <ThemedView style={styles.container}>
+          <View style={styles.card}>
+            <View style={styles.progressWrap}>
+              <View style={[styles.progressDot, step >= 1 ? { backgroundColor: tint, borderColor: tint } : {}]}>
+                <ThemedText style={[styles.progressLabel, step >= 1 ? styles.progressLabelActive : {}]}>1</ThemedText>
+              </View>
+              <View style={[styles.progressLine, step === 2 ? { backgroundColor: tint } : {}]} />
+              <View style={[styles.progressDot, step >= 2 ? { backgroundColor: tint, borderColor: tint } : {}]}>
+                <ThemedText style={[styles.progressLabel, step >= 2 ? styles.progressLabelActive : {}]}>2</ThemedText>
+              </View>
+            </View>
+
+            {step === 1 ? (
+              <>
+                <ThemedText style={styles.header}>SELECT YOUR ACTIVITY LEVEL</ThemedText>
+                <ThemedText style={styles.subheader}>This helps tailor the intensity of your plan.</ThemedText>
+
+                <View style={styles.optionsWrap}>
+                  {activityOptions.map((opt) => (
+                    <OptionButton
+                      key={opt.label}
+                      label={opt.label}
+                      description={opt.desc}
+                      selected={activity === opt.label}
+                      tint={tint}
+                      onPress={() => setActivity(opt.label)}
+                    />
+                  ))}
+                </View>
+
+                <TouchableOpacity
+                  onPress={goToStepTwo}
+                  disabled={!activity}
+                  activeOpacity={0.9}
+                  style={[styles.primaryButton, !activity ? styles.primaryButtonDisabled : { backgroundColor: tint }]}
+                >
+                  <ThemedText style={styles.primaryButtonText}>CONTINUE</ThemedText>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <ThemedText style={styles.header}>CHOOSE WORKOUT SELECTION</ThemedText>
+                <ThemedText style={styles.subheader}>Pick your preferred training style to begin.</ThemedText>
+
+                <View style={styles.optionsWrap}>
+                  {workoutOptions.map((opt) => (
+                    <OptionButton
+                      key={opt.label}
+                      label={opt.label}
+                      description={opt.desc}
+                      selected={workout === opt.label}
+                      tint={tint}
+                      onPress={() => setWorkout(opt.label)}
+                    />
+                  ))}
+                </View>
+
+                <View style={styles.actionsRow}>
+                  <TouchableOpacity onPress={() => setStep(1)} activeOpacity={0.9} style={styles.backButton}>
+                    <ThemedText style={styles.backText}>BACK</ThemedText>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={finishChoices}
+                    disabled={!workout}
+                    activeOpacity={0.9}
+                    style={[styles.primaryButton, styles.finishButton, !workout ? styles.primaryButtonDisabled : { backgroundColor: tint }]}
+                  >
+                    <ThemedText style={styles.primaryButtonText}>FINISH</ThemedText>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
           </View>
-          <View style={[styles.progressLine, step === 2 ? { backgroundColor: tint } : {}]} />
-          <View style={[styles.progressDot, step >= 2 ? { backgroundColor: tint, borderColor: tint } : {}]}>
-            <ThemedText style={[styles.progressLabel, step >= 2 ? styles.progressLabelActive : {}]}>2</ThemedText>
-          </View>
-        </View>
+        </ThemedView>
 
-        {step === 1 ? (
-          <>
-            <ThemedText style={styles.header}>SELECT YOUR ACTIVITY LEVEL</ThemedText>
-            <ThemedText style={styles.subheader}>This helps tailor the intensity of your plan.</ThemedText>
+      </SafeAreaView>
 
-            <View style={styles.optionsWrap}>
-              {activityOptions.map((opt) => (
-                <OptionButton
-                  key={opt.label}
-                  label={opt.label}
-                  description={opt.desc}
-                  selected={activity === opt.label}
-                  tint={tint}
-                  onPress={() => setActivity(opt.label)}
-                />
-              ))}
-            </View>
-
-            <TouchableOpacity
-              onPress={goToStepTwo}
-              disabled={!activity}
-              activeOpacity={0.9}
-              style={[styles.primaryButton, !activity ? styles.primaryButtonDisabled : { backgroundColor: tint }]}
-            >
-              <ThemedText style={styles.primaryButtonText}>CONTINUE</ThemedText>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <>
-            <ThemedText style={styles.header}>CHOOSE WORKOUT SELECTION</ThemedText>
-            <ThemedText style={styles.subheader}>Pick your preferred training style to begin.</ThemedText>
-
-            <View style={styles.optionsWrap}>
-              {workoutOptions.map((opt) => (
-                <OptionButton
-                  key={opt.label}
-                  label={opt.label}
-                  description={opt.desc}
-                  selected={workout === opt.label}
-                  tint={tint}
-                  onPress={() => setWorkout(opt.label)}
-                />
-              ))}
-            </View>
-
-            <View style={styles.actionsRow}>
-              <TouchableOpacity onPress={() => setStep(1)} activeOpacity={0.9} style={styles.backButton}>
-                <ThemedText style={styles.backText}>BACK</ThemedText>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={finishChoices}
-                disabled={!workout}
-                activeOpacity={0.9}
-                style={[styles.primaryButton, styles.finishButton, !workout ? styles.primaryButtonDisabled : { backgroundColor: tint }]}
-              >
-                <ThemedText style={styles.primaryButtonText}>FINISH</ThemedText>
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-        </View>
-      </ThemedView>
 
       <ConfirmationModal
         visible={showConfirmation}
@@ -178,6 +182,7 @@ export default function ChoicesScreen(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: UiTheme.colors.page },
   container: {
     flex: 1,
     padding: UiTheme.spacing.lg,

@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { Href, Link, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, BackHandler, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, BackHandler, KeyboardAvoidingView, Modal, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ConfirmationModal } from '@/components/confirmation-modal';
 import { ThemedText } from '@/components/themed-text';
@@ -126,154 +126,159 @@ export default function SignupScreen() {
   }
 
   return (
-    <Screen scroll={false} withBottomNavPadding={false} contentContainerStyle={styles.screen}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
-          <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
+    <SafeAreaView style={styles.safe}>
+      <Screen scroll={false} withBottomNavPadding={false} contentContainerStyle={styles.screen}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
+            <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
 
-          <View style={styles.header}>
-            <ThemedText type="title" style={styles.title}>
-              Create your account
-            </ThemedText>
-            <ThemedText style={styles.subtitle}>Start building workouts tailored to you.</ThemedText>
-          </View>
-
-          <View style={styles.form}>
-            <TextField
-              label="Username"
-              value={username}
-              onChangeText={handleUsernameChange}
-              onBlur={() => setFieldTouched('username')}
-              placeholder="Choose a username"
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="off"
-              importantForAutofill="no"
-              leftIconName="person"
-              error={getFieldError('username') ?? null}
-              returnKeyType="next"
-            />
-
-            <TextField
-              label="Email"
-              value={email}
-              onChangeText={handleEmailChange}
-              onBlur={() => setFieldTouched('email')}
-              placeholder="you@example.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="off"
-              importantForAutofill="no"
-              leftIconName="mail"
-              error={getFieldError('email') ?? null}
-              returnKeyType="next"
-            />
-
-            <TextField
-              label="Password"
-              value={password}
-              onChangeText={handlePasswordChange}
-              onBlur={() => setFieldTouched('password')}
-              placeholder="Create a strong password"
-              secureTextEntry
-              autoComplete="off"
-              importantForAutofill="no"
-              leftIconName="lock"
-              helperText={!hasMinPassword && password.length > 0 ? 'Use 8+ characters with uppercase, lowercase, and a number.' : undefined}
-              error={getFieldError('password') ?? null}
-              returnKeyType="next"
-            />
-
-            <TextField
-              label="Confirm password"
-              value={confirmPassword}
-              onChangeText={handleConfirmPasswordChange}
-              onBlur={() => setFieldTouched('confirmPassword')}
-              placeholder="Re-enter your password"
-              secureTextEntry
-              autoComplete="off"
-              importantForAutofill="no"
-              leftIconName="lock"
-              error={getFieldError('confirmPassword') ?? null}
-              returnKeyType="done"
-            />
-
-            <Pressable
-              onPress={() => setAccepted((s) => !s)}
-              accessibilityRole="checkbox"
-              accessibilityLabel="Agree to Terms and Privacy"
-              accessibilityState={{ checked: accepted }}
-              style={styles.checkboxRow}
-              hitSlop={10}
-            >
-              <View style={[styles.checkbox, accepted ? styles.checkboxChecked : null]} />
-              <ThemedText style={styles.checkboxLabel}>
-                <ThemedText type="link" onPress={() => setShowTerms(true)}>
-                  I have read the terms and privacy policy
-                </ThemedText>
+            <View style={styles.header}>
+              <ThemedText type="title" style={styles.title}>
+                Create your account
               </ThemedText>
-            </Pressable>
+              <ThemedText style={styles.subtitle}>Start building workouts tailored to you.</ThemedText>
+            </View>
 
-            <Button title="Create account" onPress={handleSignup} loading={isLoading} disabled={!canSubmit || isLoading} />
+            <View style={styles.form}>
+              <TextField
+                label="Username"
+                value={username}
+                onChangeText={handleUsernameChange}
+                onBlur={() => setFieldTouched('username')}
+                placeholder="Choose a username"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="off"
+                importantForAutofill="no"
+                leftIconName="person"
+                error={getFieldError('username') ?? null}
+                returnKeyType="next"
+              />
 
-            <ThemedText style={styles.orText}>OR</ThemedText>
+              <TextField
+                label="Email"
+                value={email}
+                onChangeText={handleEmailChange}
+                onBlur={() => setFieldTouched('email')}
+                placeholder="you@example.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="off"
+                importantForAutofill="no"
+                leftIconName="mail"
+                error={getFieldError('email') ?? null}
+                returnKeyType="next"
+              />
 
-            <ThemedText style={styles.orText}>
-              Already have an account?{' '}
-              <Link href={'/login' as Href} style={styles.linkText}>
-                <ThemedText type="link">Log in</ThemedText>
-              </Link>
-            </ThemedText>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+              <TextField
+                label="Password"
+                value={password}
+                onChangeText={handlePasswordChange}
+                onBlur={() => setFieldTouched('password')}
+                placeholder="Create a strong password"
+                secureTextEntry
+                autoComplete="off"
+                importantForAutofill="no"
+                leftIconName="lock"
+                helperText={!hasMinPassword && password.length > 0 ? 'Use 8+ characters with uppercase, lowercase, and a number.' : undefined}
+                error={getFieldError('password') ?? null}
+                returnKeyType="next"
+              />
 
-      <Modal visible={showTerms} animationType="slide" onRequestClose={() => setShowTerms(false)}>
-        <View style={styles.modalContainer}>
-          <ScrollView contentContainerStyle={styles.modalContent} showsVerticalScrollIndicator={false}>
-            <ThemedText type="title" style={styles.modalTitle}>
-              Terms & Privacy
-            </ThemedText>
+              <TextField
+                label="Confirm password"
+                value={confirmPassword}
+                onChangeText={handleConfirmPasswordChange}
+                onBlur={() => setFieldTouched('confirmPassword')}
+                placeholder="Re-enter your password"
+                secureTextEntry
+                autoComplete="off"
+                importantForAutofill="no"
+                leftIconName="lock"
+                error={getFieldError('confirmPassword') ?? null}
+                returnKeyType="done"
+              />
 
-            <ThemedText style={styles.modalText}>
-              It’s required by law: apps are legally obligated (by laws like GDPR) to get your permission before collecting personal data (like your name, email, or location). Checking this box fulfills that requirement.
-            </ThemedText>
+              <Pressable
+                onPress={() => setAccepted((s) => !s)}
+                accessibilityRole="checkbox"
+                accessibilityLabel="Agree to Terms and Privacy"
+                accessibilityState={{ checked: accepted }}
+                style={styles.checkboxRow}
+                hitSlop={10}
+              >
+                <View style={[styles.checkbox, accepted ? styles.checkboxChecked : null]} />
+                <ThemedText style={styles.checkboxLabel}>
+                  <ThemedText type="link" onPress={() => setShowTerms(true)}>
+                    I have read the terms and privacy policy
+                  </ThemedText>
+                </ThemedText>
+              </Pressable>
 
-            <ThemedText style={styles.modalText}>
-              It’s a binding contract: by clicking Agree, the user enters a legally binding agreement. They cannot later claim they were unaware of the app’s rules.
-            </ThemedText>
+              <Button title="Create account" onPress={handleSignup} loading={isLoading} disabled={!canSubmit || isLoading} />
 
-            <ThemedText style={styles.modalText}>
-              The Terms of Service cover the rules: this document outlines do’s and don’ts, user conduct, and the app’s right to terminate accounts.
-            </ThemedText>
+              <ThemedText style={styles.orText}>OR</ThemedText>
 
-            <ThemedText style={styles.modalText}>
-              The Privacy Policy covers your data: this document explains what data the app collects, how it will be used, and whether it will be shared with third parties.
-            </ThemedText>
-
-            <Button title="Close" onPress={() => setShowTerms(false)} />
+              <ThemedText style={styles.orText}>
+                Already have an account?{' '}
+                <Link href={'/login' as Href} style={styles.linkText}>
+                  <ThemedText type="link">Log in</ThemedText>
+                </Link>
+              </ThemedText>
+            </View>
           </ScrollView>
-        </View>
-      </Modal>
+        </KeyboardAvoidingView>
 
-      <ConfirmationModal
-        visible={showSuccessModal}
-        title="Account created"
-        message={`Welcome, ${username.trim()}! Let's set up your profile.`}
-        confirmText="Continue"
-        cancelText="Later"
-        onConfirm={() => {
-          setShowSuccessModal(false);
-          router.replace('/user' as Href);
-        }}
-        onCancel={() => setShowSuccessModal(false)}
-      />
-    </Screen>
+        <Modal visible={showTerms} animationType="slide" onRequestClose={() => setShowTerms(false)}>
+          <View style={styles.modalContainer}>
+            <ScrollView contentContainerStyle={styles.modalContent} showsVerticalScrollIndicator={false}>
+              <ThemedText type="title" style={styles.modalTitle}>
+                Terms & Privacy
+              </ThemedText>
+
+              <ThemedText style={styles.modalText}>
+                It’s required by law: apps are legally obligated (by laws like GDPR) to get your permission before collecting personal data (like your name, email, or location). Checking this box fulfills that requirement.
+              </ThemedText>
+
+              <ThemedText style={styles.modalText}>
+                It’s a binding contract: by clicking Agree, the user enters a legally binding agreement. They cannot later claim they were unaware of the app’s rules.
+              </ThemedText>
+
+              <ThemedText style={styles.modalText}>
+                The Terms of Service cover the rules: this document outlines do’s and don’ts, user conduct, and the app’s right to terminate accounts.
+              </ThemedText>
+
+              <ThemedText style={styles.modalText}>
+                The Privacy Policy covers your data: this document explains what data the app collects, how it will be used, and whether it will be shared with third parties.
+              </ThemedText>
+
+              <Button title="Close" onPress={() => setShowTerms(false)} />
+            </ScrollView>
+          </View>
+        </Modal>
+
+        <ConfirmationModal
+          visible={showSuccessModal}
+          title="Account created"
+          message={`Welcome, ${username.trim()}! Let's set up your profile.`}
+          confirmText="Continue"
+          cancelText="Later"
+          onConfirm={() => {
+            setShowSuccessModal(false);
+            router.replace('/user' as Href);
+          }}
+          onCancel={() => setShowSuccessModal(false)}
+        />
+      </Screen>
+    </SafeAreaView>
+
+
   );
 }
 
 const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: UiTheme.colors.page },
   flex: { flex: 1 },
   screen: { paddingTop: UiTheme.spacing.lg, paddingHorizontal: UiTheme.spacing.lg },
   container: { flexGrow: 1, justifyContent: 'center', paddingBottom: UiTheme.spacing.xl },
