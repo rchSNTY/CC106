@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { Href, Link, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, BackHandler, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ConfirmationModal } from '@/components/confirmation-modal';
 import { ThemedText } from '@/components/themed-text';
@@ -85,6 +85,13 @@ export default function SignupScreen() {
     !getFieldError('email') &&
     !getFieldError('password') &&
     !getFieldError('confirmPassword');
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      return true; // Prevent back button
+    });
+    return () => backHandler.remove();
+  }, []);
 
   async function handleSignup() {
     if (!validateAll({ username, email, password, confirmPassword }, validationRules)) {

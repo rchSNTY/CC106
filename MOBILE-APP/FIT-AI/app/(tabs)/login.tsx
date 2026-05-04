@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { Href, Link, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, BackHandler, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,13 @@ export default function LoginScreen() {
   };
 
   const canSubmit = username.trim().length >= 3 && password.length > 0 && !getFieldError('username') && !getFieldError('password') && !isLoading;
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      return true; // Prevent back button
+    });
+    return () => backHandler.remove();
+  }, []);
 
   async function handleLogin() {
     if (!validateAll({ username, password }, validationRules)) {
