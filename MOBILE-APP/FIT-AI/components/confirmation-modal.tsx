@@ -11,8 +11,9 @@ type ConfirmationModalProps = {
   confirmText?: string
   cancelText?: string
   onConfirm: () => void
-  onCancel: () => void
+  onCancel?: () => void
   isDangerous?: boolean
+  showCancelButton?: boolean
 }
 
 export function ConfirmationModal({
@@ -24,13 +25,16 @@ export function ConfirmationModal({
   onConfirm,
   onCancel,
   isDangerous = false,
+  showCancelButton = true,
 }: ConfirmationModalProps): JSX.Element {
+  const handleRequestClose = showCancelButton ? (onCancel ?? onConfirm) : onConfirm
+
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onCancel}
+      onRequestClose={handleRequestClose}
     >
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
@@ -40,13 +44,15 @@ export function ConfirmationModal({
           </View>
 
           <View style={styles.actions}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={onCancel}
-              activeOpacity={0.7}
-            >
-              <ThemedText style={styles.cancelButtonText}>{cancelText}</ThemedText>
-            </TouchableOpacity>
+            {showCancelButton && onCancel ? (
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={onCancel}
+                activeOpacity={0.7}
+              >
+                <ThemedText style={styles.cancelButtonText}>{cancelText}</ThemedText>
+              </TouchableOpacity>
+            ) : null}
 
             <TouchableOpacity
               style={[

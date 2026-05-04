@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { Href, Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
@@ -57,7 +57,7 @@ export default function LoginScreen() {
         setProfile(profile);
       }
 
-      router.push('/Homepage' as Href);
+      router.replace('/Homepage?loginSuccess=1' as Href);
     } catch (error) {
       Alert.alert('Login Failed', getApiErrorMessage(error));
     } finally {
@@ -66,65 +66,68 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen scroll={false} withBottomNavPadding={false} contentContainerStyle={styles.screen}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.container}
-        >
-          <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
-          <View style={styles.header}>
-            <ThemedText type="title" style={styles.title}>Welcome back</ThemedText>
-            <ThemedText style={styles.subtitle}>Log in to pick up where you left off.</ThemedText>
-          </View>
+    <SafeAreaView style={styles.safe}>
+      <Screen scroll={false} withBottomNavPadding={false} contentContainerStyle={styles.screen}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.container}
+          >
+            <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
+            <View style={styles.header}>
+              <ThemedText type="title" style={styles.title}>Welcome back</ThemedText>
+              <ThemedText style={styles.subtitle}>Log in to pick up where you left off.</ThemedText>
+            </View>
 
-          <View style={styles.form}>
-            <TextField
-              label="Username"
-              value={username}
-              onChangeText={handleUsernameChange}
-              onBlur={() => setFieldTouched('username')}
-              placeholder="Enter your username"
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="off"
-              importantForAutofill="no"
-              leftIconName="person"
-              error={getFieldError('username') ?? null}
-              returnKeyType="next"
-            />
+            <View style={styles.form}>
+              <TextField
+                label="Username"
+                value={username}
+                onChangeText={handleUsernameChange}
+                onBlur={() => setFieldTouched('username')}
+                placeholder="Enter your username"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="off"
+                importantForAutofill="no"
+                leftIconName="person"
+                error={getFieldError('username') ?? null}
+                returnKeyType="next"
+              />
 
-            <TextField
-              label="Password"
-              value={password}
-              onChangeText={handlePasswordChange}
-              onBlur={() => setFieldTouched('password')}
-              placeholder="Enter your password"
-              secureTextEntry
-              autoComplete="off"
-              importantForAutofill="no"
-              leftIconName="lock"
-              error={getFieldError('password') ?? null}
-              returnKeyType="done"
-            />
+              <TextField
+                label="Password"
+                value={password}
+                onChangeText={handlePasswordChange}
+                onBlur={() => setFieldTouched('password')}
+                placeholder="Enter your password"
+                secureTextEntry
+                autoComplete="off"
+                importantForAutofill="no"
+                leftIconName="lock"
+                error={getFieldError('password') ?? null}
+                returnKeyType="done"
+              />
 
-            <Button title="Log in" onPress={handleLogin} loading={isLoading} disabled={!canSubmit} />
+              <Button title="Log in" onPress={handleLogin} loading={isLoading} disabled={!canSubmit} />
 
-            <ThemedText style={styles.signupText}>
-              Don’t have an account?{' '}
-              <Link href={'/signup' as Href} style={styles.linkText}>
-                <ThemedText type="link">Sign up</ThemedText>
-              </Link>
-            </ThemedText>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </Screen>
+              <ThemedText style={styles.signupText}>
+                Don’t have an account?{' '}
+                <Link href={'/signup' as Href} style={styles.linkText}>
+                  <ThemedText type="link">Sign up</ThemedText>
+                </Link>
+              </ThemedText>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Screen>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: UiTheme.colors.page },
   flex: { flex: 1 },
   screen: { paddingTop: UiTheme.spacing.lg, paddingHorizontal: UiTheme.spacing.lg },
   container: { flexGrow: 1, justifyContent: 'center', paddingBottom: UiTheme.spacing.xl },

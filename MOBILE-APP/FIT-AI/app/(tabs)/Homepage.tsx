@@ -10,12 +10,13 @@ import { getAiWorkoutPreset } from '@/utils/ai-workout';
 import { getTotalWorkoutMinutes, getWeeklyCompletedWorkouts, getWorkoutStreakDays } from '@/utils/history-stats';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
-import { Href, useRouter } from 'expo-router';
+import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { JSX, useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function Homepage(): JSX.Element {
   const router = useRouter();
+  const params = useLocalSearchParams<{ loginSuccess?: string }>();
   const { profile } = useUserProfile();
   const setWorkoutView = useExploreStore((state) => state.setWorkoutView);
   const { showSnackbar, hideSnackbar } = useSnackbar();
@@ -23,6 +24,7 @@ export default function Homepage(): JSX.Element {
   const [isStatsLoading, setIsStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [showAiPrompt, setShowAiPrompt] = useState(false);
+  const [showLoginSuccessModal, setShowLoginSuccessModal] = useState(false);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
 
   const aiPreset = useMemo(() => getAiWorkoutPreset(profile), [profile]);
@@ -50,6 +52,12 @@ export default function Homepage(): JSX.Element {
   useEffect(() => {
     void loadHistory();
   }, [loadHistory]);
+
+  useEffect(() => {
+    if (params.loginSuccess === '1') {
+      setShowLoginSuccessModal(true);
+    }
+  }, [params.loginSuccess]);
 
   useFocusEffect(
     useCallback(() => {
@@ -250,6 +258,18 @@ export default function Homepage(): JSX.Element {
         cancelText="Not now"
         onConfirm={handleAiConfirm}
         onCancel={() => setShowAiPrompt(false)}
+      />
+
+      <ConfirmationModal
+        visible={showLoginSuccessModal}
+        title="Login successful"
+        message="Welcome back to FIT AI. Ready to move?"
+        confirmText="Continue"
+        onConfirm={() => {
+          setShowLoginSuccessModal(false);
+          router.replace('/Homepage' as Href);
+        }}
+        showCancelButton={false}
       />
 
       <BottomTabNav activeTab="Homepage" />

@@ -53,7 +53,7 @@ export default function Profile(): JSX.Element {
         onConfirm: async () => {
           await logout();
           resetProfile();
-          router.push('/login' as Href);
+          router.replace('/login' as Href);
         },
       };
     }

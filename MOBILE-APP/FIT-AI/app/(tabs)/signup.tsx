@@ -3,6 +3,7 @@ import { Href, Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { ConfirmationModal } from '@/components/confirmation-modal';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
@@ -22,6 +23,7 @@ export default function SignupScreen() {
   const { updateProfile } = useUserProfile();
   const [accepted, setAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const validationRules: Record<string, ValidationRule<string>[]> = {
     username: [
@@ -103,13 +105,12 @@ export default function SignupScreen() {
         name: username.trim(),
       });
 
-      Alert.alert('Account created', `Welcome, ${username.trim()}! Let\'s set up your profile.`);
       setUsername('');
       setEmail('');
       setPassword('');
       setConfirmPassword('');
       setAccepted(false);
-      router.push('/user' as Href);
+      setShowSuccessModal(true);
     } catch (error) {
       Alert.alert('Signup Failed', getApiErrorMessage(error));
     } finally {
@@ -248,6 +249,19 @@ export default function SignupScreen() {
           </ScrollView>
         </View>
       </Modal>
+
+      <ConfirmationModal
+        visible={showSuccessModal}
+        title="Account created"
+        message={`Welcome, ${username.trim()}! Let's set up your profile.`}
+        confirmText="Continue"
+        cancelText="Later"
+        onConfirm={() => {
+          setShowSuccessModal(false);
+          router.replace('/user' as Href);
+        }}
+        onCancel={() => setShowSuccessModal(false)}
+      />
     </Screen>
   );
 }
