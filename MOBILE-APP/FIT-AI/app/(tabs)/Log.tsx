@@ -1,232 +1,326 @@
-import React, { JSX } from 'react'
-import {
-  SafeAreaView,
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native'
-import { Image } from 'expo-image'
-import { useRouter, Href } from 'expo-router'
+import { Card } from '@/components/Card';
+import RoutineDetailsModal, { type Routine } from '@/components/RoutineDetailsModal';
+import BottomTabNav from '@/components/ui/bottom-tab-nav';
+import { UiTheme } from '@/constants/ui-theme';
+import { ApiError, addFavorite, getApiErrorMessage, listFavorites, listHistory, listWorkouts, removeFavorite } from '@/services/backend';
+import { getAverageWorkoutMinutes, getCompletedWeekdayIndexesForCurrentWeek, getTotalWorkoutMinutes } from '@/utils/history-stats';
+import { useFocusEffect } from '@react-navigation/native';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import React, { JSX, useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 
-// Declared Data
-const WORKOUT_HISTORY = [
-  {
-    id: 1,
-    date: 'March 5, 2026',
-    title: 'Intense Bodyweight',
-    duration: '45 mins',
-  },
-  {
-    id: 2,
-    date: 'March 3, 2026',
-    title: 'Moderate Cardio',
-    duration: '30 mins',
-  },
-]
+type HistoryRoutine = Routine & {
+  date: string;
+};
+
+const WEEK_DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 export default function Log(): JSX.Element {
-  const router = useRouter()
+  const router = useRouter();
+  const [historyWorkouts, setHistoryWorkouts] = useState<HistoryRoutine[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
-  const handleProfilePress = () => {
-    router.push('/Profile' as Href)
-  }
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+        const [history, workouts] = await Promise.all([listHistory(), listWorkouts('All', '')]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        const byId = new Map(workouts.map((workout) => [workout.id, workout]));
+        const merged = history
+          .map((item) => {
+            const workout = byId.get(item.workoutId);
+            if (!workout) {
+              return null;
+            }
+
+            return {
+              ...workout,
+              date: item.date,
+              intensity: item.intensity,
+              duration: item.duration,
+            } as HistoryRoutine;
+          })
+          .filter((item): item is HistoryRoutine => Boolean(item));
+
+        setHistoryWorkouts(merged);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+        setErrorMessage(getApiErrorMessage(error));
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+
+      (async () => {
+        try {
+          const favorites = await listFavorites();
+          if (!isMounted) {
+            return;
+          }
+
+          setFavoriteIds(new Set(favorites.map((item) => item.id)));
+        } catch (error) {
+          if (!isMounted) {
+            return;
+          }
+
+          if (error instanceof ApiError && error.status === 401) {
+            setFavoriteIds(new Set());
+          }
+        }
+      })();
+
+      return () => {
+        isMounted = false;
+      };
+    }, []),
+  );
+
+  const selectedWorkoutId = selectedRoutine ? String(selectedRoutine.id) : null;
+  const selectedIsFavorite = useMemo(() => {
+    if (!selectedWorkoutId) {
+      return false;
+    }
+
+    return favoriteIds.has(selectedWorkoutId);
+  }, [favoriteIds, selectedWorkoutId]);
+
+  const handleToggleFavorite = useCallback(async () => {
+    if (!selectedWorkoutId || isFavoriteLoading) {
+      return;
+    }
+
+    const wasFavorite = favoriteIds.has(selectedWorkoutId);
+
+    await performToggleFavorite(selectedWorkoutId, wasFavorite);
+  }, [favoriteIds, isFavoriteLoading, router, selectedWorkoutId]);
+
+  const performToggleFavorite = useCallback(async (workoutId: string, removing: boolean) => {
+    setIsFavoriteLoading(true);
+    setFavoriteIds((current) => {
+      const next = new Set(current);
+      if (removing) {
+        next.delete(workoutId);
+      } else {
+        next.add(workoutId);
+      }
+      return next;
+    });
+
+    try {
+      if (removing) {
+        await removeFavorite(workoutId);
+      } else {
+        await addFavorite(workoutId);
+      }
+    } catch (error) {
+      setFavoriteIds((current) => {
+        const next = new Set(current);
+        if (removing) {
+          next.add(workoutId);
+        } else {
+          next.delete(workoutId);
+        }
+        return next;
+      });
+
+      if (error instanceof ApiError && error.status === 401) {
+        Alert.alert('Login required', 'Please log in to save favorites.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Login', onPress: () => router.push('/login') },
+        ]);
+        return;
+      }
+
+      Alert.alert('Favorites error', getApiErrorMessage(error));
+    } finally {
+      setIsFavoriteLoading(false);
+    }
+  }, []);
+
+  const workouts = historyWorkouts.length;
+  const totalMinutes = useMemo(() => getTotalWorkoutMinutes(historyWorkouts), [historyWorkouts]);
+  const averageMinutes = useMemo(() => getAverageWorkoutMinutes(historyWorkouts), [historyWorkouts]);
+  const doneDays = useMemo(() => getCompletedWeekdayIndexesForCurrentWeek(historyWorkouts), [historyWorkouts]);
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" />
-      
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {/* Top Header with Logo */}
-        <View style={styles.topHeader}>
-           <Image source={require('@/assets/images/Logo.png')} style={styles.topLogo} contentFit="contain" />
-           <Text style={styles.topLogoText}>FITBUD</Text>
-        </View>
+      <StatusBar barStyle="dark-content" backgroundColor={UiTheme.colors.page} />
 
-        {/* Back Button */}
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>{'< Back'}</Text>
-        </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.topRow}>
+          <View style={styles.brandRow}>
+            <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
+            <View>
+              <Text style={styles.brandName}>FITBUD</Text>
+              <Text style={styles.brandSub}>Activity Journal</Text>
+            </View>
+          </View>
+        </View>
 
         <Text style={styles.pageTitle}>Activity Log</Text>
 
-        {/* This Week's Streak */}
+        <View style={styles.statsGrid}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Workouts</Text>
+            <Text style={styles.statValue}>{workouts}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Total Minutes</Text>
+            <Text style={styles.statValue}>{totalMinutes}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Avg Session</Text>
+            <Text style={styles.statValue}>{averageMinutes}</Text>
+          </View>
+        </View>
+
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>This Weeks Streak</Text>
+          <Text style={styles.sectionTitle}>Weekly Streak</Text>
           <View style={styles.streakRow}>
-            {/* M - White bg (blended), green text to match T bg style logic perhaps, or just color */}
-            <View style={[styles.dayCircle, styles.dayCircleWhite]}>
-              <Text style={styles.dayTextGreen}>M</Text>
-            </View>
-            {/* T - Highlighted Green */}
-            <View style={[styles.dayCircle, styles.dayCircleGreen]}>
-              <Text style={styles.dayTextWhite}>T</Text>
-            </View>
-            {/* Others - Grayed out */}
-            <View style={[styles.dayCircle, styles.dayCircleGray]}>
-              <Text style={styles.dayTextGray}>W</Text>
-            </View>
-            <View style={[styles.dayCircle, styles.dayCircleGray]}>
-              <Text style={styles.dayTextGray}>T</Text>
-            </View>
-            <View style={[styles.dayCircle, styles.dayCircleGray]}>
-              <Text style={styles.dayTextGray}>F</Text>
-            </View>
+            {WEEK_DAYS.map((day, index) => {
+              const done = doneDays.has(index);
+
+              return (
+                <View key={`${day}-${index}`} style={[styles.dayCircle, done ? styles.dayDone : styles.dayIdle]}>
+                  <Text style={[styles.dayText, done ? styles.dayTextDone : styles.dayTextIdle]}>{day}</Text>
+                </View>
+              );
+            })}
           </View>
         </View>
 
-        {/* Quick Stats */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Stats</Text>
-          <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Workouts</Text>
-              <Text style={styles.statValue}>2</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Active Time</Text>
-              <Text style={styles.statValue}>135 mins</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Workout History */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Workout History</Text>
+          {isLoading ? <Text style={styles.statusText}>Loading workout history...</Text> : null}
+          {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
           <View style={styles.historyList}>
-            {WORKOUT_HISTORY.map((item) => (
-              <View key={item.id} style={styles.historyCard}>
-                <View style={styles.historyContent}>
-                  <Text style={styles.historyDate}>{item.date}</Text>
-                  <Text style={styles.historyTitle}>{item.title}</Text>
-                  <Text style={styles.historyDuration}>{item.duration}</Text>
-                </View>
-                 {/* Right arrow placeholder */}
-                 <View style={styles.arrowIcon}>
-                    <Text style={{color:'#ccc', fontSize: 18}}>{'v'}</Text>
-                 </View>
-              </View>
+            {historyWorkouts.map((item, index) => (
+              <Card
+                key={`${item.id}-${index}`}
+                title={item.title}
+                subtitle={item.date}
+                duration={item.duration}
+                badges={[item.intensity ?? 'Past']}
+                onPress={() => {
+                  setSelectedRoutine(item);
+                  setModalVisible(true);
+                }}
+                accessibilityLabel={`Open ${item.title} workout details`}
+              />
             ))}
+            {!isLoading && !errorMessage && historyWorkouts.length === 0 ? <Text style={styles.statusText}>No history yet. Start a workout to track your progress.</Text> : null}
           </View>
         </View>
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNavWrap} pointerEvents="box-none">
-        <View style={styles.bottomNav}>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Homepage' as Href)}>
-            <Image source={require('@/assets/images/home.png')} style={styles.navIconHome} contentFit="contain" />
-            <Text style={styles.navLabel}>Home</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Favorites' as Href)}>
-            <Image source={require('@/assets/images/favorite-logo.png')} style={styles.navIcon} contentFit="contain" />
-            <Text style={styles.navLabel}>Favorites</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/explore' as Href)}>
-						<Image source={require('@/assets/images/search.png')} style={styles.navIcon} contentFit="contain" />
-						<Text style={styles.navLabel}>Explore</Text>
-					</TouchableOpacity>
+      <RoutineDetailsModal
+        visible={modalVisible}
+        routine={selectedRoutine}
+        isFavorite={selectedIsFavorite}
+        isFavoriteLoading={isFavoriteLoading}
+        onToggleFavorite={handleToggleFavorite}
+        onClose={() => {
+          setModalVisible(false);
+          setSelectedRoutine(null);
+        }}
+        onStart={() => {
+          if (selectedRoutine) {
+            setModalVisible(false);
+            router.push({
+              pathname: '/active-workout',
+              params: { routine: JSON.stringify(selectedRoutine) },
+            });
+            setSelectedRoutine(null);
+          }
+        }}
+      />
 
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={() => router.push('/Log' as Href)}>
-            <Image source={require('@/assets/images/activity-log.png')} style={styles.navIcon} contentFit="contain" />
-            <Text style={styles.navLabel}>Activity Log</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.7} onPress={handleProfilePress}>
-            <Image source={require('@/assets/images/user-logo.png')} style={styles.navIcon} contentFit="contain" />
-            <Text style={styles.navLabel}>Profile</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <BottomTabNav activeTab="Log" />
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f2f2f7' }, 
-  scrollContainer: { padding: 20, paddingBottom: 100 },
-  
-  topHeader: { alignItems: 'center', marginBottom: 20, marginTop: 30 },
-  topLogo: { width: 50, height: 50, marginBottom: 4 }, 
-  topLogoText: { fontSize: 20, fontWeight: '800', fontStyle: 'italic', letterSpacing: -0.5, color: '#000' },
-
-  backButton: { marginBottom: 10, alignSelf: 'flex-start' },
-  backText: { fontSize: 16, color: '#4CD964', fontWeight: '600' },
-
-  pageTitle: { fontSize: 28, fontWeight: '800', color: '#000', marginBottom: 24 },
-
-  section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#000', marginBottom: 12 },
-
-  // Streak
-  streakRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 10 },
-  dayCircle: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center' },
-  dayCircleWhite: { backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e5e5ea' }, 
-  dayCircleGreen: { backgroundColor: '#00c800', shadowColor: '#00c800', shadowOpacity: 0.3, shadowRadius: 4, elevation: 4 }, 
-  dayCircleGray: { backgroundColor: '#e5e5ea' }, 
-  
-  dayTextGreen: { fontSize: 16, fontWeight: '700', color: '#00c800' }, 
-  dayTextWhite: { fontSize: 16, fontWeight: '700', color: '#ffffff' },
-  dayTextGray: { fontSize: 16, fontWeight: '700', color: '#c7c7cc' },
-
-  // Stats
-  statsRow: { flexDirection: 'row', gap: 16 },
-  statCard: { 
-    flex: 1, 
-    backgroundColor: '#cceeee', 
-    borderRadius: 16, 
-    paddingVertical: 24, 
-    paddingHorizontal: 16,
-    alignItems: 'center', 
-    justifyContent: 'center' 
+  safe: { flex: 1, backgroundColor: UiTheme.colors.page },
+  container: {
+    padding: UiTheme.spacing.lg,
+    paddingBottom: UiTheme.nav.height + UiTheme.spacing.xl,
+    gap: UiTheme.spacing.md,
   },
-  statLabel: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8 },
-  statValue: { fontSize: 28, fontWeight: '800', color: '#000' },
-
-  // History
-  historyList: { gap: 12 },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: UiTheme.spacing.sm },
+  logo: { width: 44, height: 44 },
+  brandName: { fontSize: 18, fontWeight: '900', color: UiTheme.colors.textPrimary, letterSpacing: 0.5 },
+  brandSub: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.caption, fontWeight: '700' },
+  pageTitle: { color: UiTheme.colors.textPrimary, fontSize: 28, fontWeight: '900' },
+  statsGrid: { flexDirection: 'row', gap: UiTheme.spacing.sm },
+  statCard: {
+    flex: 1,
+    backgroundColor: UiTheme.colors.surface,
+    borderColor: UiTheme.colors.border,
+    borderWidth: 1,
+    borderRadius: UiTheme.radius.md,
+    paddingVertical: UiTheme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statLabel: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.caption, fontWeight: '700' },
+  statValue: { color: UiTheme.colors.textPrimary, fontSize: 18, fontWeight: '900' },
+  section: { gap: UiTheme.spacing.sm },
+  sectionTitle: { color: UiTheme.colors.textPrimary, fontSize: UiTheme.font.subtitle, fontWeight: '800' },
+  streakRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  dayCircle: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
+  dayDone: { backgroundColor: UiTheme.colors.accentSoft, borderWidth: 1, borderColor: UiTheme.colors.accent },
+  dayIdle: { backgroundColor: UiTheme.colors.surface, borderWidth: 1, borderColor: UiTheme.colors.border },
+  dayText: { fontWeight: '800', fontSize: UiTheme.font.caption },
+  dayTextDone: { color: UiTheme.colors.accent },
+  dayTextIdle: { color: UiTheme.colors.textSecondary },
+  historyList: { gap: UiTheme.spacing.sm },
   historyCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: UiTheme.colors.surface,
+    borderColor: UiTheme.colors.border,
+    borderWidth: 1,
+    borderRadius: UiTheme.radius.lg,
+    padding: UiTheme.spacing.md,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  historyContent: { gap: 4 },
-  historyDate: { fontSize: 13, fontWeight: '700', color: '#00c800' },
-  historyTitle: { fontSize: 16, fontWeight: '800', color: '#000' },
-  historyDuration: { fontSize: 14, fontWeight: '600', color: '#008080' },
-  arrowIcon: { paddingRight: 8 },
-
-  // Bottom Nav
-  bottomNavWrap: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
     alignItems: 'center',
   },
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    height: 72,
-    paddingHorizontal: 18,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#e6e6e6',
-  },
-  navItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8 },
-  navIcon: { width: 24, height: 24, marginBottom: 4 },
-  navIconHome: { width: 28, height: 28, marginBottom: 4 },
-  navLabel: { fontSize: 11, color: '#333', fontWeight: '600', textAlign: 'center' },
-})
+  historyDate: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.caption, fontWeight: '700' },
+  historyTitle: { color: UiTheme.colors.textPrimary, fontSize: 16, fontWeight: '800' },
+  historyDuration: { color: UiTheme.colors.textSecondary, fontWeight: '800', fontSize: UiTheme.font.body },
+  statusText: { color: UiTheme.colors.textSecondary, fontSize: UiTheme.font.body, fontWeight: '600' },
+  errorText: { color: UiTheme.colors.danger, fontSize: UiTheme.font.body, fontWeight: '600' },
+});

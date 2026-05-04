@@ -1,108 +1,148 @@
-import React, { useState } from 'react';
-import { Alert, StyleSheet, TextInput, TouchableOpacity, View,} from 'react-native';
 import { Image } from 'expo-image';
-import { Link, useRouter, Href } from 'expo-router';
+import { Href, Link, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Alert, BackHandler, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { Button } from '@/components/ui/button';
+import { Screen } from '@/components/ui/screen';
+import { TextField } from '@/components/ui/text-field';
+import { UiTheme } from '@/constants/ui-theme';
+import { useFormValidation, ValidationRule } from '@/hooks/useFormValidation';
+import { getApiErrorMessage, getProfile, login } from '@/services/backend';
+import { useUserProfile } from '@/stores/user-profile';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
- 
-  
+  const { setProfile } = useUserProfile();
 
+  const validationRules: Record<string, ValidationRule<string>[]> = {
+    username: [
+      { validate: (val) => val.trim().length > 0, message: 'Username is required' },
+      { validate: (val) => val.trim().length >= 3, message: 'Username must be at least 3 characters' },
+    ],
+    password: [
+      { validate: (val) => val.length > 0, message: 'Password is required' },
+    ],
+  };
 
-  function handleLogin() {
-    if (!username.trim() || !password) {
-      Alert.alert('Missing fields', 'Please provide both username and password.');
+  const { validateField, validateAll, setFieldTouched, getFieldError } = useFormValidation();
+
+  const handleUsernameChange = (text: string) => {
+    setUsername(text);
+    validateField('username', text, validationRules.username);
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    validateField('password', text, validationRules.password);
+  };
+
+  const canSubmit = username.trim().length >= 3 && password.length > 0 && !getFieldError('username') && !getFieldError('password') && !isLoading;
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      return true; // Prevent back button
+    });
+    return () => backHandler.remove();
+  }, []);
+
+  async function handleLogin() {
+    if (!validateAll({ username, password }, validationRules)) {
+      Alert.alert('Validation Error', 'Please fix the errors before submitting.');
       return;
     }
 
-    // Mock Login
-    Alert.alert('Success', `Welcome back, ${username}!`);
-    router.push('/user' as Href);
+    try {
+      setIsLoading(true);
+      await login({ username: username.trim(), password });
+      const profile = await getProfile();
+      if (profile) {
+        setProfile(profile);
+      }
+
+      router.replace('/Homepage?loginSuccess=1' as Href);
+    } catch (error) {
+      Alert.alert('Login Failed', getApiErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
-      <ThemedText type="title" style={styles.title}>Login Your Account</ThemedText>
+    <SafeAreaView style={styles.safe}>
+      <Screen scroll={false} withBottomNavPadding={false} contentContainerStyle={styles.screen}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.container}
+          >
+            <Image source={require('@/assets/images/Logo.png')} style={styles.logo} contentFit="contain" />
+            <View style={styles.header}>
+              <ThemedText type="title" style={styles.title}>Welcome back</ThemedText>
+              <ThemedText style={styles.subtitle}>Log in to pick up where you left off.</ThemedText>
+            </View>
 
-      <View style={styles.form}>
-        <ThemedText style={styles.label}>Username</ThemedText>
-        <TextInput
-          value={username}
-          onChangeText={setUsername}
-          placeholder="Enter username"
-          style={styles.input}
-          autoCapitalize="none"
-        />
+            <View style={styles.form}>
+              <TextField
+                label="Username"
+                value={username}
+                onChangeText={handleUsernameChange}
+                onBlur={() => setFieldTouched('username')}
+                placeholder="Enter your username"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="off"
+                importantForAutofill="no"
+                leftIconName="person"
+                error={getFieldError('username') ?? null}
+                returnKeyType="next"
+              />
 
-        <ThemedText style={styles.label}>Password</ThemedText>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Password"
-          secureTextEntry
-          style={styles.input}
-        />
+              <TextField
+                label="Password"
+                value={password}
+                onChangeText={handlePasswordChange}
+                onBlur={() => setFieldTouched('password')}
+                placeholder="Enter your password"
+                secureTextEntry
+                autoComplete="off"
+                importantForAutofill="no"
+                leftIconName="lock"
+                error={getFieldError('password') ?? null}
+                returnKeyType="done"
+              />
 
-        <View style={{ marginTop: 8 }}>
-          
-          <TouchableOpacity onPress={handleLogin} style={styles.button} activeOpacity={0.9}>
-            <ThemedText type="defaultSemiBold" style={styles.buttonText}>Login</ThemedText>
-          </TouchableOpacity>
-        </View>
+              <Button title="Log in" onPress={handleLogin} loading={isLoading} disabled={!canSubmit} />
 
-        <ThemedText style={styles.signupText}>
-          Dont Have an account Yet?{' '}
-          <Link href={"/" as Href} style={styles.linkText}>
-            <ThemedText type="link">Signup Here</ThemedText>
-          </Link>
-        </ThemedText>
-      </View>
-     
-    </ThemedView>
+              <ThemedText style={styles.signupText}>
+                Don’t have an account?{' '}
+                <Link href={'/signup' as Href} style={styles.linkText}>
+                  <ThemedText type="link">Sign up</ThemedText>
+                </Link>
+              </ThemedText>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Screen>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-    gap: 16,
-    backgroundColor: '#ffffff',
-  },
-  form: {
-    gap: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#e6e6e6',
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    fontSize: 16,
-  },
-  button: {
-    marginTop: 8,
-    backgroundColor: '#28a745',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
+  safe: { flex: 1, backgroundColor: UiTheme.colors.page },
+  flex: { flex: 1 },
+  screen: { paddingTop: UiTheme.spacing.lg, paddingHorizontal: UiTheme.spacing.lg },
+  container: { flexGrow: 1, justifyContent: 'center', paddingBottom: UiTheme.spacing.xl },
+  header: { alignItems: 'center', gap: 6, marginBottom: UiTheme.spacing.lg },
+  form: { gap: UiTheme.spacing.sm },
   signupText: {
     textAlign: 'center',
-    color: '#888',
+    color: UiTheme.colors.textSecondary,
     marginTop: 8,
   },
   linkText: {
@@ -110,31 +150,15 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: 'center',
-    fontWeight: '800',
-    color: '#222',
+    color: UiTheme.colors.textPrimary,
     fontSize: 28,
-    marginBottom: 8,
+    fontWeight: '900',
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 6,
-    color: '#222',
-  },
+  subtitle: { color: UiTheme.colors.textSecondary, textAlign: 'center', fontSize: 14, fontWeight: '600' },
   logo: {
     width: 120,
     height: 120,
     alignSelf: 'center',
     marginBottom: 12,
   },
-
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 1, borderColor: '#ccc' },
-  checkboxChecked: { backgroundColor: '#28a745', borderColor: '#28a745' },
-  checkboxLabel: { flex: 1, color: '#222' },
-
-  modalContainer: { flex: 1, padding: 20, justifyContent: 'center' },
-  modalTitle: { textAlign: 'center', marginBottom: 12 },
-  doneButton: { marginTop: 12, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center', backgroundColor: '#28a745' },
-  buttonDisabled: { opacity: 0.6 },
 });
