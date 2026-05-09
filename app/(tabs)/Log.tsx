@@ -2,7 +2,7 @@ import { Card } from '@/components/Card';
 import RoutineDetailsModal, { type Routine } from '@/components/RoutineDetailsModal';
 import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { UiTheme } from '@/constants/ui-theme';
-import { ApiError, addFavorite, getApiErrorMessage, listFavorites, listHistory, listWorkouts, removeFavorite } from '@/services/backend';
+import { ApiError, addFavorite, getApiErrorMessage, listFavorites, listGeneratedAiWorkouts, listHistory, listWorkouts, removeFavorite } from '@/services/backend';
 import { getAverageWorkoutMinutes, getCompletedWeekdayIndexesForCurrentWeek, getTotalWorkoutMinutes } from '@/utils/history-stats';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
@@ -33,13 +33,23 @@ export default function Log(): JSX.Element {
       try {
         setIsLoading(true);
         setErrorMessage(null);
-        const [history, workouts] = await Promise.all([listHistory(), listWorkouts('All', '')]);
+        const [history, workouts, generatedWorkouts] = await Promise.all([
+          listHistory(),
+          listWorkouts('All', ''),
+          listGeneratedAiWorkouts().catch((error) => {
+            if (error instanceof ApiError && error.status === 401) {
+              return [];
+            }
+
+            throw error;
+          }),
+        ]);
 
         if (!isMounted) {
           return;
         }
 
-        const byId = new Map(workouts.map((workout) => [workout.id, workout]));
+        const byId = new Map([...workouts, ...generatedWorkouts].map((workout) => [workout.id, workout]));
         const merged = history
           .map((item) => {
             const workout = byId.get(item.workoutId);
