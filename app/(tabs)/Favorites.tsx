@@ -224,7 +224,7 @@ export default function Favorites(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: UiTheme.colors.page },
+  safe: { flex: 1, backgroundColor: UiTheme.colors.page, paddingTop: UiTheme.spacing.sm },
   container: {
     padding: UiTheme.spacing.lg,
     paddingBottom: UiTheme.nav.height + UiTheme.spacing.xl,

@@ -11,6 +11,8 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.fitai.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#F5F8FC",
         "foregroundImage": "./assets/images/Logo.png"
@@ -19,7 +21,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/Logo.png"
     },
     "plugins": [
       "expo-router",
@@ -41,6 +43,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e93774c9-8613-496c-902c-b4e82c6f7f50"
+      }
     }
   }
 }

@@ -278,7 +278,7 @@ export default function SignupScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: UiTheme.colors.page },
+  safe: { flex: 1, backgroundColor: UiTheme.colors.page, paddingTop: UiTheme.spacing.sm },
   flex: { flex: 1 },
   screen: { paddingTop: UiTheme.spacing.lg, paddingHorizontal: UiTheme.spacing.lg },
   container: { flexGrow: 1, justifyContent: 'center', paddingBottom: UiTheme.spacing.xl },

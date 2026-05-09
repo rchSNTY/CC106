@@ -1,6 +1,8 @@
 import { Slot, useRootNavigationState, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef } from 'react';
 
+import { UiTheme } from '@/constants/ui-theme';
 import { SnackbarProvider } from '@/stores/snackbar';
 import { UserProfileProvider } from '@/stores/user-profile';
 
@@ -29,6 +31,7 @@ export default function Layout() {
   return (
     <UserProfileProvider>
       <SnackbarProvider>
+        <StatusBar style="dark" backgroundColor={UiTheme.colors.page} />
         <Slot />
       </SnackbarProvider>
     </UserProfileProvider>

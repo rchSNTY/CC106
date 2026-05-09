@@ -642,7 +642,7 @@ export default function Explore(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: UiTheme.colors.page },
+  safe: { flex: 1, backgroundColor: UiTheme.colors.page, paddingTop: UiTheme.spacing.sm },
   headerContainer: {
     paddingHorizontal: UiTheme.spacing.lg,
     gap: UiTheme.spacing.md,

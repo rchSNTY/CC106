@@ -178,6 +178,8 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: UiTheme.colors.page,
+    paddingTop: UiTheme.spacing.sm, 
+    paddingBottom: UiTheme.spacing.xl,
   },
   container: {
     flexGrow: 1,

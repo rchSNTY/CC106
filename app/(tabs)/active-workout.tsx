@@ -235,6 +235,7 @@ export default function ActiveWorkout() {
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: UiTheme.spacing.sm,
     flex: 1,
     backgroundColor: UiTheme.colors.page,
   },

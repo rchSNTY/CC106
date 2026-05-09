@@ -134,9 +134,13 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: UiTheme.colors.page},
+  safe: { 
+    flex: 1, 
+    backgroundColor: UiTheme.colors.page,
+    paddingTop: UiTheme.spacing.sm, 
+    paddingBottom: UiTheme.spacing.md},
   flex: { flex: 1 },
-  screen: { paddingTop: UiTheme.spacing.lg, paddingHorizontal: UiTheme.spacing.lg },
+  screen: { paddingTop: UiTheme.spacing.md, paddingHorizontal: UiTheme.spacing.md },
   container: { flexGrow: 1, justifyContent: 'center', paddingBottom: UiTheme.spacing.xl },
   header: { alignItems: 'center', gap: 6, marginBottom: UiTheme.spacing.lg },
   form: { gap: UiTheme.spacing.sm },
