@@ -1,8 +1,8 @@
-import { useRouter } from 'expo-router';
-import React, { JSX } from 'react';
-import { Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
 import { UiTheme } from '@/constants/ui-theme';
+import { useRouter } from 'expo-router';
+import React, { JSX, useState } from 'react';
+import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import SupportContactModal from '../../components/SupportContactModal';
 
 const FAQ_ITEMS = [
   {
@@ -21,22 +21,36 @@ const FAQ_ITEMS = [
 
 export default function InfoScreen(): JSX.Element {
   const router = useRouter();
+  const [showSupportModal, setShowSupportModal] = useState(false);
+
+  const supportContact = {
+    name: 'James Encagueszer Racho Jr',
+    email: 'rachojr.jamesencagueszer.palec@gmail.com',
+    phone: '+639197639326',
+    github: 'https://github.com/rchSNTY',
+    linkedin: 'linkedin.com/in/james-encagueszer-racho-85613b328',
+  };
 
   function handleContactSupport() {
-    Alert.alert('Support', 'Email support@fitai.app for help with your account or workout plans.');
+    setShowSupportModal(true);
   }
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={UiTheme.colors.page} />
 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <View style={styles.header}>
+        <View style={styles.headerTextWrap}>
+          <Text style={styles.title}>Help & Info</Text>
+          <Text style={styles.subtitle}>Everything you need to use FIT-AI safely and effectively.</Text>
+        </View>
+
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
+      </View>
 
-        <Text style={styles.title}>Help & Info</Text>
-        <Text style={styles.subtitle}>Everything you need to use FIT-AI safely and effectively.</Text>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>About FIT-AI</Text>
@@ -76,6 +90,16 @@ export default function InfoScreen(): JSX.Element {
 
         <Text style={styles.version}>App Version 1.0.0</Text>
       </ScrollView>
+
+      <SupportContactModal
+        visible={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
+        name={supportContact.name}
+        email={supportContact.email}
+        phone={supportContact.phone}
+        github={supportContact.github}
+        linkedin={supportContact.linkedin}
+      />
     </SafeAreaView>
   );
 }
@@ -84,16 +108,31 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: UiTheme.colors.page,
+    paddingTop: UiTheme.spacing.sm,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    paddingHorizontal: UiTheme.spacing.lg,
+    paddingTop: UiTheme.spacing.lg,
+    paddingBottom: UiTheme.spacing.sm,
+    gap: UiTheme.spacing.md,
+  },
+  headerTextWrap: {
+    flex: 1,
+    paddingRight: UiTheme.spacing.sm,
   },
   container: {
+    flexGrow: 1,
     padding: UiTheme.spacing.lg,
+    paddingTop: UiTheme.spacing.xs,
+    paddingBottom: UiTheme.spacing.xl,
     gap: UiTheme.spacing.md,
   },
   backButton: {
-    marginTop: UiTheme.spacing.lg,
-    alignSelf: 'flex-start',
-    paddingVertical: UiTheme.spacing.xs,
-    paddingHorizontal: UiTheme.spacing.sm,
+    paddingVertical: UiTheme.spacing.sm,
+    paddingHorizontal: UiTheme.spacing.md,
     borderRadius: UiTheme.radius.sm,
     backgroundColor: UiTheme.colors.surface,
     borderWidth: 1,
@@ -102,15 +141,18 @@ const styles = StyleSheet.create({
   backText: {
     color: UiTheme.colors.textPrimary,
     fontWeight: '700',
+    fontSize: 15,
   },
   title: {
     color: UiTheme.colors.textPrimary,
     fontSize: 28,
     fontWeight: '900',
+    flexShrink: 1,
   },
   subtitle: {
     color: UiTheme.colors.textSecondary,
     fontSize: UiTheme.font.body,
+    marginTop: 4,
   },
   section: {
     gap: UiTheme.spacing.sm,

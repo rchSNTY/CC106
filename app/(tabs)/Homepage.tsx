@@ -3,6 +3,7 @@ import BottomTabNav from '@/components/ui/bottom-tab-nav';
 import { Button } from '@/components/ui/button';
 import { UiTheme } from '@/constants/ui-theme';
 import { ApiError, generateAiWorkout, getApiErrorMessage, listHistory } from '@/services/backend';
+import { useAiGenerationStore } from '@/stores/ai-generation';
 import { useExploreStore } from '@/stores/explore';
 import { useSnackbar } from '@/stores/snackbar';
 import { useUserProfile } from '@/stores/user-profile';
@@ -20,12 +21,12 @@ export default function Homepage(): JSX.Element {
   const { profile } = useUserProfile();
   const setWorkoutView = useExploreStore((state) => state.setWorkoutView);
   const { showSnackbar, hideSnackbar } = useSnackbar();
+  const { isGeneratingAi, startAiGeneration, stopAiGeneration } = useAiGenerationStore();
   const [history, setHistory] = useState<Array<{ date: string; duration: string }>>([]);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [showAiPrompt, setShowAiPrompt] = useState(false);
   const [showLoginSuccessModal, setShowLoginSuccessModal] = useState(false);
-  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
 
   const aiPreset = useMemo(() => getAiWorkoutPreset(profile), [profile]);
 
@@ -107,29 +108,29 @@ export default function Homepage(): JSX.Element {
 
   const handleAiConfirm = async () => {
     setShowAiPrompt(false);
-    setIsGeneratingAi(true);
+    startAiGeneration();
 
     if (!aiPreset.isReady) {
       Alert.alert('Profile incomplete', 'Complete your profile first so AI suggestions can match your goal.');
-      setIsGeneratingAi(false);
+      stopAiGeneration();
       return;
     }
 
     if (!profile.name || !profile.name.trim()) {
       Alert.alert('Incomplete Profile', 'Please enter your name in your profile.');
-      setIsGeneratingAi(false);
+      stopAiGeneration();
       return;
     }
 
     if (!profile.activityLevel || !profile.activityLevel.trim()) {
       Alert.alert('Incomplete Profile', 'Please select an activity level in your profile.');
-      setIsGeneratingAi(false);
+      stopAiGeneration();
       return;
     }
 
     if (!profile.workout || !profile.workout.trim()) {
       Alert.alert('Incomplete Profile', 'Please select a workout type in your profile.');
-      setIsGeneratingAi(false);
+      stopAiGeneration();
       return;
     }
 
@@ -157,6 +158,7 @@ export default function Homepage(): JSX.Element {
           { text: 'Cancel', style: 'cancel' },
           { text: 'Login', onPress: () => router.push('/login') },
         ]);
+        stopAiGeneration();
         return;
       }
 
@@ -168,7 +170,7 @@ export default function Homepage(): JSX.Element {
         autoDismissMs: 7000,
       });
     } finally {
-      setIsGeneratingAi(false);
+      stopAiGeneration();
     }
   };
 

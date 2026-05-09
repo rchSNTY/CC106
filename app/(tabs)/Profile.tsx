@@ -69,6 +69,10 @@ export default function Profile(): JSX.Element {
     setPendingAction('edit');
   }
 
+  function handleFAQ() {
+    router.push('/info' as Href);
+  }
+
   function closeConfirmation() {
     setPendingAction(null);
   }
@@ -108,6 +112,10 @@ export default function Profile(): JSX.Element {
               </View>
             ))}
           </View>
+
+          <TouchableOpacity onPress={handleFAQ} style={[styles.actionButton, styles.faqButton]} activeOpacity={0.85}>
+            <Text style={styles.faqText}>Frequently Asked Questions?</Text>
+          </TouchableOpacity>
 
           <View style={styles.actionRow}>
             <TouchableOpacity onPress={handleEditProfile} style={[styles.actionButton, styles.editButton]} activeOpacity={0.85}>
@@ -232,6 +240,24 @@ const styles = StyleSheet.create({
   editButton: {
     backgroundColor: UiTheme.colors.accent,
   },
+  faqButton: {
+    width: '100%',
+    backgroundColor: UiTheme.colors.accentSoft,
+    borderWidth: 1,
+    borderColor: UiTheme.colors.border,
+    marginTop: UiTheme.spacing.xs,
+    shadowColor: UiTheme.colors.textPrimary,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  faqText: {
+    color: UiTheme.colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  
   editText: {
     color: UiTheme.colors.surface,
     fontSize: 16,

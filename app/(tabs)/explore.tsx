@@ -6,6 +6,7 @@ import { Chip } from '@/components/ui/chip';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { UiTheme } from '@/constants/ui-theme';
 import { ApiError, addFavorite, clearGeneratedAiWorkouts, deleteWorkout, generateAiWorkout, getApiErrorMessage, listFavorites, listGeneratedAiWorkouts, listWorkouts, removeFavorite } from '@/services/backend';
+import { useAiGenerationStore } from '@/stores/ai-generation';
 import { useExploreStore } from '@/stores/explore';
 import { useSnackbar } from '@/stores/snackbar';
 import { useUserProfile } from '@/stores/user-profile';
@@ -26,6 +27,7 @@ export default function Explore(): JSX.Element {
   const params = useLocalSearchParams<{ ai?: string; intensity?: string; search?: string }>();
   const { profile } = useUserProfile();
   const { showSnackbar, hideSnackbar } = useSnackbar();
+  const { isGeneratingAi, startAiGeneration, stopAiGeneration } = useAiGenerationStore();
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<Intensity>('All');
   const workoutView = useExploreStore((state) => state.workoutView);
@@ -39,7 +41,6 @@ export default function Explore(): JSX.Element {
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const [showAiPrompt, setShowAiPrompt] = useState(false);
   const [showDeleteGeneratedPrompt, setShowDeleteGeneratedPrompt] = useState(false);
-  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [isClearingAi, setIsClearingAi] = useState(false);
   const [generatedWorkoutCount, setGeneratedWorkoutCount] = useState(0);
   const [isSelecting, setIsSelecting] = useState(false);
@@ -127,26 +128,26 @@ export default function Explore(): JSX.Element {
 
   const handleAiConfirm = useCallback(async () => {
     setShowAiPrompt(false);
-    setIsGeneratingAi(true);
+    startAiGeneration();
     setErrorMessage(null);
     showSnackbar({ message: 'Generating your workouts...', variant: 'info' });
 
     // Validate profile before sending
     if (!profile.name || !profile.name.trim()) {
       Alert.alert('Incomplete Profile', 'Please enter your name in your profile.');
-      setIsGeneratingAi(false);
+      stopAiGeneration();
       hideSnackbar();
       return;
     }
     if (!profile.activityLevel || !profile.activityLevel.trim()) {
       Alert.alert('Incomplete Profile', 'Please select an activity level in your profile.');
-      setIsGeneratingAi(false);
+      stopAiGeneration();
       hideSnackbar();
       return;
     }
     if (!profile.workout || !profile.workout.trim()) {
       Alert.alert('Incomplete Profile', 'Please select a workout type in your profile.');
-      setIsGeneratingAi(false);
+      stopAiGeneration();
       hideSnackbar();
       return;
     }
@@ -208,6 +209,7 @@ export default function Explore(): JSX.Element {
           { text: 'Cancel', style: 'cancel' },
           { text: 'Login', onPress: () => router.push('/login') },
         ]);
+        stopAiGeneration();
         return;
       }
 
@@ -221,9 +223,9 @@ export default function Explore(): JSX.Element {
         autoDismissMs: 7000,
       });
     } finally {
-      setIsGeneratingAi(false);
+      stopAiGeneration();
     }
-  }, [hideSnackbar, profile, router, showSnackbar]);
+  }, [hideSnackbar, profile, router, showSnackbar, startAiGeneration, stopAiGeneration]);
 
   const handleShowPresetWorkouts = useCallback(() => {
     setWorkoutView('presets');
