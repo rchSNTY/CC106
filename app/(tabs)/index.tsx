@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { Href, useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Modal,
   NativeScrollEvent,
@@ -9,7 +9,6 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  TouchableOpacity,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -18,130 +17,112 @@ import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { UiTheme } from '@/constants/ui-theme';
 
-const CAPABILITY_SLIDES = [
+const HERO_SLIDES = [
   {
-    title: 'Personalized Plans',
-    description: 'FIT-AI creates workout suggestions based on your profile and selected activity level.',
+    key: 'personalized',
+    image: require('@/assets/images/index/personalizedplan.jpg'),
+    title: 'Personalized Workout Plans',
+    description: 'Get AI-powered fitness plans tailored to your goals and activity level.',
   },
   {
-    title: 'Workout Discovery',
-    description: 'Browse routines by type and intensity, then save the ones you want to repeat.',
+    key: 'discovery',
+    image: require('@/assets/images/index/wokroutdiscovery.jpg'),
+    title: 'Discover New Routines',
+    description: 'Explore curated workouts and save your favorites for later.',
   },
   {
-    title: 'Progress Tracking',
-    description: 'Check your activity log, streak, and weekly goals to stay consistent over time.',
+    key: 'progress',
+    image: require('@/assets/images/index/progresstracking.jpg'),
+    title: 'Track Your Progress',
+    description: 'See your activity history and celebrate milestones.',
   },
 ] as const;
 
 export default function LandingScreen() {
   const router = useRouter();
-  const sliderRef = useRef<ScrollView>(null);
   const { width, height } = useWindowDimensions();
+  const sliderRef = useRef<ScrollView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
 
   const isCompact = width < 380 || height < 700;
-  const horizontalPadding = isCompact ? UiTheme.spacing.md : UiTheme.spacing.lg;
-  const logoSize = Math.max(100, Math.min(124, Math.round(width * 0.28)));
+  const isNarrow = width < 430;
+  const horizontalPadding = Math.max(UiTheme.spacing.md, Math.round(width * 0.06));
   const titleSize = isCompact ? 26 : 30;
   const titleLineHeight = isCompact ? 30 : 34;
-  const subtitleSize = isCompact ? 13 : 14;
-  const slideMinHeight = Math.max(210, Math.min(270, Math.round(height * 0.34)));
-  const bottomCtaPadding = isCompact ? UiTheme.spacing.sm : UiTheme.spacing.md;
-  const slideWidth = Math.max(width - horizontalPadding * 2, 280);
+  const overlayPaddingBottom = Math.max(UiTheme.spacing.md, Math.round(height * 0.03));
 
-  const canGoPrev = activeIndex > 0;
-  const canGoNext = activeIndex < CAPABILITY_SLIDES.length - 1;
-
-  const currentSlide = useMemo(() => CAPABILITY_SLIDES[activeIndex], [activeIndex]);
+  const slideWidth = width;
 
   function onSliderScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    const { contentOffset, layoutMeasurement } = event.nativeEvent;
-    const width = layoutMeasurement.width;
-    if (!width) {
-      return;
-    }
-
-    const index = Math.round(contentOffset.x / width);
-    if (index !== activeIndex && index >= 0 && index < CAPABILITY_SLIDES.length) {
+    const { contentOffset } = event.nativeEvent;
+    const index = Math.round(contentOffset.x / slideWidth);
+    if (index !== activeIndex && index >= 0 && index < HERO_SLIDES.length) {
       setActiveIndex(index);
     }
   }
 
-  function goToSlide(nextIndex: number) {
-    sliderRef.current?.scrollTo({ x: slideWidth * nextIndex, y: 0, animated: true });
-    setActiveIndex(nextIndex);
-  }
-
   useEffect(() => {
     const timer = setInterval(() => {
-      setActiveIndex((prev) => {
-        const next = prev === CAPABILITY_SLIDES.length - 1 ? 0 : prev + 1;
-        sliderRef.current?.scrollTo({ x: slideWidth * next, y: 0, animated: true });
-        return next;
-      });
-    }, 3200);
-
+      const next = activeIndex === HERO_SLIDES.length - 1 ? 0 : activeIndex + 1;
+      sliderRef.current?.scrollTo({ x: slideWidth * next, y: 0, animated: true });
+      setActiveIndex(next);
+    }, 5000);
     return () => clearInterval(timer);
-  }, [slideWidth]);
+  }, [activeIndex, slideWidth]);
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={UiTheme.colors.page} />
 
-      <ScrollView
-        contentContainerStyle={[styles.container, { paddingHorizontal: horizontalPadding, paddingBottom: bottomCtaPadding }]}
-        showsVerticalScrollIndicator={false}
-      >
-        <Image source={require('@/assets/images/Logo.png')} style={[styles.logo, { width: logoSize, height: logoSize }]} contentFit="contain" />
-        <ThemedText type="title" style={[styles.title, { fontSize: titleSize, lineHeight: titleLineHeight }]}>Train Smarter with FIT-AI</ThemedText>
-        <ThemedText style={[styles.subtitle, { fontSize: subtitleSize }]}>Your fitness companion for planning, tracking, and improving every week.</ThemedText>
-
-        <View style={styles.sliderOuter}>
-          <ScrollView
-            ref={sliderRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={onSliderScroll}
-            contentContainerStyle={styles.sliderContent}
-          >
-            {CAPABILITY_SLIDES.map((slide) => (
-              <View key={slide.title} style={[styles.slideCard, { width: slideWidth, minHeight: slideMinHeight }]}>
-                <ThemedText style={styles.slideTitle}>{slide.title}</ThemedText>
-                <ThemedText style={styles.slideDescription}>{slide.description}</ThemedText>
-              </View>
-            ))}
-          </ScrollView>
+      <View style={styles.heroContainer}>
+        <View style={[styles.heroTopOverlay, { paddingHorizontal: horizontalPadding }]}>
+          <View style={styles.welcomeHeaderInline}>
+            <ThemedText type="title" style={[styles.welcomeHeader, { fontSize: titleSize, lineHeight: titleLineHeight }]}>Welcome to FIT-AI</ThemedText>
+          </View>
         </View>
 
-        <View style={styles.dotsRow}>
-          {CAPABILITY_SLIDES.map((slide, idx) => (
-            <View key={slide.title} style={[styles.dot, idx === activeIndex ? styles.dotActive : null]} />
+        <ScrollView
+          ref={sliderRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={onSliderScroll}
+          scrollEventThrottle={16}
+          style={styles.slider}
+          contentContainerStyle={styles.sliderContent}
+        >
+          {HERO_SLIDES.map((slide) => (
+            <View key={slide.key} style={[styles.heroSlide, { width: slideWidth }]}>
+              <Image source={slide.image} style={styles.heroImage} contentFit="cover" />
+            </View>
           ))}
-        </View>
+        </ScrollView>
 
-        <View style={styles.navHintRow}>
-          <TouchableOpacity
-            onPress={() => goToSlide(Math.max(activeIndex - 1, 0))}
-            disabled={!canGoPrev}
-            style={[styles.navChip, !canGoPrev && styles.navChipDisabled]}
-          >
-            <ThemedText style={[styles.navChipText, !canGoPrev && styles.navChipTextDisabled]}>Previous</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => goToSlide(Math.min(activeIndex + 1, CAPABILITY_SLIDES.length - 1))}
-            disabled={!canGoNext}
-            style={[styles.navChip, !canGoNext && styles.navChipDisabled]}
-          >
-            <ThemedText style={[styles.navChipText, !canGoNext && styles.navChipTextDisabled]}>Next</ThemedText>
-          </TouchableOpacity>
-        </View>
+        <View
+          style={[
+            styles.heroOverlay,
+            {
+              paddingHorizontal: horizontalPadding,
+              paddingBottom: overlayPaddingBottom,
+              gap: UiTheme.spacing.sm,
+            },
+          ]}
+        >
+          <View style={styles.heroTopRow}>
+            <View style={[styles.heroTitleWrap, isNarrow ? styles.heroTitleWrapNarrow : null]}>
+              <ThemedText style={styles.heroDescriptionTitle}>{HERO_SLIDES[activeIndex].title}</ThemedText>
+            </View>
+            <View style={[styles.heroCtaWrap, isNarrow ? styles.heroCtaWrapNarrow : null]}>
+              <Button title="Get Started" size="md" onPress={() => setModalVisible(true)} style={{ width: '100%' }} />
+            </View>
+          </View>
 
-        <View style={styles.bottomActionWrap}>
-          <Button title="Start my journey" onPress={() => setModalVisible(true)} />
+          <View style={styles.heroDescriptionRow}>
+            <ThemedText style={styles.heroDescription}>{HERO_SLIDES[activeIndex].description}</ThemedText>
+          </View>
         </View>
-      </ScrollView>
+      </View>
 
       <Modal
         visible={modalVisible}
@@ -178,134 +159,41 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: UiTheme.colors.page,
-    paddingTop: UiTheme.spacing.sm, 
-    paddingBottom: UiTheme.spacing.xl,
   },
-  container: {
-    flexGrow: 1,
-    paddingTop: UiTheme.spacing.lg,
-    backgroundColor: UiTheme.colors.page,
-  },
-  logo: {
-    alignSelf: 'center',
-    marginTop: UiTheme.spacing.xl,
-    marginBottom: UiTheme.spacing.sm,
-  },
-  title: {
-    color: UiTheme.colors.textPrimary,
-    fontSize: 30,
-    lineHeight: 34,
-    textAlign: 'center',
-    fontWeight: '900',
-  },
-  subtitle: {
-    textAlign: 'center',
-    color: UiTheme.colors.textSecondary,
-    marginTop: UiTheme.spacing.xs,
-    marginBottom: UiTheme.spacing.md,
-    fontSize: 14,
-  },
-  sliderOuter: {
+  heroContainer: {
     width: '100%',
+    flex: 1,
+    position: 'relative',
+    borderRadius: 0,
+    overflow: 'hidden',
+  },
+  welcomeHeader: {
+    color: UiTheme.colors.surface,
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: '900',
+    padding: UiTheme.spacing.sm,
+    backgroundColor: 'rgba(18, 58, 115, 0.92)',
+    borderRadius: UiTheme.radius.md,
+  },
+  welcomeHeaderInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  heroTopOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: UiTheme.spacing.md,
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  slider: {
+    ...StyleSheet.absoluteFillObject,
   },
   sliderContent: {
     alignItems: 'stretch',
-  },
-  slideCard: {
-    backgroundColor: UiTheme.colors.surface,
-    borderWidth: 1,
-    borderColor: UiTheme.colors.border,
-    borderRadius: UiTheme.radius.lg,
-    padding: UiTheme.spacing.lg,
-    justifyContent: 'center',
-    gap: UiTheme.spacing.sm,
-  },
-  slideTitle: {
-    color: UiTheme.colors.textPrimary,
-    fontSize: 22,
-    fontWeight: '900',
-  },
-  slideDescription: {
-    color: UiTheme.colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  dotsRow: {
-    marginTop: UiTheme.spacing.sm,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: UiTheme.spacing.xs,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: UiTheme.colors.border,
-  },
-  dotActive: {
-    width: 20,
-    backgroundColor: UiTheme.colors.accent,
-  },
-  previewCard: {
-    marginTop: UiTheme.spacing.md,
-    backgroundColor: UiTheme.colors.surface,
-    borderWidth: 1,
-    borderColor: UiTheme.colors.border,
-    borderRadius: UiTheme.radius.md,
-    padding: UiTheme.spacing.md,
-    gap: 4,
-  },
-  previewLabel: {
-    color: UiTheme.colors.textSecondary,
-    fontSize: UiTheme.font.caption,
-    fontWeight: '700',
-  },
-  previewTitle: {
-    color: UiTheme.colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  navHintRow: {
-    marginTop: UiTheme.spacing.sm,
-    flexDirection: 'row',
-    gap: UiTheme.spacing.sm,
-  },
-  navChip: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: UiTheme.colors.border,
-    borderRadius: UiTheme.radius.sm,
-    backgroundColor: UiTheme.colors.surface,
-    paddingVertical: UiTheme.spacing.xs + 2,
-    alignItems: 'center',
-  },
-  navChipDisabled: {
-    opacity: 0.45,
-  },
-  navChipText: {
-    color: UiTheme.colors.textPrimary,
-    fontWeight: '700',
-  },
-  navChipTextDisabled: {
-    color: UiTheme.colors.textSecondary,
-  },
-  bottomActionWrap: {
-    marginTop: 'auto',
-    paddingTop: UiTheme.spacing.md,
-    gap: UiTheme.spacing.sm,
-  },
-  secondaryButton: {
-    marginTop: UiTheme.spacing.sm,
-    borderRadius: UiTheme.radius.sm,
-    borderColor: UiTheme.colors.border,
-    borderWidth: 1,
-    alignItems: 'center',
-    paddingVertical: 13,
-    backgroundColor: UiTheme.colors.surface,
-  },
-  secondaryButtonText: {
-    color: UiTheme.colors.textPrimary,
-    fontWeight: '700',
   },
   modalOverlay: {
     flex: 1,
@@ -326,5 +214,55 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '900',
     textAlign: 'center',
+  },
+
+  heroSlide: {
+    backgroundColor: UiTheme.colors.surface,
+    flex: 1,
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
+  },
+  heroOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.38)',
+    paddingTop: UiTheme.spacing.sm,
+  },
+  heroTopRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: UiTheme.spacing.sm,
+  },
+  heroTitleWrap: {
+    flex: 9.3,
+  },
+  heroTitleWrapNarrow: {
+    flex: 1,
+  },
+  heroDescriptionRow: {
+    width: '100%',
+  },
+  heroDescriptionTitle: {
+    color: UiTheme.colors.surface,
+    fontSize: 22,
+    fontWeight: '900',
+    marginBottom: 6,
+    flexShrink: 1,
+  },
+  heroDescription: {
+    color: UiTheme.colors.surface,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  heroCtaWrap: {
+    flex: 0.7,
+    alignSelf: 'flex-end',
+  },
+  heroCtaWrapNarrow: {
+    flex: 0.7,
   },
 });

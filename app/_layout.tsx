@@ -1,6 +1,7 @@
 import { Slot, useRootNavigationState, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { UiTheme } from '@/constants/ui-theme';
 import { SnackbarProvider } from '@/stores/snackbar';
@@ -29,11 +30,13 @@ export default function Layout() {
 
 
   return (
-    <UserProfileProvider>
-      <SnackbarProvider>
-        <StatusBar style="dark" backgroundColor={UiTheme.colors.page} />
-        <Slot />
-      </SnackbarProvider>
-    </UserProfileProvider>
+    <SafeAreaProvider>
+      <UserProfileProvider>
+        <SnackbarProvider>
+          <StatusBar style="dark" backgroundColor={UiTheme.colors.page} />
+          <Slot />
+        </SnackbarProvider>
+      </UserProfileProvider>
+    </SafeAreaProvider>
   );
 }
